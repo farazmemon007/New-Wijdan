@@ -17,7 +17,7 @@ class ProductController extends Controller
         // dd(Auth::user()->id);
         // if (Auth::id()) {
         //     $userId = Auth::id();
-        $products = Product::with('category_relation','sub_category_relation')
+        $products = Product::with('category_relation','sub_category_relation', 'unit')
         ->when(Auth::user()->email !== "admin@admin.com", function($query){
                 return $query->where('creater_id', Auth::user()->id);
         })

@@ -10,12 +10,12 @@ use App\Models\Subcategory;
 class Product extends Model
 {
     use HasFactory, SoftDeletes;
-
-    protected $fillable = [
-        'creater_id', 'category_id', 'sub_category_id', 'item_code', 'item_name', 'size',
-        'opening_carton_quantity', 'carton_quantity', 'loose_pieces', 'pcs_in_carton',
-        'wholesale_price', 'retail_price', 'initial_stock', 'alert_quantity'
-    ];
+    protected $guarded = [];
+    // protected $fillable = [
+    //     'creater_id', 'category_id', 'sub_category_id', 'item_code', 'item_name', 'size',
+    //     'opening_carton_quantity', 'carton_quantity', 'loose_pieces', 'pcs_in_carton',
+    //     'wholesale_price', 'retail_price', 'initial_stock', 'alert_quantity'
+    // ];
 public function category_relation()
 {
     return $this->belongsTo(Category::class,'category_id');

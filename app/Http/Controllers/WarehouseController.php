@@ -9,7 +9,7 @@ class WarehouseController extends Controller
 {
     // VendorController.php aur WarehouseController.php same hoga
 public function index() {
-    $warehouses = Warehouse::all(); // ya $warehouses = Warehouse::all();
+    $warehouses = Warehouse::with('user')->get(); // ya $warehouses = Warehouse::all();
     return view('admin_panel.warehouses.index', compact('warehouses')); // ya warehouses.index
 }
 
