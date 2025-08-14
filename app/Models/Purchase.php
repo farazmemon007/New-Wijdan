@@ -2,21 +2,27 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-
 class Purchase extends Model
 {
-    use HasFactory;
     use SoftDeletes;
-// app/Models/Purchase.php
-protected $table = 'purchases'; // if it's not default
 
-    protected $fillable = [
-        'invoice_no', 'supplier', 'purchase_date', 'warehouse_id', 'item_category', 'item_name',
-        'quantity', 'price', 'total', 'note', 'unit', 'total_price', 'discount',
-        'Payable_amount', 'paid_amount', 'due_amount', 'status', 'is_return'
+    protected $guarded = [];
+
+    protected $casts = [
+        'purchase_date' => 'date',
+        'subtotal'      => 'decimal:2',
+        'discount'      => 'decimal:2',
+        'extra_cost'    => 'decimal:2',
+        'net_amount'    => 'decimal:2',
+        'paid_amount'   => 'decimal:2',
+        'due_amount'    => 'decimal:2',
     ];
+
+    public function branch()   { return $this->belongsTo(Branch::class); }
+    public function warehouse(){ return $this->belongsTo(Warehouse::class); }
+    public function vendor()   { return $this->belongsTo(Vendor::class, 'vendor_id'); }
+    public function items()    { return $this->hasMany(PurchaseItem::class); }
 }

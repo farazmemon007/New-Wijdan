@@ -6,54 +6,57 @@
         body {
             font-family: Arial, sans-serif;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
         }
         .label {
-            border: 2px dashed #000;
-            width: 300px;
-            padding: 20px;
+            border: 1px solid #000;
+            padding: 10px;
+            width: 280px;
             text-align: center;
         }
-        .barcode {
-            margin: 20px 0;
-        }
-        .product-name {
+        .brand-name {
             font-size: 18px;
             font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .barcode {
+            margin: 5px 0;
+        }
+        .product-info {
+            font-size: 13px;
+            margin-top: 2px;
         }
         .price {
-            font-size: 16px;
-            margin-top: 10px;
-        }
-        .print-btn {
-            margin-top: 20px;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
+            font-size: 15px;
+            font-weight: bold;
+            margin-top: 8px;
         }
         @media print {
-            .print-btn {
-                display: none;
+            body {
+                height: auto;
             }
         }
     </style>
 </head>
 <body>
 
-    <div class="label">
-        <div class="product-name">{{ $product->item_name }}</div>
-        <div class="barcode">
-            {!! DNS1D::getBarcodeHTML($product->item_code, 'C128') !!}
-        </div>
-        <div class="product-code">{{ $product->item_code }}</div>
-        <div class="price">PKR {{ $product->retail_price }}</div>
+<div class="label">
+    <div class="brand-name" style="letter-spacing: 2px">WIJDAN</div>
+
+    <div class="barcode" style="display: flex; justify-content: center;">
+        {!! DNS1D::getBarcodeHTML($product->item_code, 'C128', 1.4, 40) !!}
     </div>
 
-    {{-- <button class="print-btn" onclick="window.print()">🖨️ Print Barcode</button> --}}
+    <div class="product-info" style="font-size: 15px; font-weight: bold;">
+        {{ $product->barcode_path }} {{ $product->item_name }} # {{$product->id}}
+    </div>
+
+    <div class="price">PKR: {{ number_format($product->price) }}</div>
+</div>
+
 
 </body>
 </html>

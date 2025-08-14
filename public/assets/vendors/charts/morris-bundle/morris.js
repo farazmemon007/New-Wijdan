@@ -18,7 +18,6 @@ Licensed under the BSD-2-Clause License.
             for (var key in parent) {
                 if (__hasProp.call(parent, key)) child[key] = parent[key];
             }
-
             function ctor() {
                 this.constructor = child;
             }

@@ -25,6 +25,7 @@
     <!--=========================*
                 Favicon
     *===========================-->
+
     <link rel="shortcut icon" type="image/x-icon" href="{{ asset('assets/images/favicon.png') }}">
 <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
@@ -46,6 +47,7 @@
 <link rel="stylesheet" href="{{ asset('assets/vendors/data-table/css/jquery.dataTables.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/vendors/data-table/css/dataTables.bootstrap4.min.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/vendors/data-table/css/responsive.bootstrap.min.css') }}">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 <link rel="stylesheet" href="{{ asset('assets/vendors/data-table/css/responsive.jqueryui.min.css') }}">
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -186,7 +188,7 @@
                                     <div class="dropdown-divider"></div>
                                     <a class="dropdown-item rt-notification-item">
                                         <div class="rt-notification-thumbnail">
-                                            <img src="images/author/author-img1.jpg" class="profile-pic" alt="image">
+                                            {{-- <img src="images/author/author-img1.jpg" class="profile-pic" alt="image"> --}}
                                         </div>
                                         <div class="rt-notification-item-content flex-grow">
                                             <h6 class="rt-notification-subject ellipsis font-weight-medium">Jhon Doe
@@ -200,7 +202,7 @@
                                     <div class="dropdown-divider"></div>
                                     <a class="dropdown-item rt-notification-item">
                                         <div class="rt-notification-thumbnail">
-                                            <img src="images/author/author-img2.jpg" class="profile-pic" alt="image">
+                                            {{-- <img src="images/author/author-img2.jpg" class="profile-pic" alt="image"> --}}
                                         </div>
                                         <div class="rt-notification-item-content flex-grow">
                                             <h6 class="rt-notification-subject ellipsis font-weight-medium">David Boos
@@ -214,7 +216,9 @@
                                     <div class="dropdown-divider"></div>
                                     <a class="dropdown-item rt-notification-item">
                                         <div class="rt-notification-thumbnail">
-                                            <img src="images/user.jpg" class="profile-pic" alt="image">
+                                            <img src="{{ asset('images/user.jpg') }}"  class="profile-pic" alt="User">
+
+
                                         </div>
                                         <div class="rt-notification-item-content flex-grow">
                                             <h6 class="rt-notification-subject ellipsis font-weight-medium"> Jason Roy
@@ -228,7 +232,7 @@
                                     <div class="dropdown-divider"></div>
                                     <a class="dropdown-item rt-notification-item">
                                         <div class="rt-notification-thumbnail">
-                                            <img src="images/author/author-img3.jpg" class="profile-pic" alt="image">
+                                            {{-- <img src="images/author/author-img3.jpg" class="profile-pic" alt="image"> --}}
                                         </div>
                                         <div class="rt-notification-item-content flex-grow">
                                             <h6 class="rt-notification-subject ellipsis font-weight-medium"> Malika Roy
@@ -250,7 +254,7 @@
                             <li class="nav-item nav-profile dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown" id="profileDropdown">
                                 <span class="profile_name">{{ Auth::user()->name }} <i class="feather ft-chevron-down"></i></span>
-                                <img src="assets/images/user.jpg" alt="profile"/>
+                                {{-- <img src="assets/images/user.jpg" alt="profile"/> --}}
                             </a>
                                 <div class="dropdown-menu dropdown-menu-right navbar-dropdown pt-2" aria-labelledby="profileDropdown">
                                     <a class="dropdown-item">
@@ -573,78 +577,75 @@
             </div>
         </nav>
 
-        @yield('content')
+     @yield('content')
 
-            <footer>
-            <div class="footer-area">
-                <p>&copy; Copyright 2019. All right reserved. Template by VizzStudio.</p>
-            </div>
-        </footer>
-        <!--=================================*
-                End Footer Section
-    *===================================-->
-
+<footer>
+    <div class="footer-area">
+        <p>&copy; Copyright 2025. All right reserved. Wijdan.</p>
     </div>
-    <!--=========================*
-        End Page Container
+</footer>
+<!--=================================*
+        End Footer Section
+*===================================-->
+
+</div>
+<!--=========================*
+    End Page Container
 *===========================-->
 
-
-    <!--=========================*
-            Scripts
+<!--=========================*
+        Scripts
 *===========================-->
 
-    <!-- Jquery Js -->
-    <script src="assets/js/jquery.min.js"></script>
-    <!-- bootstrap 4 js -->
-    <script src="assets/js/popper.min.js"></script>
-    <script src="assets/js/bootstrap.min.js"></script>
-    <!-- Owl Carousel Js -->
-    <script src="assets/js/owl.carousel.min.js"></script>
-    <!-- Metis Menu Js -->
-    <script src="assets/js/metisMenu.min.js"></script>
-    <!-- SlimScroll Js -->
-    <script src="assets/js/jquery.slimscroll.min.js"></script>
-    <!-- Slick Nav -->
-    <script src="assets/js/jquery.slicknav.min.js"></script>
+<!-- Jquery Js -->
+<script src="{{ asset('assets/js/jquery.min.js') }}"></script>
+<!-- bootstrap 4 js -->
+<script src="{{ asset('assets/js/popper.min.js') }}"></script>
+<script src="{{ asset('assets/js/bootstrap.min.js') }}"></script>
+<!-- Owl Carousel Js -->
+<script src="{{ asset('assets/js/owl.carousel.min.js') }}"></script>
+<!-- Metis Menu Js -->
+<script src="{{ asset('assets/js/metisMenu.min.js') }}"></script>
+<!-- SlimScroll Js -->
+<script src="{{ asset('assets/js/jquery.slimscroll.min.js') }}"></script>
+<!-- Slick Nav -->
+<script src="{{ asset('assets/js/jquery.slicknav.min.js') }}"></script>
 
-    <!--=========================*
-        This Page Script
-*===========================-->
-    <!-- start amchart js -->
-    <script src="assets/vendors/am-charts/js/ammap.js"></script>
-    <script src="assets/vendors/am-charts/js/worldLow.js"></script>
-    <script src="assets/vendors/am-charts/js/continentsLow.js"></script>
-    <script src="assets/vendors/am-charts/js/light.js"></script>
-    <!-- maps js -->
-    <script src="assets/js/am-maps.js"></script>
+<!-- start amchart js -->
+<script src="{{ asset('assets/vendors/am-charts/js/ammap.js') }}"></script>
+<script src="{{ asset('assets/vendors/am-charts/js/worldLow.js') }}"></script>
+<script src="{{ asset('assets/vendors/am-charts/js/continentsLow.js') }}"></script>
+<script src="{{ asset('assets/vendors/am-charts/js/light.js') }}"></script>
+<!-- maps js -->
+<script src="{{ asset('assets/js/am-maps.js') }}"></script>
 
-    <!--Morris Chart-->
-    <script src="assets/vendors/charts/morris-bundle/raphael.min.js"></script>
-    <script src="assets/vendors/charts/morris-bundle/morris.js"></script>
+<!-- Morris Chart -->
+<script src="{{ asset('assets/vendors/charts/morris-bundle/raphael.min.js') }}"></script>
+<script src="{{ asset('assets/vendors/charts/morris-bundle/morris.js') }}"></script>
 
-    <!--Chart Js-->
-    <script src="assets/vendors/charts/charts-bundle/Chart.bundle.js"></script>
+<!-- Chart Js -->
+<script src="{{ asset('assets/vendors/charts/charts-bundle/Chart.bundle.js') }}"></script>
 
-    <!-- C3 Chart -->
-    <script src="assets/vendors/charts/c3charts/c3.min.js"></script>
-    <script src="assets/vendors/charts/c3charts/d3-5.4.0.min.js"></script>
+<!-- C3 Chart -->
+<script src="{{ asset('assets/vendors/charts/c3charts/c3.min.js') }}"></script>
+<script src="{{ asset('assets/vendors/charts/c3charts/d3-5.4.0.min.js') }}"></script>
 
-    <!-- Data Table js -->
-    <script src="assets/vendors/data-table/js/jquery.dataTables.js"></script>
-    <script src="assets/vendors/data-table/js/jquery.dataTables.min.js"></script>
-    <script src="assets/vendors/data-table/js/dataTables.bootstrap4.min.js"></script>
-    <script src="assets/vendors/data-table/js/dataTables.responsive.min.js"></script>
-    <script src="assets/vendors/data-table/js/responsive.bootstrap.min.js"></script>
+<!-- Data Table js -->
+<script src="{{ asset('assets/vendors/data-table/js/jquery.dataTables.js') }}"></script>
+<script src="{{ asset('assets/vendors/data-table/js/jquery.dataTables.min.js') }}"></script>
+<script src="{{ asset('assets/vendors/data-table/js/dataTables.bootstrap4.min.js') }}"></script>
+<script src="{{ asset('assets/vendors/data-table/js/dataTables.responsive.min.js') }}"></script>
+<script src="{{ asset('assets/vendors/data-table/js/responsive.bootstrap.min.js') }}"></script>
 
-    <!--Sparkline Chart-->
-    <script src="assets/vendors/charts/sparkline/jquery.sparkline.js"></script>
+<!-- Sparkline Chart -->
+<script src="{{ asset('assets/vendors/charts/sparkline/jquery.sparkline.js') }}"></script>
 
-    <!--Home Script-->
-    <script src="assets/js/home.js"></script>
+<!-- Home Script -->
+<script src="{{ asset('assets/js/home.js') }}"></script>
 
-    <!-- Main Js -->
-    <script src="assets/js/main.js"></script>
+<!-- Main Js -->
+<script src="{{ asset('assets/js/main.js') }}"></script>
+
 
     @yield('js')
 

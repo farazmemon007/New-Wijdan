@@ -47,29 +47,34 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    route::get('/category',[CategoryController::class,'index'])->name('Category.home');
+    route::get('/category', [CategoryController::class, 'index'])->name('Category.home');
     Route::get('/category/delete/{id}', [CategoryController::class, 'delete'])->name('delete.category');
-    route::post('/category/stote',[CategoryController::class,'store'])->name("store.category");
+    route::post('/category/stote', [CategoryController::class, 'store'])->name("store.category");
 
-    route::get('/Brand',[BrandController::class,'index'])->name('Brand.home');
+    route::get('/Brand', [BrandController::class, 'index'])->name('Brand.home');
     Route::get('/Brand/delete/{id}', [BrandController::class, 'delete'])->name('delete.Brand');
-    route::post('/Brand/stote',[BrandController::class,'store'])->name("store.Brand");
+    route::post('/Brand/stote', [BrandController::class, 'store'])->name("store.Brand");
 
-    route::get('/Unit',[UnitController::class,'index'])->name('Unit.home');
+    route::get('/Unit', [UnitController::class, 'index'])->name('Unit.home');
     Route::get('/Unit/delete/{id}', [UnitController::class, 'delete'])->name('delete.Unit');
-    route::post('/Unit/stote',[UnitController::class,'store'])->name("store.Unit");
+    route::post('/Unit/stote', [UnitController::class, 'store'])->name("store.Unit");
 
-    route::get('/subcategory',[SubcategoryController::class,'index'])->name('subcategory.home');
+    route::get('/subcategory', [SubcategoryController::class, 'index'])->name('subcategory.home');
     Route::get('/subcategory/delete/{id}', [SubcategoryController::class, 'delete'])->name('delete.subcategory');
-    route::post('/subcategory/stote',[SubcategoryController::class,'store'])->name("store.subcategory");
+    route::post('/subcategory/stote', [SubcategoryController::class, 'store'])->name("store.subcategory");
 
 
 
-    Route::get('/Product', [ProductController::class, 'product'])->name('product')->middleware('permission:View Product');  
+    Route::get('/Product', [ProductController::class, 'product'])->name('product')->middleware('permission:View Product');
+    Route::get('/create_prodcut', [ProductController::class, 'view_store'])->name('store')->middleware('permission:Create Product');
+
     Route::post('/store-product', [ProductController::class, 'store_product'])->name('store-product');
     Route::put('/product/update/{id}', [ProductController::class, 'update'])->name('product.update');
-    Route::get('/fetch-subcategories', [ProductController::class,'fetchSubCategories'])->name('fetch-subcategories');
-    
+    Route::get('/get-subcategories/{category_id}', [ProductController::class, 'getSubcategories'])->name('fetch-subcategories');
+    Route::get('/generate-barcode-image', [ProductController::class, 'generateBarcode'])->name('generate-barcode-image');
+
+
+
     Route::get('/products/{id}/edit', [ProductController::class, 'edit'])->name('products.edit');
 
     Route::get('/barcode/{id}', [ProductController::class, 'barcode'])->name('product.barcode');
@@ -137,22 +142,22 @@ Route::middleware('auth')->group(function () {
 
     // products
 
-    route::get('/Purchase',[PurchaseController::class,'index'])->name('Purchase.home');
-    route::get('/add/Purchase',[PurchaseController::class,'add_purchase'])->name('add_purchase');
-    route::post('/Purchase/stote',[PurchaseController::class,'store'])->name("store.Purchase");
+    route::get('/Purchase', [PurchaseController::class, 'index'])->name('Purchase.home');
+    route::get('/add/Purchase', [PurchaseController::class, 'add_purchase'])->name('add_purchase');
+    route::post('/Purchase/stote', [PurchaseController::class, 'store'])->name("store.Purchase");
     Route::get('/purchase/{id}/edit', [PurchaseController::class, 'edit'])->name('purchase.edit');
     Route::put('/purchase/{id}', [PurchaseController::class, 'update'])->name('purchase.update');
     Route::delete('/purchase/{id}', [PurchaseController::class, 'destroy'])->name('purchase.destroy');
 
+    Route::get('/search-products', [ProductController::class, 'searchProducts'])->name('search-products');
 
     // Route::get('/fetch-product', [PurchaseController::class, 'fetchProduct'])->name('item.search');
 
     // Route::post('/fetch-item-details', [PurchaseController::class, 'fetchItemDetails']);
-    Route::get('/search-products', [ProductController::class, 'searchProducts'])->name('search-products');
     // Route::get('/Purchase/create', function () {
     //     return view('admin_panel.purchase.add_purchase');
     // });
     // Route::get('/get-items-by-category/{categoryId}', [PurchaseController::class, 'getItemsByCategory'])->name('get-items-by-category');
     // Route::get('/get-product-details/{productName}', [ProductController::class, 'getProductDetails'])->name('get-product-details');
 });
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

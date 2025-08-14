@@ -9,35 +9,32 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
-    {
-      Schema::create('purchases', function (Blueprint $table) {
-    $table->id(); // Add primary key if not already
+    public function up(): void {
+   Schema::create('purchases', function (Blueprint $table) {
+            $table->id();
 
-    $table->text('invoice_no')->nullable();
-    $table->text('supplier')->nullable();
-    $table->text('purchase_date')->nullable();
-    $table->text('warehouse_id')->nullable();
-    $table->text('item_category')->nullable();
-    $table->text('item_name')->nullable();
-    $table->text('quantity')->nullable();
-    $table->text('price')->nullable();
-    $table->text('total')->nullable();
-    $table->text('note')->nullable();
-    $table->text('unit')->nullable();
-    $table->text('total_price')->nullable();
-    $table->text('discount')->nullable();
-    $table->text('Payable_amount')->nullable();
-    $table->text('paid_amount')->nullable();
-    $table->text('due_amount')->nullable();
-    $table->text('status')->nullable();
-    $table->text('is_return')->nullable();
+            $table->foreignId('branch_id');
+            $table->foreignId('warehouse_id');
+            $table->foreignId('vendor_id');
 
-    $table->timestamps();
-    $table->softDeletes();
-});
+            $table->date('purchase_date')->nullable();
+            $table->string('invoice_no')->nullable();
+            $table->text('note')->nullable();
 
+            // Totals
+            $table->decimal('subtotal',   12, 2)->default(0);
+            $table->decimal('discount',   12, 2)->default(0);
+            $table->decimal('extra_cost', 12, 2)->default(0);
+            $table->decimal('net_amount', 12, 2)->default(0);
+            $table->decimal('paid_amount',12, 2)->default(0);
+            $table->decimal('due_amount', 12, 2)->default(0);
+
+            $table->timestamps();
+            $table->softDeletes();
+        });
     }
+
+    
 
     /**
      * Reverse the migrations.

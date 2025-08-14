@@ -9,25 +9,27 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-     public function up(): void {
-   Schema::create('warehouses', function (Blueprint $table) {
+    public function up(): void
+    {
+         Schema::create('stocks', function (Blueprint $table) {
             $table->id();
+
             $table->foreignId('branch_id');
-            $table->string('warehouse_name');
-            $table->unsignedBigInteger('creater_id')->nullable();
-            $table->string('location')->nullable();
-            $table->text('remarks')->nullable();
+            $table->foreignId('warehouse_id');
+            $table->foreignId('product_id');
+
+            $table->integer('qty')->default(0);
+
             $table->timestamps();
-            $table->softDeletes();
-            $table->index('creater_id');
+
+            $table->unique(['branch_id', 'warehouse_id', 'product_id'], 'stocks_unique_triplet');
         });
     }
-
     /**
      * Reverse the migrations.
      */
     public function down(): void
     {
-        Schema::dropIfExists('warehouses');
+        Schema::dropIfExists('stocks');
     }
 };
