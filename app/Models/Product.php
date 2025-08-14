@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Category;
 use App\Models\Subcategory;
+use App\Models\Stock;
+
 class Product extends Model
 {
     use HasFactory, SoftDeletes;
@@ -34,6 +36,10 @@ public function sub_category_relation()
     public function brand()
 {
     return $this->belongsTo(Brand::class, 'brand_id');
+}
+    public function stock()
+{
+    return $this->hasOne(Stock::class);
 }
 
 

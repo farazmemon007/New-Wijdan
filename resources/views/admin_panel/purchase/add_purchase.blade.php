@@ -3,19 +3,19 @@
 @extends('admin_panel.layout.app')
 <style>
     .searchResults {
-    position: absolute;
-    z-index: 9999;
-    width: 100%;
-    max-height: 200px;
-    overflow-y: auto;
-    background: #fff;
-    border: 1px solid #ddd;
-}
-.search-result-item.active {
-    background: #007bff;
-    color: white;
-}
+        position: absolute;
+        z-index: 9999;
+        width: 100%;
+        max-height: 200px;
+        overflow-y: auto;
+        background: #fff;
+        /* border: 1px solid #ddd; */
+    }
 
+    .search-result-item.active {
+        background: #007bff;
+        color: white;
+    }
 </style>
 @section('content')
     <div class="main-content">
@@ -154,7 +154,8 @@
                                                                         <option disabled selected>Select One</option>
 
                                                                         @foreach ($Vendor as $item)
-                                                                            <option value="{{$item->id}}">{{ $item->name }}</option>
+                                                                            <option value="{{ $item->id }}">
+                                                                                {{ $item->name }}</option>
                                                                         @endforeach
                                                                     </select>
                                                                 </div>
@@ -179,11 +180,11 @@
                                                                     </select>
                                                                 </div>
 
-                                                                
+
                                                                 <div class="col-xl-6 col-sm-6 mt-3">
                                                                     <label><i class="bi bi-card-text text-primary me-1"></i>
                                                                         Job No & Description</label>
-                                                                    <input name="job_description" type="text"
+                                                                    <input name="note" type="text"
                                                                         class="form-control">
                                                                 </div>
                                                                 <div class="col-xl-6 col-sm-6 mt-3">
@@ -224,7 +225,8 @@
                                                                 style="max-height: 300px; overflow-y: auto;">
                                                                 <tr>
                                                                     <td>
-                                                                        <input type="hidden" name="product_id[]" class="product_id">
+                                                                        <input type="hidden" name="product_id[]"
+                                                                            class="product_id">
                                                                         <input type="text"
                                                                             class="form-control productSearch"
                                                                             placeholder="Enter product name..."
@@ -251,7 +253,7 @@
                                                                     <td>
                                                                         <input type="number" step="0.01"
                                                                             name="price[]" class="form-control price"
-                                                                            value="" readonly>
+                                                                            value="">
                                                                     </td>
 
                                                                     <!-- Per-item Discount (PKR, editable) -->
@@ -263,7 +265,7 @@
 
                                                                     <td class="qty">
                                                                         <input type="number" name="qty[]"
-                                                                            class="form-control quantity" value="1"
+                                                                            class="form-control quantity" value=""
                                                                             min="1">
                                                                     </td>
 
@@ -283,69 +285,7 @@
 
                                                         </table>
                                                     </div>
-                                                    {{-- <div class="container">
-                                                        <h3>Transport & Vehicle Details</h3>
-                                                        <hr>
-
-                                                        <!-- Row 1 -->
-                                                        <div class="row mb-3 mt-3">
-                                                            <div class="col-md-4">
-                                                                <label><i
-                                                                        class="fas fa-truck-moving me-1"></i>&nbsp;Transport</label>
-                                                                <select name="transport" id="supplierSelect"
-                                                                    class="form-control">
-                                                                    <option disabled selected>Select Transport Company
-                                                                    </option>
-                                                                    @foreach ($Transports as $Supplier)
-                                                                <option value="{{ $Supplier->company_name }}">
-                                                                    {{ $Supplier->company_name }}
-                                                                </option>
-                                                            @endforeach
-                                                                </select>
-                                                            </div>
-
-
-                                                            <div class="col-md-4">
-                                                                <label><i class="fas fa-file-alt me-1"></i>&nbsp;Bilti
-                                                                    Number</label>
-                                                                <input type="text" name="bilti_number"
-                                                                    class="form-control" placeholder="Enter Bilti Number">
-                                                            </div>
-
-                                                            <div class="col-md-4">
-                                                                <label><i class="fas fa-user me-1"></i>&nbsp;Driver
-                                                                    Name</label>
-                                                                <input type="text" name="driver_name"
-                                                                    class="form-control"
-                                                                    placeholder="Enter Driver's Name">
-                                                            </div>
-                                                        </div>
-
-                                                        <!-- Row 2 -->
-                                                        <div class="row mb-3">
-                                                            <div class="col-md-4">
-                                                                <label><i class="fas fa-id-badge me-1"></i>&nbsp;Truck
-                                                                    Number</label>
-                                                                <input type="text" name="truck_no"
-                                                                    class="form-control" placeholder="e.g. TRK-1234">
-                                                            </div>
-
-                                                            <div class="col-md-4">
-                                                                <label><i class="fas fa-phone me-1"></i>&nbsp;Driver
-                                                                    Phone</label>
-                                                                <input type="text" name="driver_phone"
-                                                                    class="form-control" placeholder="03XX-XXXXXXX">
-                                                            </div>
-
-                                                            <div class="col-md-4">
-                                                                <label><i class="fas fa-info-circle me-1"></i>&nbsp;Vehicle
-                                                                    Description</label>
-                                                                <textarea name="vehicle_description" class="form-control" placeholder="Type vehicle details here..."></textarea>
-                                                            </div>
-                                                        </div>
-                                                    </div> --}}
-                                                    <!-- ===== SUMMARY / DISCOUNT / NET ===== -->
-                                                    <!-- ===== Summary (Totals) ===== -->
+                                                  
                                                     <div class="row g-3 mt-3">
                                                         <div class="col-md-3">
                                                             <label>Subtotal</label>
@@ -377,9 +317,11 @@
 
 
 
-
+{{-- 
                                                     <button type="submit" class="btn btn-primary w-100 mt-4">Submit
-                                                        Purchase</button>
+                                                        Purchase</button> --}}
+                                                        <button type="button" id="submitBtn" class="btn btn-primary">Submit</button>
+
                                                 </form>
                                             </div>
                                         </div>
@@ -559,6 +501,24 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.querySelector("form[action='{{ route('store.Purchase') }}']"); 
+    const submitBtn = document.getElementById("submitBtn");
+
+    // Enter key se form submit disable
+    form.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+        }
+    });
+
+    // Sirf button click pe submit
+    submitBtn.addEventListener("click", function () {
+        form.submit();
+    });
+});
+</script>
 
     {{-- Success & Error Messages --}}
     @if (session('success'))
@@ -572,7 +532,7 @@
         </script>
     @endif
 
-    
+
     @if ($errors->any())
         <script>
             Swal.fire({
@@ -587,11 +547,11 @@
     {{-- Cancel Button Confirmation --}}
     <script>
         // Prevent Enter key from submitting form in product search
-$(document).on('keydown', '.productSearch', function(e) {
-    if (e.key === 'Enter') {
-        e.preventDefault(); // stops form submission
-    }
-});
+        $(document).on('keydown', '.productSearch', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault(); // stops form submission
+            }
+        });
 
         document.addEventListener('DOMContentLoaded', function() {
             const cancelBtn = document.getElementById('cancelBtn');
@@ -651,16 +611,18 @@ $(document).on('keydown', '.productSearch', function(e) {
             function appendBlankRow() {
                 const newRow = `
       <tr>
-        <td>
-          <input type="text" name="product_id[]" class="form-control productSearch" placeholder="Enter product name..." autocomplete="off">
-          <ul class="searchResults list-group mt-1"></ul>
-        </td>
+        
+         <td>
+        <input type="hidden" name="product_id[]" class="product_id">
+        <input type="text" class="form-control productSearch" placeholder="Enter product name..." autocomplete="off">
+        <ul class="searchResults list-group mt-1"></ul>
+    </td>
         <td class="item_code border"><input type="text" name="item_code[]" class="form-control" readonly></td>
         <td class="uom border"><input type="text" name="uom[]" class="form-control" readonly></td>
         <td class="unit border"><input type="text" name="unit[]" class="form-control" readonly></td>
-        <td><input type="number" step="0.01" name="price[]" class="form-control price" value="" readonly></td>
+        <td><input type="number" step="0.01" name="price[]" class="form-control price" value="1" ></td>
         <td><input type="number" step="0.01" name="item_disc[]" class="form-control item_disc" value=""></td>
-        <td class="qty"><input type="number" name="qty[]" class="form-control quantity" value="1" min="1"></td>
+        <td class="qty"><input type="number" name="qty[]" class="form-control quantity" value="" min="1"></td>
         <td class="total border"><input type="text" name="total[]" class="form-control row-total" readonly></td>
         <td><button type="button" class="btn btn-sm btn-danger remove-row">X</button></td>
       </tr>`;

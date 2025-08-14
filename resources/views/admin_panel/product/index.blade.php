@@ -38,6 +38,7 @@
                         <th>Item Name</th>
                         <th>Unit</th>
                         <th>Price</th>
+                        <th>Stock</th>
                         <th>Alert Qty</th>
                         <th class="text-center">Brand Name</th>
                         <th class="text-center">Action</th>
@@ -45,6 +46,7 @@
                 </thead>
                 <tbody>
                     @foreach($products as $key => $product)
+                    {{-- @dd($product->stock->qty) --}}
                     <tr>
                         <td>{{ $key + 1 }}</td>
                         <td class="fw-bold">{{ $product->item_code }}</td>
@@ -64,6 +66,7 @@
                         <td>{{ $product->item_name }}</td>
                         <td>{{ $product->unit_id ?? '-' }}</td>
                         <td>PKR {{ number_format($product->price) }}</td>
+                        <td>{{ $product->stock->qty ?? '- ' }}</td>
                         <td>{{ $product->alert_quantity }}</td>
                         <td>{{ $product->brand->name ?? '-' }}</td>
                         <td class="text-center">

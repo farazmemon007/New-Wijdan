@@ -25,10 +25,12 @@ class PurchaseController extends Controller
       $Warehouse = Warehouse::get();
          return view('admin_panel.purchase.add_purchase',compact('Vendor',"Warehouse",'Purchase'));
     }
+   
 
 
 public function store(Request $request)
 {
+    
     // dd($request->toArray());
     $validated = $request->validate([
         'invoice_no'     => 'nullable|string',
@@ -52,14 +54,22 @@ public function store(Request $request)
     ]);
 
     DB::transaction(function () use ($validated) {
+        
+       $lastInvoice = Purchase::latest()->value('invoice_no');
 
+    // Agar last invoice mila to +1 karo, warna start karo INV-00001
+    $nextInvoice = $lastInvoice 
+        ? 'INV-' . str_pad(((int) filter_var($lastInvoice, FILTER_SANITIZE_NUMBER_INT)) + 1, 5, '0', STR_PAD_LEFT)
+        : 'INV-00001';
+        
         // 1️⃣ Save main Purchase
         $purchase = Purchase::create([
+            
             'branch_id'     => Auth()->user()->id,
             'warehouse_id'  => $validated['warehouse_id'],
             'vendor_id'     => $validated['vendor_id'] ?? null,
             'purchase_date' => $validated['purchase_date'] ?? now(),
-            'invoice_no'    => $validated['invoice_no'] ?? null,
+             'invoice_no'    => $validated['invoice_no'] ?? $nextInvoice,
             'note'          => $validated['note'] ?? null,
             'subtotal'      => 0,
             'discount'      => 0,
