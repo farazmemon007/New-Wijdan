@@ -31,6 +31,10 @@
                                 <td>
                                     <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#vendorModal" onclick="editVendor('{{ $v->id }}','{{ $v->name }}','{{ $v->phone }}','{{ $v->address }}')">Edit</button>
                                     <a href="{{ url('vendor/delete/'.$v->id) }}" class="btn btn-sm btn-danger" onclick="return confirm('Delete?')">Delete</a>
+                                    <a href="{{ url('vendors-ledger') }}" class="btn btn-sm btn-danger">Ledger</a>
+                                    <a href="{{ route('vendor.payments') }}" class="btn btn-sm btn-danger">payments</a>
+                                    <a href="{{ url('vendor/bilties') }}" class="btn btn-sm btn-danger">builty</a>
+                              
                                 </td>
                             </tr>
                             @endforeach

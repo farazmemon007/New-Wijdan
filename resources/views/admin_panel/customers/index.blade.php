@@ -19,6 +19,8 @@
   <a href="{{ route('customers.inactive') }}" class="btn btn-secondary mb-3 float-end">View Inactive Customers</a>
 
     <a href="{{ route('customers.create') }}" class="btn btn-primary mb-3">+ Add New Customer</a>
+    <a href="{{ route('customers.ledger') }}" class="btn btn-primary mb-3">Ledger</a>
+    <a href="{{ route('customer.payments') }}" class="btn btn-primary mb-3">payment</a>
 
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>

@@ -1,34 +1,35 @@
 <?php
 
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\BrandController;
-use App\Http\Controllers\UnitController;
-use App\Http\Controllers\SubcategoryController;
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\WarehouseController;
-use App\Http\Controllers\VendorController;
-use App\Http\Controllers\CustomerController;
-use App\Http\Controllers\BranchController;
-use App\Http\Controllers\ZoneController;
-use App\Http\Controllers\SalesOfficerController;
-use App\Http\Controllers\PurchaseController;
-use App\Http\Controllers\UserController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SaleController;
+use App\Http\Controllers\UnitController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\ZoneController;
+use App\Http\Controllers\BrandController;
+use App\Http\Controllers\BranchController;
+use App\Http\Controllers\VendorController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\PurchaseController;
+use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\SubcategoryController;
+use App\Http\Controllers\SalesOfficerController;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
-*/
+    /*
+    |--------------------------------------------------------------------------
+    | Web Routes
+    |--------------------------------------------------------------------------
+    |
+    | Here is where you can register web routes for your application. These
+    | routes are loaded by the RouteServiceProvider and all of them will
+    | be assigned to the "web" middleware group. Make something great!
+    |
+    */
 
 Route::get('/home', [HomeController::class, 'index'])->middleware('auth')->name('home');
 
@@ -63,8 +64,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/subcategory/delete/{id}', [SubcategoryController::class, 'delete'])->name('delete.subcategory');
     route::post('/subcategory/stote', [SubcategoryController::class, 'store'])->name("store.subcategory");
 
-
-
     Route::get('/Product', [ProductController::class, 'product'])->name('product')->middleware('permission:View Product');
     Route::get('/create_prodcut', [ProductController::class, 'view_store'])->name('store')->middleware('permission:Create Product');
 
@@ -73,15 +72,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/get-subcategories/{category_id}', [ProductController::class, 'getSubcategories'])->name('fetch-subcategories');
     Route::get('/generate-barcode-image', [ProductController::class, 'generateBarcode'])->name('generate-barcode-image');
 
-
-
     Route::get('/products/{id}/edit', [ProductController::class, 'edit'])->name('products.edit');
 
     Route::get('/barcode/{id}', [ProductController::class, 'barcode'])->name('product.barcode');
 
 
     // Customer Routes
-
 
     Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
     Route::get('/customers/create', [CustomerController::class, 'create'])->name('customers.create');
@@ -95,11 +91,19 @@ Route::middleware('auth')->group(function () {
     Route::get('/customers/inactive', [CustomerController::class, 'inactiveCustomers'])->name('customers.inactive');
     Route::get('/customers/inactive/{id}', [CustomerController::class, 'markInactive'])->name('customers.markInactive');
     Route::get('customers/toggle-status/{id}', [CustomerController::class, 'toggleStatus'])->name('customers.toggleStatus');
+    Route::get('/customers/ledger', [CustomerController::class, 'customer_ledger'])->name('customers.ledger');
+    Route::get('/customer/payments', [CustomerController::class, 'customer_payments'])->name('customer.payments');
+    Route::post('/customer/payments', [CustomerController::class, 'store_customer_payment'])->name('customer.payments.store');
 
     // Vendor Routes
     Route::get('/vendor', [VendorController::class, 'index']);
     Route::post('/vendor/store', [VendorController::class, 'store']);
     Route::get('/vendor/delete/{id}', [VendorController::class, 'delete']);
+    Route::get('/vendors-ledger', [VendorController::class, 'vendors_ledger'])->name('vendors-ledger');
+    Route::get('/vendor/payments', [VendorController::class, 'vendor_payments'])->name('vendor.payments');
+    Route::post('/vendor/payments', [VendorController::class, 'store_vendor_payment'])->name('vendor.payments.store');
+    Route::get('/vendor/bilties', [VendorController::class, 'vendor_bilties'])->name('vendor.bilties');
+    Route::post('/vendor/bilties', [VendorController::class, 'store_vendor_bilty'])->name('vendor.bilties.store');
 
     // Warehouse Routes
     Route::get('/warehouse', [WarehouseController::class, 'index']);
@@ -148,16 +152,20 @@ Route::middleware('auth')->group(function () {
     Route::get('/purchase/{id}/edit', [PurchaseController::class, 'edit'])->name('purchase.edit');
     Route::put('/purchase/{id}', [PurchaseController::class, 'update'])->name('purchase.update');
     Route::delete('/purchase/{id}', [PurchaseController::class, 'destroy'])->name('purchase.destroy');
-
     Route::get('/search-products', [ProductController::class, 'searchProducts'])->name('search-products');
 
     // Route::get('/fetch-product', [PurchaseController::class, 'fetchProduct'])->name('item.search');
-
     // Route::post('/fetch-item-details', [PurchaseController::class, 'fetchItemDetails']);
     // Route::get('/Purchase/create', function () {
     //     return view('admin_panel.purchase.add_purchase');
     // });
     // Route::get('/get-items-by-category/{categoryId}', [PurchaseController::class, 'getItemsByCategory'])->name('get-items-by-category');
     // Route::get('/get-product-details/{productName}', [ProductController::class, 'getProductDetails'])->name('get-product-details');
+
+    Route::get('sale', [SaleController::class,'index'])->name('sale.index');
+    Route::get('sale/create', [SaleController::class,'addsale'])->name('sale.add');
+// Route::get('/products/search', [SaleController::class, 'searchProducts'])->name('products.search');
+ Route::get('/search-product-name', [SaleController::class, 'searchpname'])->name('search-product-name');
+Route::post('/sales/store', [SaleController::class, 'store'])->name('sales.store');
 });
 require __DIR__ . '/auth.php';

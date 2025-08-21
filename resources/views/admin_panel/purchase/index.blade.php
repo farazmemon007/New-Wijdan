@@ -9,48 +9,63 @@
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h3>Purchase</h3>
                         {{-- <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#purchaseModal" id="reset">Create</button> --}}
-                   <a class="btn btn-primary" href="{{ route('add_purchase') }}">add purchase</a>
+                   <a class="btn btn-primary" href="{{ route('add_purchase') }}">Add purchase</a>
 
                     </div>
 
                     <div class="border mt-1 shadow rounded" style="background-color: white;">
                         <div class="col-lg-12 m-auto">
                             <div class="table-responsive mt-5 mb-5">
-                                <table id="purchase-table" class="table">
-                                    <thead class="text-center">
-                                        <tr>
-                                            <th class="text-center">ID</th>
-                                            <th class="text-center">Invoice No</th>
-                                            <th class="text-center">Supplier</th>
-                                            <th class="text-center">Purchase Date</th>
-                                            <th class="text-center">Warehouse</th>
-                                            <th class="text-center">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="text-center">
-                                        @foreach ($Purchase as $purchase)
-                                            <tr>
-                                                <td class="id">{{ $purchase->id }}</td>
-                                                <td class="invoice_no">{{ $purchase->invoice_no }}</td>
-                                                <td class="supplier">{{ $purchase->supplier }}</td>
-                                                <td class="purchase_date">{{ $purchase->purchase_date }}</td>
-                                                <td class="warehouse_id">{{ $purchase->warehouse_id }}</td>
-                                               <td>
-    <!-- Edit Button -->
-    <a href="{{ route('purchase.edit', $purchase->id) }}" class="btn btn-primary btn-sm">Edit</a>
+                              <table id="purchase-table" class="table">
+    <thead class="text-center" style="background:#add8e6">
+        <tr>
+            <th>ID</th>
+            <th>Branch</th>
+            <th>Warehouse</th>
+            <th>Vendor</th>
+            <th>Invoice No</th>
+            <th>Note</th>
+            <th>Subtotal</th>
+            <th>Discount</th>
+            <th>Extra Cost</th>
+            <th>Net Amount</th>
+            <th>Paid</th>
+            <th>Due</th>
+            <th>Purchase Date</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody class="text-center">
+        @foreach ($Purchase as $purchase)
+            <tr>
+                <td>{{ $purchase->id }}</td>
+      <td>{{ $purchase->branch->name ?? 'N/A' }}</td>
+                <td>{{ $purchase->warehouse->warehouse_name ?? 'N/A' }}</td>
+                <td>{{ $purchase->vendor->name ?? 'N/A' }}</td>
+                <td>{{ $purchase->invoice_no }}</td>
+                <td>{{ $purchase->note }}</td>
+                <td>{{ $purchase->subtotal }}</td>
+                <td>{{ $purchase->discount }}</td>
+                <td>{{ $purchase->extra_cost }}</td>
+                <td>{{ $purchase->net_amount }}</td>
+                <td>{{ $purchase->paid_amount }}</td>
+                <td>{{ $purchase->due_amount }}</td>
+                <td>{{ $purchase->purchase_date }}</td>
+                <td>
+                    <a href="{{ route('purchase.edit', $purchase->id) }}" class="btn  btn-sm" style="background:#add8e6">Edit</a>
+                    {{-- 
+                    <form action="{{ route('purchase.destroy', $purchase->id) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Are you sure you want to delete this purchase?');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    </form> 
+                    --}}
+                </td>
+            </tr>
+        @endforeach
+    </tbody>
+</table>
 
-    <!-- Delete Button -->
-    {{-- <form action="{{ route('purchase.destroy', $purchase->id) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Are you sure you want to delete this purchase?');">
-        @csrf
-        @method('DELETE')
-        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-    </form> --}}
-</td>
-
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
                             </div>
                         </div>
                     </div>
