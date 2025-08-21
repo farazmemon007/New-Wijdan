@@ -285,7 +285,7 @@
 
                                                         </table>
                                                     </div>
-                                                  
+                                                   
                                                     <div class="row g-3 mt-3">
                                                         <div class="col-md-3">
                                                             <label>Subtotal</label>
