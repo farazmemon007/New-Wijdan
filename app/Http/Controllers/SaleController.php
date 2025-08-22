@@ -36,10 +36,8 @@ public function searchpname(Request $request)
 {
     $q = $request->get('q');
 
-    $products = Product::with('brand', 'discount')
-        ->whereHas('discounts', function($query) {
-    $query->where('status', 1);
-})
+    $products = Product::with(['brand', 'activeDiscount'])
+        ->whereHas('activeDiscount') // only products with active discount
         ->where(function ($query) use ($q) {
             $query->where('item_name', 'like', "%{$q}%")
                   ->orWhere('item_code', 'like', "%{$q}%")
@@ -49,6 +47,8 @@ public function searchpname(Request $request)
 
     return response()->json($products);
 }
+
+
 
 
 

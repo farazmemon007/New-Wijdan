@@ -18,15 +18,17 @@ class Product extends Model
     //     'opening_carton_quantity', 'carton_quantity', 'loose_pieces', 'pcs_in_carton',
     //     'wholesale_price', 'retail_price', 'initial_stock', 'alert_quantity'
     // ];
-    public function discount()
+  // app/Models/Product.php
+
+// app/Models/Product.php
+
+public function activeDiscount()
 {
-    return $this->hasOne(ProductDiscount::class, 'product_id');
+    return $this->hasOne(ProductDiscount::class, 'product_id')
+                ->where('status', 1); // only active discount
 }
 
-public function discounts()
-{
-    return $this->hasMany(ProductDiscount::class, 'product_id');
-}
+
 
 
 public function category_relation()
