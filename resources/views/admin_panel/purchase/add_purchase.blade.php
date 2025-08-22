@@ -290,24 +290,24 @@
                                                         <div class="col-md-3">
                                                             <label>Subtotal</label>
                                                             <input type="text" id="subtotal" class="form-control"
-                                                                value="0" readonly>
+                                                                value="0" name="subtotal" readonly>
                                                         </div>
 
                                                         <div class="col-md-3">
                                                             <label>Discount (Overall)</label>
                                                             <input type="number" step="0.01" id="overallDiscount"
-                                                                class="form-control" value="0">
+                                                                class="form-control" name="discount" value="0">
                                                         </div>
 
                                                         <div class="col-md-3">
                                                             <label>Extra Cost</label>
                                                             <input type="number" step="0.01" id="extraCost"
-                                                                class="form-control" value="0">
+                                                                class="form-control" name="extra_cost" value="0">
                                                         </div>
 
                                                         <div class="col-md-3">
                                                             <label>Net Amount</label>
-                                                            <input type="text" id="netAmount"
+                                                            <input type="text" id="netAmount"  name="net_amount" 
                                                                 class="form-control fw-bold" value="0" readonly>
                                                         </div>
                                                     </div>
@@ -688,16 +688,16 @@ document.addEventListener("DOMContentLoaded", function () {
                             const name = (p.item_name ?? '');
                             const id = (p.id ?? '');
                             html += `
-              <li class="list-group-item search-result-item"
-                  tabindex="0"
-                  data-product-id="${id}"
-                  data-product-name="${name}"
-                  data-product-uom="${brand}"
-                  data-product-unit="${unit}"
-                  data-product-code="${code}"
-                  data-price="${price}">
-                ${name} - ${code} - Rs. ${price}
-              </li>`;
+                            <li class="list-group-item search-result-item"
+                                tabindex="0"
+                                data-product-id="${id}"
+                                data-product-name="${name}"
+                                data-product-uom="${brand}"
+                                data-product-unit="${unit}"
+                                data-product-code="${code}"
+                                data-price="${price}">
+                                ${name} - ${code} - Rs. ${price}
+                            </li>`;
                         });
                         $box.html(html);
 

@@ -8,18 +8,25 @@
         @csrf
 
         <div class="row mb-3">
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <label>Customer ID:</label>
                 <input type="text" class="form-control" name="customer_id" readonly value="{{ $latestId }}">
             </div>
-            <div class="col-md-5">
+            <div class="col-md-3">
                 <label>Customer:</label>
                 <input type="text" class="form-control" name="customer_name" value="{{ old('customer_name') }}">
             </div>
-            <div class="col-md-5">
+            <div class="col-md-3">
                 <label>کسٹمر کا نام:</label>
                 <input type="text" class="form-control text-end" name="customer_name_ur" dir="rtl" value="{{ old('customer_name_ur') }}">
             </div>
+            <div class="col-md-3">
+                <label><strong>Customer Type :</strong></label>
+                <select class="form-control" name="customer_type">
+                    <option>Main Customer</option>
+                    <option>Walking Customer</option>
+                </select>
+             </div>
         </div>
 
         <div class="row mb-3">

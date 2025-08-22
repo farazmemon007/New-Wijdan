@@ -32,18 +32,24 @@ class SaleController extends Controller
 
 
 
-     public function searchpname(Request $request)
+public function searchpname(Request $request)
 {
     $q = $request->get('q');
 
-    $products = Product::with('brand')->where(function ($query) use ($q) {
+    $products = Product::with('brand', 'discount')
+        ->whereHas('discounts', function($query) {
+    $query->where('status', 1);
+})
+        ->where(function ($query) use ($q) {
             $query->where('item_name', 'like', "%{$q}%")
                   ->orWhere('item_code', 'like', "%{$q}%")
                   ->orWhere('barcode_path', 'like', "%{$q}%");
-        })->get();
+        })
+        ->get();
 
     return response()->json($products);
 }
+
 
 
 

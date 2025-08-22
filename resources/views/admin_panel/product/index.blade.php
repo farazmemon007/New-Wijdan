@@ -12,6 +12,11 @@
             <h5 class="mb-0 fw-bold">📦 Product List</h5>
             <small class="text-muted">Manage all products here</small>
         </div>
+        <div>
+                <button id="createDiscountBtn" class="btn btn-success btn-sm">
+        ➡ Create Discount
+    </button>
+        </div>
         @if(auth()->user()->can('Create Product') || auth()->user()->email === 'admin@admin.com')
             <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addProductModal">
                 ➕ Add Product
@@ -31,6 +36,7 @@
             <table id="productTable" class="table table-striped table-bordered align-middle nowrap" style="width:100%">
                 <thead class="table-light">
                     <tr>
+                          <th><input type="checkbox" id="selectAll"></th>
                         <th>#</th>
                         <th>Item Code</th>
                         <th>Image</th>
@@ -48,6 +54,7 @@
                     @foreach($products as $key => $product)
                     {{-- @dd($product->stock->qty) --}}
                     <tr>
+                           <td><input type="checkbox" class="selectProduct" value="{{ $product->id }}"></td>
                         <td>{{ $key + 1 }}</td>
                         <td class="fw-bold">{{ $product->item_code }}</td>
                         <td>
@@ -175,7 +182,32 @@
         </div>
     </div>
 </div>
+<script>
+$(document).ready(function() {
+    $('#productTable').DataTable();
 
+    // Select/Deselect all checkboxes
+    $('#selectAll').click(function() {
+        $('.selectProduct').prop('checked', this.checked);
+    });
+
+    // On "Create Discount" click
+    $('#createDiscountBtn').click(function() {
+        var selected = [];
+        $('.selectProduct:checked').each(function() {
+            selected.push($(this).val());
+        });
+
+        if(selected.length === 0){
+            alert('Please select at least one product.');
+            return;
+        }
+
+        // Redirect with product IDs as query param
+        window.location.href = "{{ route('discount.create') }}" + "?products=" + selected.join(',');
+    });
+});
+</script>
 <script>
 $(document).ready(function() {
     $('#productTable').DataTable({

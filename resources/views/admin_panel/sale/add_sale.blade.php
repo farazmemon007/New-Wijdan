@@ -103,7 +103,6 @@
                                                                 <tr class="text-center">
                                                                     <th>product</th>
                                                                     <th>Item Code</th>
-
                                                                     <th>Brand</th>
                                                                     <th>Unit</th>
                                                                     <th>Price</th>

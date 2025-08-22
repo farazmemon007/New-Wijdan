@@ -23,7 +23,6 @@
     <link rel="shortcut icon" type="image/x-icon" href="{{ asset('assets/images/favicon.png') }}">
 <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
-
 <link rel="stylesheet" href="{{ asset('assets/css/owl.carousel.min.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/css/owl.theme.default.min.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/css/font-awesome.min.css') }}">
@@ -258,11 +257,11 @@
                                     {{-- <a class="dropdown-item"> --}}
                                     {{-- <i class="ti-power-off text-dark mr-3"></i> --}}
                                      <form method="POST" action="{{ route('logout') }}">
-            @csrf
-            <button type="submit" class="dropdown-item">
-                <i class="ti-power-off text-dark mr-3"></i> Logout
-            </button>
-        </form>
+                                        @csrf
+                                        <button type="submit" class="dropdown-item">
+                                            <i class="ti-power-off text-dark mr-3"></i> Logout
+                                        </button>
+                                     </form>
                                 {{-- </a> --}}
                                 </div>
                             </li>
@@ -311,9 +310,7 @@
                                                         <div class="col-md-6">
                                                             <ul>
                                                                 <li class="nav-item"><a class="nav-link" href="{{route('Category.home')}}"><i class="menu_icon ti-alert"></i><span>Category</span></a></li>
- <li class="nav-item"><a class="nav-link" href="{{route('subcategory.home')}}"><i class="menu_icon ti-id-badge"></i><span>Sub Category</span></a></li>
-
-
+                                                                 <li class="nav-item"><a class="nav-link" href="{{route('subcategory.home')}}"><i class="menu_icon ti-id-badge"></i><span>Sub Category</span></a></li>
                                                                 <li class="nav-item"><a class="nav-link" href="{{url('warehouse')}}"><i class="menu_icon ti-alert"></i><span>warehouse</span></a></li>
                                                                 <li class="nav-item"><a class="nav-link" href="{{url('vendor')}}"><i class="menu_icon ti-alert"></i><span>vendor</span></a></li>
                                                                 <li class="nav-item"><a class="nav-link" href="{{url('customer')}}"><i class="menu_icon ti-alert"></i><span>customer</span></a></li>

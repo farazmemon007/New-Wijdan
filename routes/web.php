@@ -12,13 +12,16 @@ use App\Http\Controllers\BranchController;
 use App\Http\Controllers\VendorController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\VoucherController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\PurchaseController;
+use App\Http\Controllers\NarrationController;
 use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\SubcategoryController;
 use App\Http\Controllers\SalesOfficerController;
+use App\Http\Controllers\DiscountController;
 
     /*
     |--------------------------------------------------------------------------
@@ -64,17 +67,24 @@ Route::middleware('auth')->group(function () {
     Route::get('/subcategory/delete/{id}', [SubcategoryController::class, 'delete'])->name('delete.subcategory');
     route::post('/subcategory/stote', [SubcategoryController::class, 'store'])->name("store.subcategory");
 
-    Route::get('/Product', [ProductController::class, 'product'])->name('product')->middleware('permission:View Product');
-    Route::get('/create_prodcut', [ProductController::class, 'view_store'])->name('store')->middleware('permission:Create Product');
-
+    Route::get('/Product', [ProductController::class, 'product'])->name('product');
+    // Route::get('/Product', [ProductController::class, 'product'])->name('product')->middleware('permission:View Product');
+    Route::get('/create_prodcut', [ProductController::class, 'view_store'])->name('store');
+    // Route::get('/create_prodcut', [ProductController::class, 'view_store'])->name('store')->middleware('permission:Create Product');
     Route::post('/store-product', [ProductController::class, 'store_product'])->name('store-product');
     Route::put('/product/update/{id}', [ProductController::class, 'update'])->name('product.update');
     Route::get('/get-subcategories/{category_id}', [ProductController::class, 'getSubcategories'])->name('fetch-subcategories');
     Route::get('/generate-barcode-image', [ProductController::class, 'generateBarcode'])->name('generate-barcode-image');
-
     Route::get('/products/{id}/edit', [ProductController::class, 'edit'])->name('products.edit');
-
     Route::get('/barcode/{id}', [ProductController::class, 'barcode'])->name('product.barcode');
+
+Route::prefix('discount')->group(function() {
+    Route::get('/', [DiscountController::class, 'index'])->name('discount.index');
+    Route::get('/create', [DiscountController::class, 'create'])->name('discount.create');
+    Route::post('/store', [DiscountController::class, 'store'])->name('discount.store');
+    Route::post('/toggle-status/{id}', [DiscountController::class, 'toggleStatus'])->name('discount.toggleStatus');
+    Route::get('/barcode/{id}', [DiscountController::class, 'barcode'])->name('discount.barcode');
+});
 
 
     // Customer Routes
@@ -85,8 +95,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/customers/edit/{id}', [CustomerController::class, 'edit'])->name('customers.edit');
     Route::post('/customers/update/{id}', [CustomerController::class, 'update'])->name('customers.update');
     Route::get('/customers/delete/{id}', [CustomerController::class, 'destroy'])->name('customers.destroy');
-
-
     // New
     Route::get('/customers/inactive', [CustomerController::class, 'inactiveCustomers'])->name('customers.inactive');
     Route::get('/customers/inactive/{id}', [CustomerController::class, 'markInactive'])->name('customers.markInactive');
@@ -136,7 +144,6 @@ Route::middleware('auth')->group(function () {
     Route::get('zones/edit/{id}', [ZoneController::class, 'edit'])->name('zone.edit');
     Route::get('zones/delete/{id}', [ZoneController::class, 'destroy'])->name('zone.delete');
 
-
     //Sales Officer
     Route::get('sales-officers', [SalesOfficerController::class, 'index'])->name('sales.officer.index');
     Route::post('sales-officers/store', [SalesOfficerController::class, 'store'])->name('sales-officer.store');
@@ -164,8 +171,15 @@ Route::middleware('auth')->group(function () {
 
     Route::get('sale', [SaleController::class,'index'])->name('sale.index');
     Route::get('sale/create', [SaleController::class,'addsale'])->name('sale.add');
-// Route::get('/products/search', [SaleController::class, 'searchProducts'])->name('products.search');
- Route::get('/search-product-name', [SaleController::class, 'searchpname'])->name('search-product-name');
-Route::post('/sales/store', [SaleController::class, 'store'])->name('sales.store');
+ // Route::get('/products/search', [SaleController::class, 'searchProducts'])->name('products.search');
+    Route::get('/search-product-name', [SaleController::class, 'searchpname'])->name('search-product-name');
+    Route::post('/sales/store', [SaleController::class, 'store'])->name('sales.store');
+
+    // narratiions
+Route::get('/get-customers-by-type', [CustomerController::class, 'getByType']);
+
+Route::resource('narrations', NarrationController::class)->only(['index','store', 'destroy']);
+Route::get('vouchers/{type}', [VoucherController::class, 'index'])->name('vouchers.index');
+Route::post('vouchers/store', [VoucherController::class, 'store'])->name('vouchers.store'); 
 });
 require __DIR__ . '/auth.php';

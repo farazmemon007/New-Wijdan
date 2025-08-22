@@ -18,6 +18,17 @@ class Product extends Model
     //     'opening_carton_quantity', 'carton_quantity', 'loose_pieces', 'pcs_in_carton',
     //     'wholesale_price', 'retail_price', 'initial_stock', 'alert_quantity'
     // ];
+    public function discount()
+{
+    return $this->hasOne(ProductDiscount::class, 'product_id');
+}
+
+public function discounts()
+{
+    return $this->hasMany(ProductDiscount::class, 'product_id');
+}
+
+
 public function category_relation()
 {
     return $this->belongsTo(Category::class,'category_id');

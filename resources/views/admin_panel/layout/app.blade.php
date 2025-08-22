@@ -392,6 +392,58 @@
                                 </div>
                             </div>
                         </li>
+                             <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="menu_icon feather ft-clipboard"></i>
+                                <span class="menu-title">Vouchers</span>
+                                <i class="menu-arrow"></i>
+                            </a>
+                            <div class="submenu">
+                                <ul class="submenu-item">
+                                    {{--  <li class="nav-item">
+                                        <a class="nav-link" href="{{ route('view_all') }}">
+                                            <i class="fa-solid fa-money-bill-wave mr-2"></i>
+                                            <span>Char Of Accounts </span>
+                                        </a>
+                                    </li>  --}}
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="{{ route('vouchers.index', 'expense voucher') }}">
+                                            <i class="fa-solid fa-money-bill-wave mr-2"></i>
+                                            <span>Expense Voucher</span>
+                                        </a>
+                                    </li>
+
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="{{ route('vouchers.index', 'receipt voucher') }}">
+                                            <i class="fa-solid fa-wallet mr-2"></i>
+                                            <span>Receipts Voucher</span>
+                                        </a>
+                                    </li>
+
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="{{ route('vouchers.index', 'journal voucher') }}">
+                                            <i class="fa-solid fa-wallet mr-2"></i>
+                                            <span>Journal Voucher</span>
+                                        </a>
+                                    </li>
+
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="{{ route('vouchers.index', 'payment voucher') }}">
+                                            <i class="fa-solid fa-wallet mr-2"></i>
+                                            <span>Payment Voucher</span>
+                                        </a>
+                                    </li>
+
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="{{ route('vouchers.index', 'income voucher') }}">
+                                            <i class="fa-solid fa-wallet mr-2"></i>
+                                            <span>Income Voucher</span>
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </div>
+                        </li>
                         @if(auth()->user()->email === 'admin@admin.com')
                             <li class="nav-item">
                                 <a href="#" class="nav-link"><i class="menu_icon feather ft-clipboard"></i><span class="menu-title">User Managment</span><i class="menu-arrow"></i></a>

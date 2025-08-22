@@ -52,6 +52,7 @@ public function store(Request $request)
         'customer_id' => 'required|unique:customers',
         'customer_name' => 'nullable',
         'customer_name_ur' => 'nullable',
+        'customer_type' => 'nullable|string',
         'cnic' => 'nullable',
         'filer_type' => 'nullable',
         'zone' => 'nullable',
@@ -152,6 +153,7 @@ public function store_customer_payment(Request $request)
         'payment_method' => 'nullable|string',
         'payment_date' => 'required|date',
         'note' => 'nullable|string',
+      
     ]);
 
     $userId = Auth::id();
@@ -164,6 +166,7 @@ public function store_customer_payment(Request $request)
         'payment_method' => $request->payment_method,
         'payment_date' => $request->payment_date,
         'note' => $request->note,
+      
     ]);
 
     // Ledger update
@@ -191,6 +194,13 @@ public function store_customer_payment(Request $request)
     return back()->with('success', 'Payment to customer recorded and ledger updated.');
 }
 
+    public function getByType(Request $request)
+{
+    $type = $request->get('type');
 
+    $customers = Customer::where('customer_type',$type)->get(['id', 'customer_name']);
+
+    return response()->json(['customers' => $customers]);
+}
 }
 
