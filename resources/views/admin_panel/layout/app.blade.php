@@ -366,6 +366,7 @@
                                                             <ul>
                                                                 <li class="nav-item"><a class="nav-link" href="{{route('Unit.home')}}"><i class="menu_icon ion-ios-photos"></i><span>Units</span></a></li>
                                                                 <li class="nav-item"><a class="nav-link" href="{{url('sale')}}"><i class="menu_icon ion-ios-photos"></i><span>sales</span></a></li>
+                                                                <li class="nav-item"><a class="nav-link" href="{{url('narrations')}}"><i class="menu_icon ion-ios-photos"></i><span>narration</span></a></li>
                                                                 {{-- <li class="nav-item"><a class="nav-link" href="progressbar.html"><i class="menu_icon ion-ios-settings-strong"></i><span>Progressbar</span></a></li> --}}
                                                                 {{-- <li class="nav-item"><a class="nav-link" href="grid.html"><i class="menu_icon ti-layout-grid4"></i><span>Grid</span></a></li> --}}
                                                             </ul>
