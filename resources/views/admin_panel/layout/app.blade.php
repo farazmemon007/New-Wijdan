@@ -267,11 +267,11 @@
                                     {{-- <a class="dropdown-item"> --}}
                                     {{-- <i class="ti-power-off text-dark mr-3"></i> --}}
                                      <form method="POST" action="{{ route('logout') }}">
-            @csrf
-            <button type="submit" class="dropdown-item">
-                <i class="ti-power-off text-dark mr-3"></i> Logout
-            </button>
-        </form>
+                                        @csrf
+                                        <button type="submit" class="dropdown-item">
+                                            <i class="ti-power-off text-dark mr-3"></i> Logout
+                                        </button>
+                                    </form>
                                 {{-- </a> --}}
                                 </div>
                             </li>
@@ -319,16 +319,21 @@
                                                     <div class="row">
                                                         <div class="col-md-6">
                                                             <ul>
+
+                                                                <li class="nav-item"><a class="nav-link" href="{{route('Brand.home')}}"><i class="menu_icon ti-smallcap"></i><span>Brands</span></a></li>
+
                                                                 <li class="nav-item"><a class="nav-link" href="{{route('Category.home')}}"><i class="menu_icon ti-alert"></i><span>Category</span></a></li>
  <li class="nav-item"><a class="nav-link" href="{{route('subcategory.home')}}"><i class="menu_icon ti-id-badge"></i><span>Sub Category</span></a></li>
 
 
                                                                 <li class="nav-item"><a class="nav-link" href="{{url('warehouse')}}"><i class="menu_icon ti-alert"></i><span>warehouse</span></a></li>
+                                                                <li class="nav-item"><a class="nav-link" href="{{url('warehouse_stocks')}}"><i class="menu_icon ti-alert"></i><span>warehouse stock</span></a></li>
+                                                                <li class="nav-item"><a class="nav-link" href="{{url('stock_transfers')}}"><i class="menu_icon ti-alert"></i><span>Stock transfer   </span></a></li>
                                                                 <li class="nav-item"><a class="nav-link" href="{{url('vendor')}}"><i class="menu_icon ti-alert"></i><span>vendor</span></a></li>
-                                                                <li class="nav-item"><a class="nav-link" href="{{url('customer')}}"><i class="menu_icon ti-alert"></i><span>customer</span></a></li>
+                                                                <li class="nav-item"><a class="nav-link" href="{{url('customers')}}"><i class="menu_icon ti-alert"></i><span>customer</span></a></li>
                                                                 <li class="nav-item"><a class="nav-link" href="{{url('zone')}}"><i class="menu_icon ti-alert"></i><span>zone</span></a></li>
                                                                 <li class="nav-item"><a class="nav-link" href="{{url('sales-officers')}}"><i class="menu_icon ti-alert"></i><span>Sales Officer</span></a></li>
-                                                                <li class="nav-item"><a class="nav-link" href="{{url('transport')}}"><i class="menu_icon ti-alert"></i><span>Transport</span></a></li>
+                                                                {{--  <li class="nav-item"><a class="nav-link" href="{{url('transport')}}"><i class="menu_icon ti-alert"></i><span>Transport</span></a></li>  --}}
                                                                 {{-- <li class="nav-item"><a class="nav-link" href="accordion.html"><i class="menu_icon ti-layout-accordion-separated"></i><span>Accordion</span></a></li>
                                                                 <li class="nav-item"><a class="nav-link" href="buttons.html"><i class="menu_icon icon-focus"></i><span>Buttons</span></a></li>
                                                                 <li class="nav-item"><a class="nav-link" href="badges.html"><i class="menu_icon icon-ribbon"></i><span>Badges</span></a></li> --}}
@@ -356,7 +361,6 @@
                                                     <div class="row">
                                                         <div class="col-md-6">
                                                             <ul>
-                                                                <li class="nav-item"><a class="nav-link" href="{{route('Brand.home')}}"><i class="menu_icon ti-smallcap"></i><span>Brands</span></a></li>
                                                                 {{-- <li class="nav-item"><a class="nav-link" href="list-group.html"><i class="menu_icon ti-list"></i><span>List Group</span></a></li>
                                                                 <li class="nav-item"><a class="nav-link" href="modals.html"><i class="menu_icon ti-layers-alt"></i><span>Modals</span></a></li>
                                                                 <li class="nav-item"><a class="nav-link" href="pagination.html"><i class="menu_icon ion-android-more-horizontal"></i><span>Pagination</span></a></li> --}}
@@ -383,7 +387,7 @@
                                         <p class="category-heading">Products</p>
                                         <ul class="submenu-item">
                                             {{-- <li class="nav-item"><a class="nav-link" href="font-awesome.html"><i class="menu_icon ti-flag-alt"></i> <span>Font Awesome</span></a></li> --}}
-                                            {{-- <li class="nav-item"><a class="nav-link" href="themify.html"><i class="menu_icon ti-themify-favicon"></i><span>Themify</span></a></li> --}}
+                                            {{-- <li class="nav-item"><a class="nav-link" href="themify.html">  <i class="menu_icon ti-themify-favicon"></i><span>Themify</span></a></li> --}}
                                             {{-- <li class="nav-item"><a class="nav-link" href="ionicons.html"><i class="menu_icon ion-ionic"></i><span>Ionicons V2</span></a></li> --}}
                                         @if(auth()->user()->can('View Product') || auth()->user()->email === 'admin@admin.com')
                                             <li class="nav-item"><a class="nav-link" href="{{route('product')}}"><i class="menu_icon icon-basket"></i><span>Products</span></a></li>
@@ -402,12 +406,12 @@
                             </a>
                             <div class="submenu">
                                 <ul class="submenu-item">
-                                    {{--  <li class="nav-item">
+                                    <li class="nav-item">
                                         <a class="nav-link" href="{{ route('view_all') }}">
                                             <i class="fa-solid fa-money-bill-wave mr-2"></i>
                                             <span>Char Of Accounts </span>
                                         </a>
-                                    </li>  --}}
+                                    </li>
                                     <li class="nav-item">
                                         <a class="nav-link" href="{{ route('vouchers.index', 'expense voucher') }}">
                                             <i class="fa-solid fa-money-bill-wave mr-2"></i>

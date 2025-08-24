@@ -12,10 +12,6 @@ class CustomerLedger extends Model
         'admin_or_user_id',
         'previous_balance',
         'closing_balance',
-             'date',
-            'description',
-            'debit' ,
-            'credit' ,
     ];
 
     public function customer()

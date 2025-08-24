@@ -15,13 +15,16 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\VoucherController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\DiscountController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\NarrationController;
 use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\SubcategoryController;
+use App\Http\Controllers\AccountsHeadController;
 use App\Http\Controllers\SalesOfficerController;
-use App\Http\Controllers\DiscountController;
+use App\Http\Controllers\StockTransferController;
+use App\Http\Controllers\WarehouseStockController;
 
     /*
     |--------------------------------------------------------------------------
@@ -78,23 +81,27 @@ Route::middleware('auth')->group(function () {
     Route::get('/products/{id}/edit', [ProductController::class, 'edit'])->name('products.edit');
     Route::get('/barcode/{id}', [ProductController::class, 'barcode'])->name('product.barcode');
 
-Route::prefix('discount')->group(function() {
-    Route::get('/', [DiscountController::class, 'index'])->name('discount.index');
-    Route::get('/create', [DiscountController::class, 'create'])->name('discount.create');
-    Route::post('/store', [DiscountController::class, 'store'])->name('discount.store');
-    Route::post('/toggle-status/{id}', [DiscountController::class, 'toggleStatus'])->name('discount.toggleStatus');
-    Route::get('/barcode/{id}', [DiscountController::class, 'barcode'])->name('discount.barcode');
-});
+    Route::prefix('discount')->group(function() {
+        Route::get('/', [DiscountController::class, 'index'])->name('discount.index');
+        Route::get('/create', [DiscountController::class, 'create'])->name('discount.create');
+        Route::post('/store', [DiscountController::class, 'store'])->name('discount.store');
+        Route::post('/toggle-status/{id}', [DiscountController::class, 'toggleStatus'])->name('discount.toggleStatus');
+        Route::get('/barcode/{id}', [DiscountController::class, 'barcode'])->name('discount.barcode');
+    });
 
 
     // Customer Routes
 
-    Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
+   
+//Cutomer create 
+ Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
     Route::get('/customers/create', [CustomerController::class, 'create'])->name('customers.create');
     Route::post('/customers/store', [CustomerController::class, 'store'])->name('customers.store');
     Route::get('/customers/edit/{id}', [CustomerController::class, 'edit'])->name('customers.edit');
     Route::post('/customers/update/{id}', [CustomerController::class, 'update'])->name('customers.update');
     Route::get('/customers/delete/{id}', [CustomerController::class, 'destroy'])->name('customers.destroy');
+
+
     // New
     Route::get('/customers/inactive', [CustomerController::class, 'inactiveCustomers'])->name('customers.inactive');
     Route::get('/customers/inactive/{id}', [CustomerController::class, 'markInactive'])->name('customers.markInactive');
@@ -102,7 +109,10 @@ Route::prefix('discount')->group(function() {
     Route::get('/customers/ledger', [CustomerController::class, 'customer_ledger'])->name('customers.ledger');
     Route::get('/customer/payments', [CustomerController::class, 'customer_payments'])->name('customer.payments');
     Route::post('/customer/payments', [CustomerController::class, 'store_customer_payment'])->name('customer.payments.store');
+// web.php
+Route::get('/customer/ledger/{id}', [CustomerController::class, 'getCustomerLedger']);
 
+   
     // Vendor Routes
     Route::get('/vendor', [VendorController::class, 'index']);
     Route::post('/vendor/store', [VendorController::class, 'store']);
@@ -176,10 +186,13 @@ Route::prefix('discount')->group(function() {
     Route::post('/sales/store', [SaleController::class, 'store'])->name('sales.store');
 
     // narratiions
-Route::get('/get-customers-by-type', [CustomerController::class, 'getByType']);
+    Route::get('/get-customers-by-type', [CustomerController::class, 'getByType']);
+    Route::resource('warehouse_stocks', WarehouseStockController::class);
+    Route::resource('stock_transfers', StockTransferController::class);
 
-Route::resource('narrations', NarrationController::class)->only(['index','store', 'destroy']);
-Route::get('vouchers/{type}', [VoucherController::class, 'index'])->name('vouchers.index');
-Route::post('vouchers/store', [VoucherController::class, 'store'])->name('vouchers.store'); 
+    Route::resource('narrations', NarrationController::class)->only(['index','store', 'destroy']);
+    Route::get('vouchers/{type}', [VoucherController::class, 'index'])->name('vouchers.index');
+    Route::post('vouchers/store', [VoucherController::class, 'store'])->name('vouchers.store'); 
+  Route::get('/view_all', [AccountsHeadController::class, 'index'])->name('view_all');
 });
 require __DIR__ . '/auth.php';

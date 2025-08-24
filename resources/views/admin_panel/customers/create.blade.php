@@ -8,25 +8,18 @@
         @csrf
 
         <div class="row mb-3">
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label>Customer ID:</label>
                 <input type="text" class="form-control" name="customer_id" readonly value="{{ $latestId }}">
             </div>
-            <div class="col-md-3">
+            <div class="col-md-5">
                 <label>Customer:</label>
                 <input type="text" class="form-control" name="customer_name" value="{{ old('customer_name') }}">
             </div>
-            <div class="col-md-3">
+            <div class="col-md-5">
                 <label>کسٹمر کا نام:</label>
                 <input type="text" class="form-control text-end" name="customer_name_ur" dir="rtl" value="{{ old('customer_name_ur') }}">
             </div>
-            <div class="col-md-3">
-                <label><strong>Customer Type :</strong></label>
-                <select class="form-control" name="customer_type">
-                    <option>Main Customer</option>
-                    <option>Walking Customer</option>
-                </select>
-             </div>
         </div>
 
         <div class="row mb-3">
@@ -83,13 +76,13 @@
 
         <div class="row mb-4">
             <div class="col-md-6">
-                <label>Debit (Dr):</label>
-                <input type="number" class="form-control" name="debit" value="{{ old('debit') }}">
+                <label>opening balance (Dr):</label>
+                <input type="number" class="form-control" name="opening_balance" value="{{ old('opening_balance') }}">
             </div>
-            <div class="col-md-6">
+            {{--  <div class="col-md-6">
                 <label>Credit (Cr):</label>
                 <input type="number" class="form-control" name="credit" value="{{ old('credit') }}">
-            </div>
+            </div>  --}}
         </div>
 
         <div class="col-md-6 mb-4">

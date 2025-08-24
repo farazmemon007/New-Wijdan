@@ -18,6 +18,7 @@ class CreateCustomerPaymentsTable extends Migration
             $table->date('payment_date')->nullable();
             $table->text('note')->nullable();
             $table->timestamps();
+
             $table->foreign('customer_id')->references('id')->on('customers')->onDelete('cascade');
         });
     }

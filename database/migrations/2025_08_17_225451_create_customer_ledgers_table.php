@@ -17,6 +17,7 @@ class CreateCustomerLedgersTable extends Migration
             $table->decimal('previous_balance', 12, 2)->default(0);
             $table->decimal('closing_balance', 12, 2)->default(0);
             $table->timestamps();
+
             $table->foreign('customer_id')->references('id')->on('customers')->onDelete('cascade');
         });
     }
