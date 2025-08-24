@@ -184,6 +184,8 @@ Route::get('/customer/ledger/{id}', [CustomerController::class, 'getCustomerLedg
  // Route::get('/products/search', [SaleController::class, 'searchProducts'])->name('products.search');
     Route::get('/search-product-name', [SaleController::class, 'searchpname'])->name('search-product-name');
     Route::post('/sales/store', [SaleController::class, 'store'])->name('sales.store');
+// web.php
+Route::get('/warehouse-stock-quantity', [StockTransferController::class, 'getStockQuantity'])->name('warehouse.stock.quantity');
 
     // narratiions
     Route::get('/get-customers-by-type', [CustomerController::class, 'getByType']);

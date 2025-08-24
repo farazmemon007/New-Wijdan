@@ -67,4 +67,15 @@ class StockTransferController extends Controller
         // Optional: reverse the transfer if needed
         return back()->with('error', 'Deleting transfers not allowed.');
     }
+    public function getStockQuantity(Request $request)
+{
+    $stock = WarehouseStock::where('warehouse_id', $request->warehouse_id)
+        ->where('product_id', $request->product_id)
+        ->first();
+
+    return response()->json([
+        'quantity' => $stock ? $stock->quantity : 0
+    ]);
+}
+
 }

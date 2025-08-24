@@ -33,10 +33,10 @@
                 <label>Quantity</label>
                 <input type="number" name="quantity" value="{{ $warehouseStock->quantity }}" class="form-control" required>
             </div>
-            <div class="mb-3">
+            {{--  <div class="mb-3">
                 <label>Price</label>
                 <input type="number" step="0.01" name="price" value="{{ $warehouseStock->price }}" class="form-control">
-            </div>
+            </div>  --}}
             <div class="mb-3">
                 <label>Remarks</label>
                 <textarea name="remarks" class="form-control">{{ $warehouseStock->remarks }}</textarea>
