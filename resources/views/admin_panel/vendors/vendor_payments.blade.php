@@ -63,23 +63,38 @@
             <div class="modal-content">
                 <div class="modal-header"><h5 class="modal-title">Add Vendor Payment</h5></div>
                 <div class="modal-body">
-                    <div class="mb-2">
-                        <label>Vendor</label>
-                        <select name="vendor_id" class="form-control" required>
-                            <option value="">Select Vendor</option>
-                            @foreach($vendors as $vendor)
-                                <option value="{{ $vendor->id }}">{{ $vendor->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
+               <div class="mb-2">
+    <label>Vendor</label>
+    <select name="vendor_id" id="vendor_id" class="form-control" required>
+        <option value="">Select Vendor</option>
+        @foreach($vendors as $vendor)
+            <option value="{{ $vendor->id }}">{{ $vendor->name }}</option>
+        @endforeach
+    </select>
+</div>
+
+<div class="mb-2">
+    <label>Stock (Closing Balance)</label>
+    <input type="text" id="vendor_stock" class="form-control" readonly>
+</div>
+
                     <div class="mb-2">
                         <label>Payment Date</label>
                         <input type="date" name="payment_date" class="form-control" required>
                     </div>
-                    <div class="mb-2">
-                        <label>Amount</label>
-                        <input type="number" step="0.01" name="amount" class="form-control" required>
-                    </div>
+                  <div class="mb-2">
+    <label>Type</label>
+    <select name="adjustment_type" class="form-control" required>
+        <option value="minus">Minus (Payment)</option>
+        <option value="plus">Plus (Return / Advance)</option>
+    </select>
+</div>
+
+<div class="mb-2">
+    <label>Amount</label>
+    <input type="number" step="0.01" name="amount" class="form-control" required>
+</div>
+
                     <div class="mb-2">
                         <label>Payment Method</label>
                         <input type="text" name="payment_method" class="form-control" placeholder="e.g. Cash, Bank">
@@ -98,17 +113,26 @@
 </div>
 
 @endsection
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-@push('scripts')
 <script>
-function clearPaymentForm() {
-    $('#paymentModal select[name="vendor_id"]').val('');
-    $('#paymentModal input[name="payment_date"]').val('');
-    $('#paymentModal input[name="amount"]').val('');
-    $('#paymentModal input[name="payment_method"]').val('');
-    $('#paymentModal textarea[name="note"]').val('');
-}
-
-$('.datanew').DataTable();
+$(document).ready(function () {
+    $('#vendor_id').on('change', function () {
+        var vendorId = $(this).val();
+        if (vendorId) {
+            $.ajax({
+                url: '/get-vendor-balance/' + vendorId,
+                type: 'GET',
+                success: function (data) {
+                    $('#vendor_stock').val(data.closing_balance);
+                },
+                error: function () {
+                    $('#vendor_stock').val('0');
+                }
+            });
+        } else {
+            $('#vendor_stock').val('');
+        }
+    });
+});
 </script>
-@endpush

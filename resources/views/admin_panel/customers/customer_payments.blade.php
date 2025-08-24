@@ -75,7 +75,14 @@
     <input type="text" id="customer_balance" class="form-control" readonly>
 </div>
 
-
+<!-- Adjustment Type -->
+<div class="mb-2">
+    <label>Adjustment Type</label>
+    <select name="adjustment_type" class="form-control" required>
+        <option value="minus">- Minus (Payment Received)</option>
+        <option value="plus">+ Plus (Outstanding Increased)</option>
+    </select>
+</div>
                     <div class="mb-2"><label>Payment Date</label><input type="date" name="payment_date" class="form-control" required></div>
                     <div class="mb-2"><label>Amount</label><input type="number" name="amount" step="0.01" class="form-control" required></div>
                     <div class="mb-2"><label>Payment Method</label><input type="text" name="payment_method" class="form-control" placeholder="e.g. Cash, Bank"></div>
@@ -88,7 +95,6 @@
 </div>
 <script>
     function fetchCustomerBalance(customerId) {
-alert(customerId)
     $.ajax({
         url: '/customer/ledger/' + customerId,
         method: 'GET',

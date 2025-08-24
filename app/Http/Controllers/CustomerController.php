@@ -147,6 +147,7 @@ public function store_customer_payment(Request $request)
     $request->validate([
         'customer_id' => 'required|exists:customers,id',
         'amount' => 'required|numeric|min:0',
+        'adjustment_type' => 'required|in:plus,minus',
         'payment_method' => 'nullable|string',
         'payment_date' => 'required|date',
         'note' => 'nullable|string',
@@ -154,7 +155,7 @@ public function store_customer_payment(Request $request)
 
     $userId = Auth::id();
 
-    // Save payment
+    // Save the payment
     CustomerPayment::create([
         'customer_id' => $request->customer_id,
         'admin_or_user_id' => $userId,
@@ -164,35 +165,26 @@ public function store_customer_payment(Request $request)
         'note' => $request->note,
     ]);
 
-    // Fetch last ledger entry
-    $ledger = CustomerLedger::where('customer_id', $request->customer_id)
-                ->latest()
-                ->first();
+    // Ledger update logic
+    $ledger = CustomerLedger::where('customer_id', $request->customer_id)->latest()->first();
+    $prevBalance = $ledger->closing_balance ?? 0;
 
-    // Agar ledger record exist karta ho
-    if ($ledger) {
-        $prevBalance = $ledger->closing_balance;
+    // Determine new closing balance based on adjustment type
+    $newBalance = $request->adjustment_type === 'plus'
+        ? $prevBalance + $request->amount
+        : $prevBalance - $request->amount;
 
-        if ($request->amount > $prevBalance) {
-            return back()->with('error', 'Amount exceeds available balance.');
-        }
+    // Insert new ledger entry
+    CustomerLedger::create([
+        'customer_id' => $request->customer_id,
+        'admin_or_user_id' => $userId,
+        'previous_balance' => $prevBalance,
+        'closing_balance' => $newBalance,
+    ]);
 
-        // Update existing ledger row
-        $ledger->update([
-            'closing_balance' => $prevBalance - $request->amount
-        ]);
-    } else {
-        // Ledger record nahi mila, create first time
-        CustomerLedger::create([
-            'customer_id' => $request->customer_id,
-            'admin_or_user_id' => $userId,
-            'previous_balance' => 0,
-            'closing_balance' => 0 - $request->amount, // negative balance
-        ]);
-    }
-
-    return back()->with('success', 'Payment received and ledger updated.');
+    return back()->with('success', 'Payment adjusted and ledger updated.');
 }
+
 
 }
 

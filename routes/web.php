@@ -196,5 +196,7 @@ Route::get('/warehouse-stock-quantity', [StockTransferController::class, 'getSto
     Route::get('vouchers/{type}', [VoucherController::class, 'index'])->name('vouchers.index');
     Route::post('vouchers/store', [VoucherController::class, 'store'])->name('vouchers.store'); 
   Route::get('/view_all', [AccountsHeadController::class, 'index'])->name('view_all');
+  Route::get('/get-vendor-balance/{id}', [VendorController::class, 'getVendorBalance']);
+
 });
 require __DIR__ . '/auth.php';

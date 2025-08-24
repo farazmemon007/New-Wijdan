@@ -17,14 +17,25 @@ public function index() {
     return view('admin_panel.vendors.index', compact('vendors')); // ya warehouses.index
 }
 
-public function store(Request $request) {
+public function store(Request $request)
+{
     if ($request->id) {
-        Vendor::findOrFail($request->id)->update($request->all());
+        Vendor::findOrFail($request->id)->update($request->except('opening_balance')); // prevent balance update
     } else {
-        Vendor::create($request->all());
+        $vendor = Vendor::create($request->all());
+
+        // Ledger entry
+        VendorLedger::create([
+            'vendor_id' => $vendor->id,
+            'admin_or_user_id' => Auth::id(),
+            'opening_balance' => $request->opening_balance ?? 0,
+            'closing_balance' => $request->opening_balance ?? 0,
+        ]);
     }
+
     return back()->with('success', 'Saved Successfully');
 }
+
 
 public function delete($id) {
     Vendor::findOrFail($id)->delete();
@@ -64,8 +75,10 @@ public function store_vendor_payment(Request $request)
         'amount' => 'required|numeric|min:0',
         'payment_method' => 'nullable|string',
         'note' => 'nullable|string',
+        'adjustment_type' => 'required|in:plus,minus',
     ]);
 
+    // Save the payment
     VendorPayment::create([
         'vendor_id' => $request->vendor_id,
         'admin_or_user_id' => Auth::id(),
@@ -75,15 +88,21 @@ public function store_vendor_payment(Request $request)
         'note' => $request->note,
     ]);
 
-    // Reduce from ledger
+    // Update ledger
     $ledger = VendorLedger::where('vendor_id', $request->vendor_id)->first();
+
     if ($ledger) {
-        $ledger->closing_balance -= $request->amount;
+        if ($request->adjustment_type == 'minus') {
+            $ledger->closing_balance -= $request->amount;
+        } else {
+            $ledger->closing_balance += $request->amount;
+        }
         $ledger->save();
     }
 
     return redirect()->back()->with('success', 'Vendor payment recorded.');
 }
+
 // end payments vendor
 
 // vendor bilty statr  
@@ -113,6 +132,14 @@ public function store_vendor_bilty(Request $request)
     VendorBilty::create($request->all());
 
     return back()->with('success', 'Vendor bilty saved successfully.');
+}
+public function getVendorBalance($id)
+{
+    $ledger = VendorLedger::where('vendor_id', $id)->first();
+
+    return response()->json([
+        'closing_balance' => $ledger ? $ledger->closing_balance : 0
+    ]);
 }
 
 }
