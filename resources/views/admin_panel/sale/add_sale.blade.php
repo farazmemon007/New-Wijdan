@@ -60,7 +60,9 @@
         <div class="card shadow-sm border-0 mt-3">
             <div class="card-header bg-light text-white d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">SALES</h5>
-                <span class="fw-bold text-dark">USER NAME: <span class="text-dark">Administrator</span></span>
+                <div>
+                    <a href="" class="btn btn-primary"> DC</a>
+                </div>
             </div>
 <form action="{{ route('sales.store') }}" method="POST">
     @csrf

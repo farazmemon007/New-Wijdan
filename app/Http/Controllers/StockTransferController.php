@@ -100,3 +100,8 @@ class StockTransferController extends Controller
 }
 
 }
+
+
+
+// delvivery challan 
+// convet out per  stock ledger maintain
