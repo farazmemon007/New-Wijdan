@@ -25,7 +25,7 @@ return new class extends Migration
         $table->string('contact_person_2')->nullable();
         $table->string('mobile_2')->nullable();
         $table->string('email_address_2')->nullable();
-        $table->decimal('opening_balance', 15, 2)->default(0);
+        $table->decimal('opening_balance', 15, 2)->nullable(0);
       
         $table->text('address')->nullable();
         $table->timestamps();

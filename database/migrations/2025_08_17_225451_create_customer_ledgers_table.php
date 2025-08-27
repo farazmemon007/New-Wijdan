@@ -14,8 +14,8 @@ class CreateCustomerLedgersTable extends Migration
             $table->id();
             $table->unsignedBigInteger('customer_id');
             $table->unsignedBigInteger('admin_or_user_id');
-            $table->decimal('previous_balance', 12, 2)->default(0);
-            $table->decimal('closing_balance', 12, 2)->default(0);
+            $table->decimal('previous_balance', 12, 2)->nullable(0);
+            $table->decimal('closing_balance', 12, 2)->nullable(0);
             $table->timestamps();
 
             $table->foreign('customer_id')->references('id')->on('customers')->onDelete('cascade');

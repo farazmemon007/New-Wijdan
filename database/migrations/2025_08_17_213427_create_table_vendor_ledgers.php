@@ -16,9 +16,9 @@ return new class extends Migration
             $table->text('admin_or_user_id');
             $table->foreignId('vendor_id')->references('id')->on('vendors')->casecdeOnDelete();
 
-            $table->text('opening_balance');
-            $table->text('previous_balance');
-            $table->text('closing_balance');
+            $table->text('opening_balance')->nullable(0);
+            $table->text('previous_balance')->nullable(0);
+            $table->text('closing_balance')->nullable(0);
             $table->timestamps();
             $table->softDeletes();
         });

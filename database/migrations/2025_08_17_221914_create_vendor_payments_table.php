@@ -14,7 +14,7 @@ class CreateVendorPaymentsTable extends Migration
             $table->unsignedBigInteger('vendor_id');
             $table->unsignedBigInteger('admin_or_user_id');
             $table->date('payment_date')->nullable();
-            $table->decimal('amount', 12, 2);
+            $table->decimal('amount', 12, 2)->nullable();
             $table->string('payment_method')->nullable(); // e.g., cash, bank, cheque
             $table->string('note')->nullable();
             $table->timestamps();
