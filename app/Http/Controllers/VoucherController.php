@@ -14,7 +14,6 @@ class VoucherController extends Controller
     // Sirf selected type ka data laa lo
     $vouchers = Voucher::where('voucher_type', $type)->latest()->get();
         $narration = Narration::where('expense_head',$type)->get();
-
     return view('admin_panel.accounts.expenses', [
         'vouchers' => $vouchers,
         'type' => $type,

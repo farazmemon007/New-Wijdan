@@ -82,7 +82,7 @@
                                     <option>Fuel Expense</option>
                                     <option>Lost Stock</option>
                                     <option>journal voucher</option>
-                                    <option>reciepts voucher</option>
+                                    <option>receipt voucher</option>
                                     <option>payment voucher</option>
                                     <option>income voucher</option>
                                     <option>expense voucher</option>

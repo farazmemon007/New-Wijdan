@@ -18,33 +18,33 @@ use Illuminate\Support\Facades\Auth;
 class ProductController extends Controller
 {
 
-//     public function searchProducts(Request $request)
-// {
-//     $q = $request->get('q');
-
-//     $products = Product::with('brand')->where(function ($query) use ($q) {
-//             $query->where('item_name', 'like', "%{$q}%")
-//                   ->orWhere('item_code', 'like', "%{$q}%")
-//                   ->orWhere('barcode_path', 'like', "%{$q}%");
-//         })->get();
-
-//     return response()->json($products);
-// }
-public function searchProducts(Request $request)
+    public function searchProducts(Request $request)
 {
     $q = $request->get('q');
 
-    $products = Product::with(['brand', 'activeDiscount'])
-        ->whereHas('activeDiscount') // only products with active discount
-        ->where(function ($query) use ($q) {
+    $products = Product::with('brand')->where(function ($query) use ($q) {
             $query->where('item_name', 'like', "%{$q}%")
                   ->orWhere('item_code', 'like', "%{$q}%")
                   ->orWhere('barcode_path', 'like', "%{$q}%");
-        })
-        ->get();
+        })->get();
 
     return response()->json($products);
 }
+// public function searchProducts(Request $request)
+// {
+//     $q = $request->get('q');
+
+//     $products = Product::with(['brand', 'activeDiscount'])
+//         ->whereHas('activeDiscount') // only products with active discount
+//         ->where(function ($query) use ($q) {
+//             $query->where('item_name', 'like', "%{$q}%")
+//                   ->orWhere('item_code', 'like', "%{$q}%")
+//                   ->orWhere('barcode_path', 'like', "%{$q}%");
+//         })
+//         ->get();
+
+//     return response()->json($products);
+// }
 
     
     public function product()

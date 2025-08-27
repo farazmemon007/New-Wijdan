@@ -7,20 +7,31 @@
     <form action="{{ route('customers.store') }}" method="POST">
         @csrf
 
-        <div class="row mb-3">
-            <div class="col-md-2">
-                <label>Customer ID:</label>
-                <input type="text" class="form-control" name="customer_id" readonly value="{{ $latestId }}">
-            </div>
-            <div class="col-md-5">
-                <label>Customer:</label>
-                <input type="text" class="form-control" name="customer_name" value="{{ old('customer_name') }}">
-            </div>
-            <div class="col-md-5">
-                <label>کسٹمر کا نام:</label>
-                <input type="text" class="form-control text-end" name="customer_name_ur" dir="rtl" value="{{ old('customer_name_ur') }}">
-            </div>
-        </div>
+      
+
+  <div class="row mb-3">
+                            <div class="col-md-3">
+                                <label><strong>Customer ID:</strong></label>
+                                <input type="text" class="form-control" name="customer_id" readonly value="{{ $latestId }}">
+                            </div>
+                                           <div class="col-md-3">
+                                <label><strong>Customer Type :</strong></label>
+                                <select class="form-control" name="customer_type">
+                                    <option>Main Customer</option>
+                                    <option>Walking Customer</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label><strong>Customer:</strong></label>
+                                <input type="text" class="form-control" name="customer_name" value="{{ old('customer_name') }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="float-end"><strong>کسٹمر کا نام:</strong></label>
+                                <input type="text" class="form-control text-end" dir="rtl" name="customer_name_ur" value="{{ old('customer_name_ur') }}">
+                            </div>
+                
+                        </div>
+
 
         <div class="row mb-3">
             <div class="col-md-4">

@@ -114,8 +114,8 @@
                                             <label class="form-label">Sub-Head</label>
                                             <select name="sub_head" class="form-select">
                                                 @foreach ($narration as $item)
-                                                    <option value="{{ $item->expense_head }}">{{ $item->expense_head }}
-                                                    </option>
+                                   <option value="{{ $item->expense_head }}">{{ $item->expense_head }}</option>
+
                                                 @endforeach
                                             </select>
                                         </div>

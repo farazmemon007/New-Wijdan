@@ -13,6 +13,8 @@
             <small class="text-muted">Manage all products here</small>
         </div>
         <div>
+<a href="create_prodcut" class="btn btn-primary"> Add product</a>
+
                 <button id="createDiscountBtn" class="btn btn-success btn-sm">
         ➡ Create Discount
     </button>
@@ -97,7 +99,6 @@
 
 {{-- add product modal --}}
 
-<a href="create_prodcut"> Add product</a>
 <div class="modal fade bd-example-modal-lg" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -184,7 +185,6 @@
 </div>
 <script>
 $(document).ready(function() {
-    $('#productTable').DataTable();
 
     // Select/Deselect all checkboxes
     $('#selectAll').click(function() {

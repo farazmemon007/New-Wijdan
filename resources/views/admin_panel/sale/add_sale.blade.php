@@ -393,7 +393,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
 
                 $.ajax({
-                    url: "{{ route('search-products') }}",
+                    url: "{{ route('search-product-name') }}",
                     type: 'GET',
                     data: {
                         q

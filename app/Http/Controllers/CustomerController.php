@@ -73,6 +73,7 @@ public function getCustomerLedger($id)
             'opening_balance' => 'nullable',
             // 'credit' => 'nullable|numeric',
             'address' => 'nullable',
+            'customer_type' => 'nullable',
         ]);
 
 
@@ -185,6 +186,13 @@ public function store_customer_payment(Request $request)
     return back()->with('success', 'Payment adjusted and ledger updated.');
 }
 
+ public function getByType(Request $request)
+{
+    $type = $request->get('type');
 
+    $customers = Customer::where('customer_type',$type)->get(['id', 'customer_name']);
+
+    return response()->json(['customers' => $customers]);
+}
 }
 
