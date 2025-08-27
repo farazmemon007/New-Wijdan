@@ -20,48 +20,69 @@ class StockTransferController extends Controller
         return view('admin_panel.warehouses.stock_transfers.create', compact('warehouses', 'products'));
     }
 
-    public function store(Request $request) {
-        // dd($request->a   ll());
-        $request->validate([
-            'from_warehouse_id' => 'required',
-            'product_id' => 'required',
-            'quantity' => 'required|integer|min:1',
-        ]);
+      public function store(Request $request)
+{
+    $request->validate([
+        'from_warehouse_id' => 'required|integer',
+        'product_id' => 'required|array',
+        'product_id.*' => 'required|integer|exists:products,id',
+        'quantity' => 'required|array',
+        'quantity.*' => 'required|integer|min:1',
+    ]);
 
-        // Source stock check
-        $sourceStock = WarehouseStock::where('warehouse_id', $request->from_warehouse_id)
-            ->where('product_id',$request->product_id)
+    $fromWarehouse = $request->from_warehouse_id;
+    $toWarehouse = $request->to_warehouse_id;
+    $toShop = $request->to_shop ? true : false;
+    $remarks = $request->remarks;
+
+    $products = $request->product_id;
+    $quantities = $request->quantity;
+
+    foreach ($products as $index => $productId) {
+        $qty = $quantities[$index];
+
+        // Check source stock
+        $sourceStock = WarehouseStock::where('warehouse_id', $fromWarehouse)
+            ->where('product_id', $productId)
             ->first();
 
-        if (!$sourceStock || $sourceStock->quantity < $request->quantity) {
-            return back()->with('error', 'Insufficient stock in source warehouse.');
+        if (!$sourceStock || $sourceStock->quantity < $qty) {
+            return back()->with('error', 'Insufficient stock for product ID: ' . $productId);
         }
 
-        // Reduce source stock
-        $sourceStock->quantity -= $request->quantity;
+        // Reduce stock from source
+        $sourceStock->quantity -= $qty;
         $sourceStock->save();
 
-        // Add to destination warehouse if not shop
-        if (!$request->to_shop && $request->to_warehouse_id) {
+        // If not transferring to shop, add to destination warehouse
+        if (!$toShop && $toWarehouse) {
             $destStock = WarehouseStock::firstOrCreate(
                 [
-                    'warehouse_id' => $request->to_warehouse_id,
-                    'product_id' => $request->product_id
+                    'warehouse_id' => $toWarehouse,
+                    'product_id' => $productId
                 ],
                 [
                     'quantity' => 0,
                     'price' => $sourceStock->price
                 ]
             );
-            $destStock->quantity += $request->quantity;
+            $destStock->quantity += $qty;
             $destStock->save();
         }
 
-        // Create transfer record
-        StockTransfer::create($request->all());
-
-        return redirect()->route('stock_transfers.index')->with('success', 'Stock transferred successfully.');
+        // Record each transfer
+        StockTransfer::create([
+            'from_warehouse_id' => $fromWarehouse,
+            'to_warehouse_id' => $toShop ? null : $toWarehouse,
+            'to_shop' => $toShop,
+            'product_id' => $productId,
+            'quantity' => $qty,
+            'remarks' => $remarks,
+        ]);
     }
+
+    return redirect()->route('stock_transfers.index')->with('success', 'Stock transferred successfully.');
+}
 
     public function destroy(StockTransfer $stockTransfer) {
         // Optional: reverse the transfer if needed
