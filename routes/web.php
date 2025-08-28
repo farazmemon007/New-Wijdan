@@ -17,6 +17,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DiscountController;
 use App\Http\Controllers\PurchaseController;
+use App\Http\Controllers\InwardgatepassController;
 use App\Http\Controllers\NarrationController;
 use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\PermissionController;
@@ -88,6 +89,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/toggle-status/{id}', [DiscountController::class, 'toggleStatus'])->name('discount.toggleStatus');
         Route::get('/barcode/{id}', [DiscountController::class, 'barcode'])->name('discount.barcode');
     });
+
+
 
 
     // Customer Routes

@@ -28,36 +28,89 @@ class DiscountController extends Controller
     }
 
     // Store Discount
-    public function store(Request $request)
-    {
-        foreach ($request->product_id as $key => $productId) {
-            $product = Product::find($productId);
+    // public function store(Request $request)
+    // {
+        
+    //     foreach ($request->product_id as $key => $productId) {
+    //         $product = Product::find($productId);
 
-            $discountPercentage = $request->discount_percentage[$key] ?? 0;
-            $discountAmount = $request->discount_amount[$key] ?? 0;
-            $status = $request->status[$key] ?? 1;
+    //         $discountPercentage = $request->discount_percentage[$key] ?? 0;
+    //         $discountAmount = $request->discount_amount[$key] ?? 0;
+    //         $status = $request->status[$key] ?? 1;
 
-            $finalPrice = $product->price; // original price
-            if ($discountPercentage > 0) {
-                $finalPrice = $product->price - ($product->price * $discountPercentage / 100);
-            } elseif ($discountAmount > 0) {
-                $finalPrice = $product->price - $discountAmount;
-            }
+    //         $finalPrice = $product->price; // original price
+    //         if ($discountPercentage > 0) {
+    //             $finalPrice = $product->price - ($product->price * $discountPercentage / 100);
+    //         } elseif ($discountAmount > 0) {
+    //             $finalPrice = $product->price - $discountAmount;
+    //         }
 
-            ProductDiscount::updateOrCreate(
-                ['product_id' => $productId],
-                [
-                    'actual_price' => $product->price,
-                    'discount_percentage' => $discountPercentage,
-                    'discount_amount' => $discountAmount,
-                    'final_price' => $finalPrice,
-                    'status' => $status
-                ]
-            );
+    //         ProductDiscount::updateOrCreate(
+    //             ['product_id' => $productId],
+    //             [
+    //                 'actual_price' => $product->price,
+    //                 'discount_percentage' => $discountPercentage,
+    //                 'discount_amount' => $discountAmount,
+    //                 'total_discount'     => $totalDiscount,
+    //                 'final_price' => $finalPrice,
+    //                 'date'               => $date,  
+    //                 'status' => $status
+    //             ]
+    //         );
+    //     }
+
+    //     return redirect()->route('discount.index')->with('success', 'Discounts saved successfully.');
+    // }
+// Store Discount
+public function store(Request $request)
+{
+    $request->validate([
+        'product_id.*'          => ['required','integer','exists:products,id'],
+        'discount_percentage.*' => ['nullable','numeric','min:0','max:100'],
+        'discount_amount.*'     => ['nullable','numeric','min:0'],
+        'date.*'                => ['required','date'],
+        'status.*'              => ['required','in:0,1'],
+    ]);
+
+    foreach ($request->product_id as $key => $productId) {
+        $product = Product::findOrFail($productId);
+
+        $discountPercentage = (float)($request->discount_percentage[$key] ?? 0);
+        $discountAmount     = (float)($request->discount_amount[$key] ?? 0);
+        $status             = (int)($request->status[$key] ?? 1);
+        $date               = $request->date[$key];
+
+        $percDiscount  = round($product->price * $discountPercentage / 100, 2);
+        $totalDiscount = round($percDiscount + $discountAmount, 2);
+
+        if ($totalDiscount > $product->price) {
+            return back()
+                ->withErrors([
+                    "discount_percentage.$key" => "Total discount exceeds original price for '{$product->item_name}'.",
+                    "discount_amount.$key"     => "Total discount exceeds original price for '{$product->item_name}'.",
+                ])
+                ->withInput();
         }
 
-        return redirect()->route('discount.index')->with('success', 'Discounts saved successfully.');
+        $finalPrice = round($product->price - $totalDiscount, 2);
+
+        ProductDiscount::updateOrCreate(
+            ['product_id' => $productId],
+            [
+                'actual_price'        => $product->price,
+                'discount_percentage' => $discountPercentage,
+                'discount_amount'     => $discountAmount,
+                'total_discount'      => $totalDiscount,
+                'final_price'         => $finalPrice,
+                'date'                => $date,  // ✅ only one line
+                'status'              => $status,
+            ]
+        );
     }
+
+    return redirect()->route('discount.index')->with('success', 'Discounts saved successfully.');
+}
+
 
     // Toggle Status Active/Inactive
     public function toggleStatus($id)

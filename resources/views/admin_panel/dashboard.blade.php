@@ -13,7 +13,7 @@
                                 @if ($stock->isNotEmpty())
                                     <h1>
                                         @foreach ($stock as $item)
-                                            product Stock {{ $item->qty }}
+                                            {{-- product Stock {{ $item->qty }} --}}
                                         @endforeach
                                     </h1>
                                 @else

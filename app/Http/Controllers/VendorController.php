@@ -30,6 +30,7 @@ public function store(Request $request)
             'admin_or_user_id' => Auth::id(),
             'opening_balance' => $request->opening_balance ?? 0,
             'closing_balance' => $request->opening_balance ?? 0,
+
         ]);
     }
 

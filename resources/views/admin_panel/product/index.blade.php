@@ -12,18 +12,19 @@
             <h5 class="mb-0 fw-bold">📦 Product List</h5>
             <small class="text-muted">Manage all products here</small>
         </div>
-        <div>
-<a href="create_prodcut" class="btn btn-primary"> Add product</a>
+        <div class="d-flex justify-content-between align-items-end gap-1" >
+              @if(auth()->user()->can(' Discount.index') || auth()->user()->email === 'admin@admin.com')
+            <a href="{{ route('discount.index') }}" class="btn btn-success btn-sm">
+                View Discount
+            </a>    
+        @endif
+          <a href="create_prodcut" class="btn btn-primary"> Add product</a>
 
                 <button id="createDiscountBtn" class="btn btn-success btn-sm">
         ➡ Create Discount
     </button>
         </div>
-        @if(auth()->user()->can('Create Product') || auth()->user()->email === 'admin@admin.com')
-            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addProductModal">
-                ➕ Add Product
-            </button>
-        @endif
+      
     </div>
 
     <div class="card-body">
@@ -183,6 +184,13 @@
         </div>
     </div>
 </div>
+
+<!-- SweetAlert2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+
+<!-- SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
 $(document).ready(function() {
 
@@ -199,7 +207,12 @@ $(document).ready(function() {
         });
 
         if(selected.length === 0){
-            alert('Please select at least one product.');
+            Swal.fire({
+                icon: "error",
+                title: "Oops...",
+                text: "Please select at least one product!",
+               
+            });
             return;
         }
 
@@ -208,6 +221,7 @@ $(document).ready(function() {
     });
 });
 </script>
+
 <script>
 $(document).ready(function() {
     $('#productTable').DataTable({

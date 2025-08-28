@@ -323,9 +323,7 @@
                                                                 <li class="nav-item"><a class="nav-link" href="{{route('Brand.home')}}"><i class="menu_icon ti-smallcap"></i><span>Brands</span></a></li>
 
                                                                 <li class="nav-item"><a class="nav-link" href="{{route('Category.home')}}"><i class="menu_icon ti-alert"></i><span>Category</span></a></li>
- <li class="nav-item"><a class="nav-link" href="{{route('subcategory.home')}}"><i class="menu_icon ti-id-badge"></i><span>Sub Category</span></a></li>
-
-
+                                                                 <li class="nav-item"><a class="nav-link" href="{{route('subcategory.home')}}"><i class="menu_icon ti-id-badge"></i><span>Sub Category</span></a></li>
                                                                 <li class="nav-item"><a class="nav-link" href="{{url('warehouse')}}"><i class="menu_icon ti-alert"></i><span>warehouse</span></a></li>
                                                                 <li class="nav-item"><a class="nav-link" href="{{url('warehouse_stocks')}}"><i class="menu_icon ti-alert"></i><span>warehouse stock</span></a></li>
                                                                 <li class="nav-item"><a class="nav-link" href="{{url('stock_transfers')}}"><i class="menu_icon ti-alert"></i><span>Stock transfer   </span></a></li>
@@ -391,6 +389,7 @@
                                             {{-- <li class="nav-item"><a class="nav-link" href="ionicons.html"><i class="menu_icon ion-ionic"></i><span>Ionicons V2</span></a></li> --}}
                                         @if(auth()->user()->can('View Product') || auth()->user()->email === 'admin@admin.com')
                                             <li class="nav-item"><a class="nav-link" href="{{route('product')}}"><i class="menu_icon icon-basket"></i><span>Products</span></a></li>
+                                            <li class="nav-item"><a class="nav-link" href="{{route('discount.index')}}"><i class="menu_icon icon-basket"></i><span>Discount Prodcuts </span></a></li>
                                         @endif
                                             <li class="nav-item"><a class="nav-link" href="{{route('Purchase.home')}}"><i class="menu_icon icon-basket"></i><span>Purchase</span></a></li>
                                         </ul>

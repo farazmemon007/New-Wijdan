@@ -6,7 +6,6 @@ use App\Models\Category;
 use App\Models\Subcategory;
 use App\Models\Brand;
 use App\Models\Unit;
-use Illuminate\Support\Facades\DB;
 // use App\Models\Size;
 use Carbon\Carbon;
 use Milon\Barcode\DNS1D;
@@ -92,7 +91,7 @@ class ProductController extends Controller
 
 
 
-public function store_product(Request $request)
+   public function store_product(Request $request)
 {
     if (!Auth::id()) {
         return redirect()->back();
@@ -118,39 +117,26 @@ public function store_product(Request $request)
     }
 
     // ✅ Product Create
-    $product = Product::create([
-        'creater_id'      => $userId,
-        'category_id'     => $request->category_id,
-        'sub_category_id' => $request->sub_category_id,
-        'item_code'       => $nextCode,
-        'item_name'       => $request->product_name,
-        'barcode_path'    => $request->barcode_path ?? rand(100000000000, 999999999999),
-        'unit_id'         => $request->unit,
-        'initial_stock'   => $request->Stock,
-        'brand_id'        => $request->brand_id,
-        'wholesale_price' => $request->wholesale_price,
-        'price'           => $request->retail_price,
-        'alert_quantity'  => $request->alert_quantity,
-        'image'           => $imagePath,
-        'created_at'      => now(),
-        'updated_at'      => now(),
+    Product::create ([
+        'creater_id'     => $userId,
+        'category_id'    => $request->category_id,
+        'sub_category_id'=> $request->sub_category_id,
+        'item_code'      => $nextCode,
+        'item_name'      => $request->product_name,
+        'barcode_path'   => $request->barcode_path ?? rand(100000000000, 999999999999),
+        'unit_id'        => $request->unit,
+        'initial_stock'  => $request->Stock,
+        'brand_id'        => $request->brand_id, 
+        'wholesale_price'=> $request->wholesale_price,
+        'price'          => $request->retail_price,
+        'alert_quantity' => $request->alert_quantity,
+        'image'          => $imagePath,
+        'created_at'     => now(),
+        'updated_at'     => now(),
     ]);
-
-    // ✅ Stock entry (only if stock > 0)
-    if ($request->Stock > 0) {
-        DB::table('stocks')->insert([
-            'branch_id'    => $request->branch_id ?? 1,   // default 1 if not provided
-            'warehouse_id' => $request->warehouse_id ?? 1, // default 1 if not provided
-            'product_id'   => $product->id,
-            'qty'          => $request->Stock,
-            'created_at'   => now(),
-            'updated_at'   => now(),
-        ]);
-    }
 
     return redirect()->back()->with('success', 'Product created successfully');
 }
-
 
 
 

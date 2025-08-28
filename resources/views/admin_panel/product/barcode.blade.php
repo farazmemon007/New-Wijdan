@@ -47,11 +47,11 @@
     <div class="brand-name" style="letter-spacing: 2px">WIJDAN</div>
 
     <div class="barcode" style="display: flex; justify-content: center;">
-        {!! DNS1D::getBarcodeHTML($product->item_code, 'C128', 1.4, 40) !!}
+        {!! DNS1D::getBarcodeHTML($product->item_code, 'C128', 1.4, 22) !!}
     </div>
 
     <div class="product-info" style="font-size: 15px; font-weight: bold;">
-        {{ $product->barcode_path }} {{ $product->item_name }} # {{$product->id}}
+        {{ $product->barcode_path }} {{ $product->item_name }}
     </div>
 
     <div class="price">PKR: {{ number_format($product->price) }}</div>

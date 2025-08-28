@@ -586,14 +586,15 @@ document.addEventListener("DOMContentLoaded", function () {
                 return isNaN(parseFloat(n)) ? 0 : parseFloat(n);
             }
 
-            function recalcRow($row) {
-                const qty = num($row.find('.quantity').val());
-                const price = num($row.find('.price').val());
-                const disc = num($row.find('.item_disc').val()); // absolute PKR per item
-                let total = (qty * price) - disc;
-                if (total < 0) total = 0;
-                $row.find('.row-total').val(total.toFixed(2));
-            }
+           function recalcRow($row) {
+    const qty = num($row.find('.quantity').val());
+    const price = num($row.find('.price').val());
+    const disc = num($row.find('.item_disc').val()); // per-item discount
+    let total = (qty * price) - (qty * disc);  // ✅ correct formula
+    if (total < 0) total = 0;
+    $row.find('.row-total').val(total.toFixed(2));
+}
+
 
             function recalcSummary() {
                 let sub = 0;

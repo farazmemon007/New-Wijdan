@@ -7,8 +7,8 @@
             <small class="text-muted">Manage all product discounts here</small>
         </div>
         @if(auth()->user()->can('Create Discount') || auth()->user()->email === 'admin@admin.com')
-            <a href="{{ route('discount.create') }}" class="btn btn-success btn-sm">
-                ➕ Add Discount
+            <a href="{{ route('product') }}" class="btn btn-success btn-sm">
+                View Product
             </a>
         @endif
     </div>
@@ -26,54 +26,78 @@
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Item Code</th>
-                        <th>Image</th>
-                        <th>Category / Sub-Category</th>
-                        <th>Item Name</th>
-                        <th>Unit</th>
-                        <th>Brand</th>
+                        <th>Item Descriptions</th>
+                        {{-- <th>Image</th> --}}
+                        {{-- <th>Category / Sub-Category</th> --}}
+                        {{-- <th>Item Name</th> --}}
+                        {{-- <th>Unit</th> --}}
+                        {{-- <th>Brand</th> --}}
                         <th>Original Price</th>
-                        <th>Discount %</th>
-                        <th>Discount Amount</th>
-                        <th>Final Price</th>
-                        <th>Status</th>
+                        <th>Discount</th>
+                        {{-- <th>Flat Discount</th> --}}
+                        <th>Date</th>
+                        <th>Discount Price</th>
                         <th>Barcode</th>
+                        <th>Status</th>
                     </tr>
                 </thead>
-                <tbody>
-                    @foreach($discounts as $key => $discount)
-                    <tr>
-                        <td>{{ $key + 1 }}</td>
-                        <td>{{ $discount->product->item_code }}</td>
-                        <td>
-                            @if($discount->product->image)
-                                <img src="{{ asset('uploads/products/'.$discount->product->image) }}" width="50" height="50">
-                            @else
-                                <span class="badge bg-secondary">No Img</span>
-                            @endif
-                        </td>
-                        <td>{{ $discount->product->category_relation->name ?? '-' }} / {{ $discount->product->sub_category_relation->name ?? '-' }}</td>
-                        <td>{{ $discount->product->item_name }}</td>
-                        <td>{{ $discount->product->unit->name ?? '-' }}</td>
-                        <td>{{ $discount->product->brand->name ?? '-' }}</td>
-                        <td>{{ number_format($discount->actual_price,2) }}</td>
-                        <td>{{ $discount->discount_percentage }}%</td>
-                        <td>{{ number_format($discount->discount_amount,2) }}</td>
-                        <td>{{ number_format($discount->final_price,2) }}</td>
-                        <td>
-                            <form action="{{ route('discount.toggleStatus', $discount->id) }}" method="POST">
-                                @csrf
-                                <button class="btn btn-sm {{ $discount->status ? 'btn-success' : 'btn-danger' }}">
-                                    {{ $discount->status ? 'Active' : 'Inactive' }}
-                                </button>
-                            </form>
-                        </td>
-                        <td>
-                            <a href="{{ route('discount.barcode', $discount->id) }}" class="btn btn-sm btn-outline-success">🏷 Barcode</a>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
+               <tbody>
+@foreach($discounts as $key => $discount)
+    <tr class="{{ $discount->status ? '' : 'table-danger' }}">
+        <td>{{ $key + 1 }}</td>
+
+        {{-- Product Info Column --}}
+        <td class="d-flex align-items-center">
+            @if($discount->product->image)
+                <img src="{{ asset('uploads/products/'.$discount->product->image) }}" 
+                     width="45" height="45" class="rounded me-2">
+            @else
+                <span class="badge bg-secondary me-2">No Img</span>
+            @endif
+            <div>
+                <strong>{{ $discount->product->item_name }}</strong><br>
+                <small class="text-muted">Code: {{ $discount->product->item_code }}</small><br>
+                <small class="text-muted">Brand: {{ $discount->product->brand->name ?? '-' }}</small>
+            </div>
+        </td>
+
+        {{-- Prices --}}
+        <td>{{ number_format($discount->actual_price,2) }}</td>
+        
+        {{-- Discount Column --}}
+        <td>
+            <span class="badge bg-info">{{ $discount->discount_percentage }}%</span> 
+            <span class="badge bg-warning text-dark">{{ number_format($discount->discount_amount,2) }} PKR</span>
+        </td>
+
+        {{-- Date --}}
+        <td>{{ \Carbon\Carbon::parse($discount->date)->format('d-M-Y') }}</td>
+
+        {{-- Final Price --}}
+        <td><strong class="text-success">{{ number_format($discount->final_price,2) }}</strong></td>
+
+        {{-- Barcode --}}
+        <td>
+            <a href="{{ route('discount.barcode', $discount->id) }}" 
+               class="btn btn-sm btn-outline-primary">
+               🏷 Barcode
+            </a>
+        </td>
+
+        {{-- Status --}}
+        <td>
+            <form action="{{ route('discount.toggleStatus', $discount->id) }}" method="POST">
+                @csrf
+                <button class="btn btn-sm {{ $discount->status ? 'btn-success' : 'btn-danger' }}">
+                    {{ $discount->status ? '✔ Active' : '✖ Inactive' }}
+                </button>
+            </form>
+        </td>
+    </tr>
+@endforeach
+</tbody>
+
+
             </table>
         </div>
     </div>
