@@ -22,6 +22,7 @@ return new class extends Migration
             // $table->text('measurement')->nullable();
             $table->text('unit_id')->nullable();
             $table->text('item_name')->nullable();
+            $table->text('color')->nullable();
             // $table->text('size')->nullable();
             // $table->text('opening_carton_quantity')->nullable();
             // $table->text('carton_quantity')->nullable();
