@@ -132,6 +132,7 @@ public function store_product(Request $request)
         'price'           => $request->retail_price,
         'alert_quantity'  => $request->alert_quantity,
         'image'           => $imagePath,
+        'color'=> $request->color ? json_encode($request->color) : null,
         'created_at'      => now(),
         'updated_at'      => now(),
     ]);

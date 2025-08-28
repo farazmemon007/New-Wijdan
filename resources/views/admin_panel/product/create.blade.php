@@ -2,6 +2,8 @@
 
 @extends('admin_panel.layout.app')
 @section('content')
+<!-- Select2 CSS -->
+
     <style>
         .image-preview-wrapper {
             position: relative;
@@ -209,6 +211,17 @@
                                                         </div>
 
 
+<div class="col-sm-4">
+    <label for="color-select">Color Name</label>
+    <select name="color[]" id="color-select" class="form-select" multiple="multiple" style="width: 100%">
+        <option value="Black" selected>Black</option>
+        <option value="White">White</option>
+        <option value="Red">Red</option>
+        <option value="Blue">Blue</option>
+    </select>
+</div>
+
+
 
 
                                                         <!-- Hidden barcode value -->
@@ -390,11 +403,7 @@
                 </div>
             </div>
 
-            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
-                integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous">
-            </script>
-            <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
+       
            <script>
 document.getElementById('generateBarcodeBtn').addEventListener('click', function () {
     let currentValue = document.getElementById('barcodeInput').value.trim();
@@ -468,11 +477,7 @@ document.getElementById('generateBarcodeBtn').addEventListener('click', function
                     }
                 });
             </script>
-        @endsection
-        {{-- fetch subc ategory --}}
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-
+   
 
         <script>
             document.getElementById('imageUpload').addEventListener('change', function(event) {
@@ -495,3 +500,16 @@ document.getElementById('generateBarcodeBtn').addEventListener('click', function
                 this.style.display = 'none';
             });
         </script>
+<script>
+    $(document).ready(function () {
+        $('#color-select').select2({
+            tags: true,
+            placeholder: "Select or type color(s)",
+            allowClear: true,
+            width: 'resolve'
+        });
+    });
+</script>
+
+
+        @endsection
