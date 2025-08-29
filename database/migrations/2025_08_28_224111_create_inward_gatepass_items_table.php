@@ -11,25 +11,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-         Schema::create('stocks', function (Blueprint $table) {
+        Schema::create('inward_gatepass_items', function (Blueprint $table) {
             $table->id();
-
-            $table->foreignId('branch_id');
-            $table->foreignId('warehouse_id');
+            $table->foreignId('inward_gatepass_id')->constrained('inward_gatepasses')->onDelete('cascade');
             $table->foreignId('product_id');
 
             $table->integer('qty')->default(0);
-            $table->integer('reserved_qty')->default(0);
             $table->timestamps();
-
-            $table->unique(['branch_id', 'warehouse_id', 'product_id'], 'stocks_unique_triplet');
         });
     }
+
     /**
      * Reverse the migrations.
      */
     public function down(): void
     {
-        Schema::dropIfExists('stocks');
+        Schema::dropIfExists('inward_gatepass_items');
     }
 };

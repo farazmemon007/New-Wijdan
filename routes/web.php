@@ -174,6 +174,25 @@ Route::get('/customer/ledger/{id}', [CustomerController::class, 'getCustomerLedg
     Route::delete('/purchase/{id}', [PurchaseController::class, 'destroy'])->name('purchase.destroy');
     Route::get('/search-products', [ProductController::class, 'searchProducts'])->name('search-products');
 
+
+
+// Inward Gatepass Routes
+Route::get('/InwardGatepass', [InwardgatepassController::class, 'index'])->name('InwardGatepass.home');
+Route::get('/add/InwardGatepass', [InwardgatepassController::class, 'create'])->name('add_inwardgatepass');
+Route::post('/InwardGatepass/store', [InwardgatepassController::class, 'store'])->name("store.InwardGatepass");
+Route::get('/InwardGatepass/{id}', [InwardgatepassController::class, 'show'])->name('InwardGatepass.show');
+
+// edit/update/delete abhi comment kiye hue hain
+Route::get('/InwardGatepass/{id}/edit', [InwardgatepassController::class, 'edit'])->name('InwardGatepass.edit');
+Route::put('/InwardGatepass/{id}', [InwardgatepassController::class, 'update'])->name('InwardGatepass.update');
+Route::get('/inward-gatepass/{id}/pdf', [InwardgatepassController::class, 'pdf'])->name('InwardGatepass.pdf');
+
+Route::delete('/InwardGatepass/{id}', [InwardgatepassController::class, 'destroy'])->name('InwardGatepass.destroy');
+
+
+// Products search
+Route::get('/search-products', [InwardgatepassController::class, 'searchProducts'])->name('search-products');
+
     // Route::get('/fetch-product', [PurchaseController::class, 'fetchProduct'])->name('item.search');
     // Route::post('/fetch-item-details', [PurchaseController::class, 'fetchItemDetails']);
     // Route::get('/Purchase/create', function () {
