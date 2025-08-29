@@ -385,22 +385,11 @@
             <div class="col-group col-md-3">
                 <p class="category-heading">Purchase & Inventory</p>
                 <ul class="submenu-item">
-                    <li><a href="{{route('Purchase.home')}}"><i class="fas fa-shopping-cart"></i> Purchase</a></li>
-                    <li><a href="{{url('vendor')}}"><i class="fas fa-truck"></i> Vendor</a></li>
-                    <li><a href="{{url('warehouse')}}"><i class="fas fa-warehouse"></i> Warehouse</a></li>
-                    <li><a href="{{url('warehouse_stocks')}}"><i class="fas fa-boxes"></i> Warehouse Stock</a></li>
-                    <li><a href="{{url('stock_transfers')}}"><i class="fas fa-exchange-alt"></i> Stock Transfer</a></li>
-                </ul>
-            </div>
 
-            <!-- Customers & Sales -->
-            <div class="col-group col-md-3">
-                <p class="category-heading">Sales & Customers</p>
-                <ul class="submenu-item">
-                    <li><a href="{{url('sale')}}"><i class="fas fa-receipt"></i> Sales</a></li>
-                    <li><a href="{{url('customers')}}"><i class="fas fa-user"></i> Customer</a></li>
-                    <li><a href="{{url('sales-officers')}}"><i class="fas fa-user-tie"></i> Sales Officer</a></li>
-                    <li><a href="{{url('zone')}}"><i class="fas fa-map-marker-alt"></i> Zone</a></li>
+                    <li><a href="{{route('InwardGatepass.home')}}"><i class="fas fa-shopping-cart"></i> Inward Gatepass </a></li>
+                    <li><a href="{{route('add_inwardgatepass')}}"><i class="fas fa-shopping-cart"></i> Add Inward Gatepass </a></li>
+                    <li><a href="{{route('Purchase.home')}}"><i class="fas fa-shopping-cart"></i> Purchase</a></li>
+                    
                 </ul>
             </div>
 
@@ -408,7 +397,21 @@
             <div class="col-group col-md-3">
                 <p class="category-heading">Accounts</p>
                 <ul class="submenu-item">
-                    <li><a href="{{url('narrations')}}"><i class="fas fa-file-alt"></i> Narration</a></li>
+                    {{-- <li><a href="{{url('narrations')}}"><i class="fas fa-file-alt"></i> Narration</a></li> --}}
+                    <li><a href="{{url('vendor')}}"><i class="fas fa-truck"></i> Vendor</a></li>
+                    <li><a href="{{url('warehouse')}}"><i class="fas fa-warehouse"></i> Warehouse</a></li>
+                    <li><a href="{{url('warehouse_stocks')}}"><i class="fas fa-boxes"></i> Warehouse Stock</a></li>
+                    <li><a href="{{url('stock_transfers')}}"><i class="fas fa-exchange-alt"></i> Stock Transfer</a></li>
+                </ul>
+            </div>
+              <!-- Customers & Sales -->
+            <div class="col-group col-md-3">
+                <p class="category-heading">Sales & Customers</p>
+                <ul class="submenu-item">
+                    <li><a href="{{url('sale')}}"><i class="fas fa-receipt"></i> Sales</a></li>
+                    <li><a href="{{url('customers')}}"><i class="fas fa-user"></i> Customer</a></li>
+                    <li><a href="{{url('sales-officers')}}"><i class="fas fa-user-tie"></i> Sales Officer</a></li>
+                    <li><a href="{{url('zone')}}"><i class="fas fa-map-marker-alt"></i> Zone</a></li>
                 </ul>
             </div>
 
