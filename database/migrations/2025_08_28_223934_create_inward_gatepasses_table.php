@@ -14,17 +14,15 @@ return new class extends Migration
         Schema::create('inward_gatepasses', function (Blueprint $table) {
             $table->id();
             $table->foreignId('branch_id');
-    $table->foreignId('warehouse_id');
-    $table->foreignId('vendor_id');
+            $table->foreignId('warehouse_id');
+            $table->foreignId('vendor_id');
+            $table->foreignId('purchase_id')->nullable();   // linked when bill comes
+            $table->date('gatepass_date')->nullable();
+            $table->string('gatepass_no')->nullable();
+            $table->text('remarks')->nullable();
+            $table->enum('status', ['pending','linked','cancelled'])->default('pending');
 
-    $table->foreignId('purchase_id')->nullable();   // linked when bill comes
-    $table->date('gatepass_date')->nullable();
-    $table->string('gatepass_no')->nullable();
-
-    $table->text('remarks')->nullable();
-    $table->enum('status', ['pending','linked','cancelled'])->default('pending');
-
-    $table->foreignId('created_by')->nullable();  
+            $table->foreignId('created_by')->nullable();  
             $table->timestamps();
         });
     }

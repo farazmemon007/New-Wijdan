@@ -187,11 +187,16 @@ Route::get('/InwardGatepass/{id}/edit', [InwardgatepassController::class, 'edit'
 Route::put('/InwardGatepass/{id}', [InwardgatepassController::class, 'update'])->name('InwardGatepass.update');
 Route::get('/inward-gatepass/{id}/pdf', [InwardgatepassController::class, 'pdf'])->name('InwardGatepass.pdf');
 
+
 Route::delete('/InwardGatepass/{id}', [InwardgatepassController::class, 'destroy'])->name('InwardGatepass.destroy');
-
-
 // Products search
 Route::get('/search-products', [InwardgatepassController::class, 'searchProducts'])->name('search-products');
+
+
+// Show Add Bill Form
+Route::get('inward-gatepass/{id}/add-bill', [PurchaseController::class, 'addBill'])->name('add_bill');
+// Store Bill
+Route::post('inward-gatepass/{id}/store-bill', [PurchaseController::class, 'store'])->name('store.bill');
 
     // Route::get('/fetch-product', [PurchaseController::class, 'fetchProduct'])->name('item.search');
     // Route::post('/fetch-item-details', [PurchaseController::class, 'fetchItemDetails']);

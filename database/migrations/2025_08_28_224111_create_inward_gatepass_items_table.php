@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('inward_gatepass_id')->constrained('inward_gatepasses')->onDelete('cascade');
             $table->foreignId('product_id');
-
+            
             $table->integer('qty')->default(0);
             $table->timestamps();
         });
