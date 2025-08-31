@@ -31,6 +31,7 @@ return new class extends Migration
                 $table->text('cash');
                 $table->text('card');
                 $table->text('change');
+                $table->text('color');
 
                 $table->text('total_items');
                 $table->timestamps();

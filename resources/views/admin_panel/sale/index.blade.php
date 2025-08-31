@@ -5,8 +5,11 @@
     <div class="card shadow-sm border-0 mt-3">
         <div class="card-header bg-light text-dark d-flex justify-content-between align-items-center">
             <h5 class="mb-0">SALES</h5>
-            <span class="fw-bold text-dark"><a href="{{ route('sale.add') }}" class="btn btn-primary">Add sale</a></span>
+          <div>
+              <span class="fw-bold text-dark"><a href="{{ route('sale.add') }}" class="btn btn-primary">Add sale</a></span>
+            <span class="fw-bold text-dark"><a href="{{ url('bookings') }}" class="btn btn-primary">All Booking</a></span>
         </div>
+          </div>
 
         <div class="card-body">
             <table class="table table-bordered table-striped">

@@ -59,12 +59,13 @@
     <div class="container-fluid">
         <div class="card shadow-sm border-0 mt-3">
             <div class="card-header bg-light text-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">SALES</h5>
+                <h5 class="mb-0">Booking System</h5>
                 <div>
                     <a href="" class="btn btn-primary"> DC</a>
                 </div>
             </div>
-            <form action="{{ route('sales.store') }}" method="POST">
+     <form action="{{ route('bookings.store') }}" method="POST">
+
                 @csrf
                 @if (session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -242,16 +243,14 @@
 
 
                     {{-- Footer Buttons --}}
-                <div class="d-flex justify-content-between align-items-center mt-4">
-    <div>
-        <strong>TOTAL PIECES : </strong> <span>0</span>
-    </div>
-    <div>
-        <button type="submit" name="action" value="booking" class="btn btn-warning">Book</button>
-        <button type="submit" name="action" value="sale" class="btn btn-success">Sale</button>
-        <button type="button" class="btn btn-secondary">Close</button>
-    </div>
-</div>
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <div>
+                            <strong>TOTAL PIECES : </strong> <span>0</span>
+                        </div>
+                        <div>
+                            <button class="btn btn-primary">Save</button>
+                            <button class="btn btn-secondary">Close</button>
+                        </div>
                     </div>
                 </div>
             </form>
@@ -540,26 +539,14 @@ $(document).ready(function () {
         recalcSummary();
 
         // Select2 Color Init on focus
-    $(document).ready(function () {
-    // 1️⃣ Page load par saare color select2 initialize karo
-    $('.select2-color').each(function () {
-        $(this).select2({
-            placeholder: "Select Color",
-            tags: true,
-            width: '100%'
+        $('#purchaseItems').on('focus', '.select2-color', function() {
+            if (!$(this).hasClass("select2-hidden-accessible")) {
+                $(this).select2({
+                    placeholder: "Select Color",
+                    tags: true,
+                    width: '100%'
+                });
+            }
         });
-    });
-
-    // 2️⃣ Jab naye row aaye to tab bhi initialize karo
-    $('#purchaseItems').on('focus', '.select2-color', function () {
-        if (!$(this).hasClass("select2-hidden-accessible")) {
-            $(this).select2({
-                placeholder: "Select Color",
-                tags: true,
-                width: '100%'
-            });
-        }
-    });
-});
     });
 </script>

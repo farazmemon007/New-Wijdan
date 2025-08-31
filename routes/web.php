@@ -17,7 +17,6 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DiscountController;
 use App\Http\Controllers\PurchaseController;
-use App\Http\Controllers\InwardgatepassController;
 use App\Http\Controllers\NarrationController;
 use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\PermissionController;
@@ -25,6 +24,8 @@ use App\Http\Controllers\SubcategoryController;
 use App\Http\Controllers\AccountsHeadController;
 use App\Http\Controllers\SalesOfficerController;
 use App\Http\Controllers\StockTransferController;
+use App\Http\Controllers\InwardgatepassController;
+use App\Http\Controllers\ProductBookingController;
 use App\Http\Controllers\WarehouseStockController;
 
     /*
@@ -206,12 +207,22 @@ Route::post('inward-gatepass/{id}/store-bill', [PurchaseController::class, 'stor
     // Route::get('/get-items-by-category/{categoryId}', [PurchaseController::class, 'getItemsByCategory'])->name('get-items-by-category');
     // Route::get('/get-product-details/{productName}', [ProductController::class, 'getProductDetails'])->name('get-product-details');
 
+    // Route::get('booking/system', [SaleController::class,'booking-system'])->name('booking.index');
     Route::get('sale', [SaleController::class,'index'])->name('sale.index');
     Route::get('sale/create', [SaleController::class,'addsale'])->name('sale.add');
  // Route::get('/products/search', [SaleController::class, 'searchProducts'])->name('products.search');
     Route::get('/search-product-name', [SaleController::class, 'searchpname'])->name('search-product-name');
     Route::post('/sales/store', [SaleController::class, 'store'])->name('sales.store');
-// web.php
+// booking system
+
+Route::get('bookings', [ProductBookingController::class, 'index'])->name('bookings.index');
+Route::get('bookings/create', [ProductBookingController::class, 'create'])->name('bookings.create');
+Route::post('bookings/store', [ProductBookingController::class, 'store'])->name('bookings.store');
+Route::get('booking/receipt/{id}', [ProductBookingController::class, 'receipt'])->name('booking.receipt');
+Route::get('/sales/from-booking/{id}', [SaleController::class, 'convertFromBooking'])->name('sales.from.booking');
+
+
+    // web.php
 Route::get('/warehouse-stock-quantity', [StockTransferController::class, 'getStockQuantity'])->name('warehouse.stock.quantity');
 
     // narratiions
@@ -224,6 +235,9 @@ Route::get('/warehouse-stock-quantity', [StockTransferController::class, 'getSto
     Route::post('vouchers/store', [VoucherController::class, 'store'])->name('vouchers.store'); 
   Route::get('/view_all', [AccountsHeadController::class, 'index'])->name('view_all');
   Route::get('/get-vendor-balance/{id}', [VendorController::class, 'getVendorBalance']);
+
+
+  
 
 });
 require __DIR__ . '/auth.php';

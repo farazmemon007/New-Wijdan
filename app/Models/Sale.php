@@ -11,7 +11,7 @@ class Sale extends Model
         'customer', 'product', 'reference', 'product_code', 'brand', 'unit', 'per_price', 
         'per_discount', 'qty', 'per_total', 'total_amount_Words', 'total_bill_amount',
         'total_extradiscount', 'total_net', 'cash', 'card', 'change', 'total_discount',
-        'total_subtotal', 'total_items'
+        'total_subtotal', 'total_items','color'
     ];
 
     public function customer_relation()

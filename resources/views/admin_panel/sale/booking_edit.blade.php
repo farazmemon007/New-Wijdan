@@ -56,6 +56,9 @@
             pointer-events: none;
         }
     </style>
+    <style>
+
+    </style>
     <div class="container-fluid">
         <div class="card shadow-sm border-0 mt-3">
             <div class="card-header bg-light text-white d-flex justify-content-between align-items-center">
@@ -84,17 +87,25 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Customer:</label>
-                            <select name="customer" class="form-control form-control-sm">
-                                <option value="">Select Customer</option>
-                                @foreach ($Customer as $c)
-                                    <option value="{{ $c->id }}">{{ $c->customer_name }}</option>
-                                @endforeach
-                            </select>
+<select name="customer" class="form-control form-control-sm">
+    <option value="">Select Customer</option>
+    @foreach ($Customer as $c)
+        <option value="{{ $c->id }}" {{ $booking->customer == $c->id ? 'selected' : '' }}>
+            {{ $c->customer_name }}
+        </option>
+    @endforeach
+</select>
+
+
+
                         </div>
 
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Reference #</label>
-                            <input type="text" name="reference" class="form-control form-control-sm">
+                     <input type="text" name="reference" class="form-control form-control-sm"
+    value="{{ $booking->reference }}">
+    <input type="text" name="booking_id" value="{{ $booking->id ?? '' }}">
+
                         </div>
                     </div>
 
@@ -116,92 +127,136 @@
                                     <th>Action</th>
                                 </tr>
                             </thead>
-<style>
-/* Select2: make selection stay in one line and scroll horizontally */
-.select2-container--default .select2-selection--multiple {
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    min-height: 38px !important;
-    max-height: 38px !important;
-    white-space: nowrap !important;
-    scrollbar-width: thin;
-}
+                            <style>
+                                /* Select2: make selection stay in one line and scroll horizontally */
+                                .select2-container--default .select2-selection--multiple {
+                                    display: flex !important;
+                                    flex-wrap: nowrap !important;
+                                    overflow-x: auto !important;
+                                    overflow-y: hidden !important;
+                                    min-height: 38px !important;
+                                    max-height: 38px !important;
+                                    white-space: nowrap !important;
+                                    scrollbar-width: thin;
+                                }
 
-/* Each tag styling */
-.select2-selection__choice {
-    white-space: nowrap !important;
-    margin-right: 3px !important;
-    font-size: 11px;
-    padding: 2px 5px !important;
-}
+                                /* Each tag styling */
+                                .select2-selection__choice {
+                                    white-space: nowrap !important;
+                                    margin-right: 3px !important;
+                                    font-size: 11px;
+                                    padding: 2px 5px !important;
+                                }
 
-/* Remove unwanted spacing */
-.select2-search--inline {
-    flex: none !important;
-}
-</style>
+                                /* Remove unwanted spacing */
+                                .select2-search--inline {
+                                    flex: none !important;
+                                }
+                            </style>
 
 
 
                             </style>
-                            <tbody id="purchaseItems" style="max-height: 300px; overflow-y: auto;">
-                                <tr>
-                                    <td>
-                                        <input type="hidden" name="product_id[]" class="product_id">
-                                        <input type="text" class="form-control productSearch"
-                                            placeholder="Enter product name..." autocomplete="off">
-                                        <ul class="searchResults list-group mt-1"></ul>
-                                    </td>
+                           <tbody id="purchaseItems">
+ @foreach ($bookingItems as $item)
+<tr>
+    <td>
+        <input type="hidden" name="product_id[]" class="product_id" value="{{ $item['product_id'] ?? '' }}">
+        <input type="text" class="form-control productSearch" value="{{ $item['item_name'] ?? '' }}" autocomplete="off">
+        <ul class="searchResults list-group mt-1"></ul>
+    </td>
 
-                                    <td class="item_code border">
-                                        <input type="text" name="item_code[]" class="form-control" readonly>
- <td class="color border" style="min-width: 180px; max-width: 200px; overflow-x: auto; white-space: nowrap;">
-    <div style="overflow-x: auto;">
-        <select class="form-control form-control-sm select2-color" name="color[][]" multiple></select>
-    </div>
-</td>
+    <td class="item_code border">
+        <input type="text" name="item_code[]" class="form-control" value="{{ $item['item_code'] ?? '' }}" readonly>
+    </td>
+
+    <td class="color border">
+        <select class="form-control form-control-sm select2-color" name="color[][]" multiple>
+            @if(!empty($item['color']) && is_array($item['color']))
+                @foreach($item['color'] as $color)
+                    <option value="{{ $color }}" selected>{{ $color }}</option>
+                @endforeach
+            @endif
+        </select>
+    </td>
+
+    <td class="uom border">
+        <input type="text" name="uom[]" class="form-control" value="{{ $item['uom'] ?? '' }}" readonly>
+    </td>
+
+    <td class="unit border">
+        <input type="text" name="unit[]" class="form-control" value="{{ $item['unit'] ?? '' }}" readonly>
+    </td>
+
+    <td>
+        <input type="number" step="0.01" name="price[]" class="form-control price" value="{{ $item['price'] ?? 0 }}">
+    </td>
+
+    <td>
+        <input type="number" step="0.01" name="item_disc[]" class="form-control item_disc" value="{{ $item['discount'] ?? 0 }}">
+    </td>
+
+    <td class="qty">
+        <input type="number" name="qty[]" class="form-control quantity" value="{{ $item['qty'] ?? 1 }}" min="1">
+    </td>
+
+    <td class="total border">
+        <input type="text" name="total[]" class="form-control row-total" value="{{ $item['total'] ?? 0 }}" readonly>
+    </td>
+
+    <td>
+        <button type="button" class="btn btn-sm btn-danger remove-row">X</button>
+    </td>
+</tr>
+@endforeach
 
 
+    {{-- Empty row for adding more products manually --}}
+    <tr>
+        <td>
+            <input type="hidden" name="product_id[]" class="product_id">
+            <input type="text" class="form-control productSearch" placeholder="Enter product name..." autocomplete="off">
+            <ul class="searchResults list-group mt-1"></ul>
+        </td>
 
+        <td class="item_code border">
+            <input type="text" name="item_code[]" class="form-control" readonly>
+        </td>
 
+        <td class="color border">
+            <select class="form-control form-control-sm select2-color" name="color[][]" multiple></select>
+        </td>
 
-                                    <td class="uom border">
-                                        <input type="text" name="uom[]" class="form-control" readonly>
-                                    </td>
+        <td class="uom border">
+            <input type="text" name="uom[]" class="form-control" readonly>
+        </td>
 
-                                    <td class="unit border">
-                                        <input type="text" name="unit[]" class="form-control" readonly>
-                                    </td>
+        <td class="unit border">
+            <input type="text" name="unit[]" class="form-control" readonly>
+        </td>
 
-                                    <!-- Price = wholesale_price (readonly) -->
-                                    <td>
-                                        <input type="number" step="0.01" name="price[]" class="form-control price"
-                                            value="">
-                                    </td>
+        <td>
+            <input type="number" step="0.01" name="price[]" class="form-control price">
+        </td>
 
-                                    <!-- Per-item Discount (PKR, editable) -->
-                                    <td>
-                                        <input type="number" step="0.01" name="item_disc[]"
-                                            class="form-control item_disc" value="">
-                                    </td>
+        <td>
+            <input type="number" step="0.01" name="item_disc[]" class="form-control item_disc">
+        </td>
 
-                                    <td class="qty">
-                                        <input type="number" name="qty[]" class="form-control quantity" value=""
-                                            min="1">
-                                    </td>
+        <td class="qty">
+            <input type="number" name="qty[]" class="form-control quantity" min="1">
+        </td>
 
-                                    <!-- Row Total (readonly) -->
-                                    <td class="total border">
-                                        <input type="text" name="total[]" class="form-control row-total" readonly>
-                                    </td>
+        <td class="total border">
+            <input type="text" name="total[]" class="form-control row-total" readonly>
+        </td>
 
-                                    <td>
-                                        <button type="button" class="btn btn-sm btn-danger remove-row">X</button>
-                                    </td>
-                                </tr>
-                            </tbody>
+        <td>
+            <button type="button" class="btn btn-sm btn-danger remove-row">X</button>
+        </td>
+    </tr>
+</tbody>
+
 
                         </table>
                     </div>
@@ -242,101 +297,102 @@
 
 
                     {{-- Footer Buttons --}}
-                <div class="d-flex justify-content-between align-items-center mt-4">
-    <div>
-        <strong>TOTAL PIECES : </strong> <span>0</span>
-    </div>
-    <div>
-        <button type="submit" name="action" value="booking" class="btn btn-warning">Book</button>
-        <button type="submit" name="action" value="sale" class="btn btn-success">Sale</button>
-        <button type="button" class="btn btn-secondary">Close</button>
-    </div>
-</div>
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <div>
+                            <strong>TOTAL PIECES : </strong> <span>0</span>
+                        </div>
+                        <div>
+                            <button type="submit" name="action" value="booking" class="btn btn-warning">Book</button>
+                            <button type="submit" name="action" value="sale" class="btn btn-success">Sale</button>
+                            <button type="button" class="btn btn-secondary">Close</button>
+                        </div>
                     </div>
                 </div>
-            </form>
         </div>
+        </form>
+    </div>
     </div>
 @endsection
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
-$(document).ready(function () {
-    function num(n) {
-        return isNaN(parseFloat(n)) ? 0 : parseFloat(n);
-    }
+    $(document).ready(function() {
+        function num(n) {
+            return isNaN(parseFloat(n)) ? 0 : parseFloat(n);
+        }
 
-    function numberToWords(num) {
-        const a = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten",
-            "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen",
-            "Eighteen", "Nineteen"];
-        const b = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
-        if ((num = num.toString()).length > 9) return "Overflow";
-        const n = ("000000000" + num).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{3})$/);
-        if (!n) return;
-        let str = "";
-        str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + " " + a[n[1][1]]) + " Crore " : "";
-        str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + " " + a[n[2][1]]) + " Lakh " : "";
-        str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + " " + a[n[3][1]]) + " Thousand " : "";
-        str += (n[4] != 0) ? (a[Number(n[4])] || b[n[4][0]] + " " + a[n[4][1]]) + " " : "";
-        return str.trim() + " Rupees Only";
-    }
+        function numberToWords(num) {
+            const a = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten",
+                "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen",
+                "Eighteen", "Nineteen"
+            ];
+            const b = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+            if ((num = num.toString()).length > 9) return "Overflow";
+            const n = ("000000000" + num).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{3})$/);
+            if (!n) return;
+            let str = "";
+            str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + " " + a[n[1][1]]) + " Crore " : "";
+            str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + " " + a[n[2][1]]) + " Lakh " : "";
+            str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + " " + a[n[3][1]]) + " Thousand " : "";
+            str += (n[4] != 0) ? (a[Number(n[4])] || b[n[4][0]] + " " + a[n[4][1]]) + " " : "";
+            return str.trim() + " Rupees Only";
+        }
 
-    function recalcRow($row) {
-        const qty = num($row.find('.quantity').val());
-        const price = num($row.find('.price').val());
-        const disc = num($row.find('.item_disc').val());
-        let total = (qty * price) - disc;
-        if (total < 0) total = 0;
-        $row.find('.row-total').val(total.toFixed(2));
-    }
+        function recalcRow($row) {
+            const qty = num($row.find('.quantity').val());
+            const price = num($row.find('.price').val());
+            const disc = num($row.find('.item_disc').val());
+            let total = (qty * price) - disc;
+            if (total < 0) total = 0;
+            $row.find('.row-total').val(total.toFixed(2));
+        }
 
-    function recalcSummary() {
-        let billAmount = 0;
-        let itemDiscount = 0;
-        let totalQty = 0;
+        function recalcSummary() {
+            let billAmount = 0;
+            let itemDiscount = 0;
+            let totalQty = 0;
 
-        $('#purchaseItems tr').each(function () {
-            const rowTotal = num($(this).find('.row-total').val());
-            const disc = num($(this).find('.item_disc').val());
-            const qty = num($(this).find('.quantity').val());
+            $('#purchaseItems tr').each(function() {
+                const rowTotal = num($(this).find('.row-total').val());
+                const disc = num($(this).find('.item_disc').val());
+                const qty = num($(this).find('.quantity').val());
 
-            billAmount += rowTotal;
-            itemDiscount += disc;
-            totalQty += qty;
+                billAmount += rowTotal;
+                itemDiscount += disc;
+                totalQty += qty;
+            });
+
+            const extraDiscount = num($('#extraDiscount').val());
+            const cash = num($('#cash').val());
+            const card = num($('#card').val());
+
+            const net = billAmount - itemDiscount - extraDiscount;
+            const change = (cash + card) - net;
+
+            $('#billAmount').val(billAmount.toFixed(2));
+            $('#itemDiscount').val(itemDiscount.toFixed(2));
+            $('#netAmount').val(net.toFixed(2));
+            $('#change').val(change.toFixed(2));
+            $('#amountInWords').val(numberToWords(Math.round(net)));
+
+            $('strong:contains("TOTAL PIECES")').next().text(totalQty);
+        }
+
+        // Events
+        $(document).on('input', '.quantity, .price, .item_disc, #extraDiscount, #cash, #card', function() {
+            const $row = $(this).closest('tr');
+            if ($row.length) {
+                recalcRow($row);
+            }
+            recalcSummary();
         });
 
-        const extraDiscount = num($('#extraDiscount').val());
-        const cash = num($('#cash').val());
-        const card = num($('#card').val());
-
-        const net = billAmount - itemDiscount - extraDiscount;
-        const change = (cash + card) - net;
-
-        $('#billAmount').val(billAmount.toFixed(2));
-        $('#itemDiscount').val(itemDiscount.toFixed(2));
-        $('#netAmount').val(net.toFixed(2));
-        $('#change').val(change.toFixed(2));
-        $('#amountInWords').val(numberToWords(Math.round(net)));
-
-        $('strong:contains("TOTAL PIECES")').next().text(totalQty);
-    }
-
-    // Events
-    $(document).on('input', '.quantity, .price, .item_disc, #extraDiscount, #cash, #card', function () {
-        const $row = $(this).closest('tr');
-        if ($row.length) {
-            recalcRow($row);
-        }
+        // Initialize
+        $('#purchaseItems tr').each(function() {
+            recalcRow($(this));
+        });
         recalcSummary();
     });
-
-    // Initialize
-    $('#purchaseItems tr').each(function () {
-        recalcRow($(this));
-    });
-    recalcSummary();
-});
 </script>
 
 <script>
@@ -540,7 +596,8 @@ $(document).ready(function () {
         recalcSummary();
 
         // Select2 Color Init on focus
-    $(document).ready(function () {
+    // Select2 Color Init on focus
+$(document).ready(function () {
     // 1️⃣ Page load par saare color select2 initialize karo
     $('.select2-color').each(function () {
         $(this).select2({
@@ -561,5 +618,7 @@ $(document).ready(function () {
         }
     });
 });
+
+
     });
 </script>
