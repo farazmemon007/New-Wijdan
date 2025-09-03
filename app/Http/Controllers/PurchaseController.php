@@ -614,4 +614,131 @@ public function store(Request $request, $gatepassId = null)
         return redirect()->back()->with('success', 'Purchase deleted successfully.');
     }
 
+
+
+    // purchase_reutun
+
+
+
+public function showReturnForm($id)
+{
+    $purchase = Purchase::with(['vendor', 'warehouse', 'items.product'])->findOrFail($id);
+    $Vendor = \App\Models\Vendor::all();
+    $Warehouse = \App\Models\Warehouse::all();
+
+    return view('admin_panel.purchase.purchase_return.create', compact('purchase', 'Vendor', 'Warehouse'));
+}
+
+// store return
+public function storeReturn(Request $request)
+{
+    $validated = $request->validate([
+        'vendor_id'        => 'required|exists:vendors,id',
+        'warehouse_id'     => 'required|exists:warehouses,id',
+        'return_date'      => 'required|date',
+        'return_reason'    => 'nullable|string|max:255',
+        'remarks'          => 'nullable|string',
+        'product_id'       => 'required|array',
+        'product_id.*'     => 'required|exists:products,id',
+        'qty'              => 'required|array',
+        'qty.*'            => 'required|numeric|min:1',
+        'price'            => 'required|array',
+        'price.*'          => 'required|numeric|min:0',
+        'unit'             => 'required|array',
+        'unit.*'           => 'required|string',
+        'item_disc'        => 'nullable|array',
+        'item_disc.*'      => 'nullable|numeric|min:0',
+    ]);
+
+    DB::transaction(function () use ($validated) {
+        // Generate Return Invoice #
+        $lastReturn = \App\Models\PurchaseReturn::latest()->first();
+        $nextInvoice = 'RTN-' . str_pad(optional($lastReturn)->id + 1 ?? 1, 5, '0', STR_PAD_LEFT);
+
+        // Create main return record
+        $return = \App\Models\PurchaseReturn::create([
+            'vendor_id'     => $validated['vendor_id'],
+            'warehouse_id'  => $validated['warehouse_id'],
+            'return_invoice'=> $nextInvoice,
+            'return_date'   => $validated['return_date'],
+            'return_reason' => $validated['return_reason'] ?? null,
+            'bill_amount'   => 0, // calculated below
+            'item_discount' => 0,
+            'extra_discount'=> 0,
+            'net_amount'    => 0,
+            'paid'          => 0,
+            'balance'       => 0,
+            'remarks'       => $validated['remarks'] ?? null,
+        ]);
+
+        $subtotal = 0;
+
+        foreach ($validated['product_id'] as $index => $productId) {
+            $qty   = $validated['qty'][$index];
+            $price = $validated['price'][$index];
+            $disc  = $validated['item_disc'][$index] ?? 0;
+            $unit  = $validated['unit'][$index];
+            $lineTotal = ($price * $qty) - $disc;
+
+            \App\Models\PurchaseReturnItem::create([
+                'purchase_return_id' => $return->id,
+                'product_id'         => $productId,
+                'qty'                => $qty,
+                'price'              => $price,
+                'item_discount'      => $disc,
+                'unit'               => $unit,
+                'line_total'         => $lineTotal,
+            ]);
+
+            // Update stock (deduct)
+            $stock = \App\Models\Stock::where('branch_id', auth()->id())
+                ->where('warehouse_id', $validated['warehouse_id'])
+                ->where('product_id', $productId)
+                ->first();
+
+            if ($stock) {
+                $stock->qty -= $qty;
+                $stock->save();
+            }
+
+            $subtotal += $lineTotal;
+        }
+
+        $discount    = $validated['item_disc'] ? array_sum($validated['item_disc']) : 0;
+        $extraDisc   = $request->extra_discount ?? 0;
+        $netAmount   = ($subtotal - $discount) - $extraDisc;
+
+        $return->update([
+            'bill_amount'   => $subtotal,
+            'item_discount' => $discount,
+            'extra_discount'=> $extraDisc,
+            'net_amount'    => $netAmount,
+            'balance'       => $netAmount,
+        ]);
+
+        // Update Vendor Ledger (subtract amount)
+        $ledger = \App\Models\VendorLedger::where('vendor_id', $validated['vendor_id'])->first();
+        $openingBalance = $ledger ? $ledger->closing_balance : 0;
+        $closingBalance = $openingBalance - $netAmount;
+
+        \App\Models\VendorLedger::updateOrCreate(
+            ['vendor_id' => $validated['vendor_id']],
+            [
+                'admin_or_user_id' => auth()->id(),
+                'opening_balance'  => $openingBalance,
+                'closing_balance'  => $closingBalance,
+                'previous_balance' => $openingBalance,
+            ]
+        );
+    });
+
+    return redirect()->route('purchase.return.index')->with('success', 'Purchase return successfully created.');
+}
+
+public function purchaseReturnIndex()
+{
+    $returns = \App\Models\PurchaseReturn::with(['vendor', 'warehouse'])->latest()->get();
+    return view('admin_panel.purchase.purchase_return.index', compact('returns'));
+}
+
 }

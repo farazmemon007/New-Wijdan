@@ -53,6 +53,8 @@
                 <td>{{ $purchase->purchase_date }}</td>
                 <td>
                     <a href="{{ route('purchase.edit', $purchase->id) }}" class="btn  btn-sm" style="background:#add8e6">Edit</a>
+                   <a href="{{ route('purchase.return.show', $purchase->id) }}" class="btn btn-sm btn-danger">Return</a>
+
                     {{-- 
                     <form action="{{ route('purchase.destroy', $purchase->id) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Are you sure you want to delete this purchase?');">
                         @csrf

@@ -34,6 +34,7 @@ return new class extends Migration
                 $table->text('color');
 
                 $table->text('total_items');
+                $table->text('sale_status')->nullable();
                 $table->timestamps();
             });
     }

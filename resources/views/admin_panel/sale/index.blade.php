@@ -24,6 +24,8 @@
                         <th>discount</th>
                         <th>Total</th>
                         <th>Date</th>
+                        <th>Status Sale</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -38,6 +40,19 @@
     <td>{{ $sale->per_discount}}</td>
     <td>{{ $sale->per_total }}</td>
     <td>{{ $sale->created_at->format('d-m-Y') }}</td>
+    <td>
+    @if($sale->sale_status === null)
+        <span class="badge bg-success">Sale</span>
+    @elseif($sale->sale_status == 1)
+        <span class="badge bg-danger">Return</span>
+    @else
+        <span class="badge bg-secondary">Unknown</span>
+    @endif
+</td>
+    <td><a href="{{ route('sales.return.create', $sale->id) }}" class="btn btn-sm btn-warning">
+    Return
+</a>
+</td>
 </tr>
 @endforeach
 </tbody>

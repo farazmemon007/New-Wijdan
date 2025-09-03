@@ -198,6 +198,11 @@ Route::get('/search-products', [InwardgatepassController::class, 'searchProducts
 Route::get('inward-gatepass/{id}/add-bill', [PurchaseController::class, 'addBill'])->name('add_bill');
 // Store Bill
 Route::post('inward-gatepass/{id}/store-bill', [PurchaseController::class, 'store'])->name('store.bill');
+// Purchase Return Routes
+Route::get('purchase/return', [PurchaseController::class, 'purchaseReturnIndex'])->name('purchase.return.index');
+
+Route::get('purchase/return/{id}', [PurchaseController::class, 'showReturnForm'])->name('purchase.return.show');
+Route::post('purchase/return/store', [PurchaseController::class, 'storeReturn'])->name('purchase.return.store');
 
     // Route::get('/fetch-product', [PurchaseController::class, 'fetchProduct'])->name('item.search');
     // Route::post('/fetch-item-details', [PurchaseController::class, 'fetchItemDetails']);
@@ -213,7 +218,12 @@ Route::post('inward-gatepass/{id}/store-bill', [PurchaseController::class, 'stor
  // Route::get('/products/search', [SaleController::class, 'searchProducts'])->name('products.search');
     Route::get('/search-product-name', [SaleController::class, 'searchpname'])->name('search-product-name');
     Route::post('/sales/store', [SaleController::class, 'store'])->name('sales.store');
-// booking system
+Route::get('/sales/{id}/return', [SaleController::class, 'saleretun'])->name('sales.return.create');
+Route::post('/sales-return/store', [SaleController::class, 'storeSaleReturn'])->name('sales.return.store');
+Route::get('/sale-returns', [App\Http\Controllers\SaleController::class, 'salereturnview'])->name('sale.returns.index');
+
+
+    // booking system
 
 Route::get('bookings', [ProductBookingController::class, 'index'])->name('bookings.index');
 Route::get('bookings/create', [ProductBookingController::class, 'create'])->name('bookings.create');

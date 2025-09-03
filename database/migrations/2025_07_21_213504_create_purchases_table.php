@@ -28,6 +28,7 @@ return new class extends Migration
             $table->decimal('net_amount', 12, 2)->default(0);
             $table->decimal('paid_amount',12, 2)->default(0);
             $table->decimal('due_amount', 12, 2)->default(0);
+                $table->text('status_purchase')->nullable();
 
             $table->timestamps();
             $table->softDeletes();
