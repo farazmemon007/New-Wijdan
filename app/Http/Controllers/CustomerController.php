@@ -4,49 +4,51 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Customer;
-    use App\Models\CustomerLedger;
+use App\Models\CustomerLedger;
 use App\Models\CustomerPayment;
 use Illuminate\Support\Facades\Auth;
+
 class CustomerController extends Controller
 {
     public function index()
-{
-    $customers = Customer::latest()->get(); // no status filter
-    return view('admin_panel.customers.index', compact('customers'));
-}
+    {
+        $customers = Customer::latest()->get(); // no status filter
+        return view('admin_panel.customers.index', compact('customers'));
+    }
 
-public function toggleStatus($id)
-{
-    $customer = Customer::findOrFail($id);
-    $customer->status = $customer->status === 'active' ? 'inactive' : 'active';
-    $customer->save();
+    public function toggleStatus($id)
+    {
+        $customer = Customer::findOrFail($id);
+        $customer->status = $customer->status === 'active' ? 'inactive' : 'active';
+        $customer->save();
 
-    return redirect()->back()->with('success', 'Customer status updated.');
-}
+        return redirect()->back()->with('success', 'Customer status updated.');
+    }
 
-// Add this in CustomerController
-public function getCustomerLedger($id)
-{
-    $ledger = CustomerLedger::where('customer_id',$id)->latest()->first();
-    return response()->json([
-        'closing_balance' => $ledger->closing_balance
-    ]);
-}
+    // Add this in CustomerController
+    public function getCustomerLedger($id)
+    {
+        $ledger = CustomerLedger::where('customer_id', $id)->latest()->first();
+        return response()->json([
+            'closing_balance' => $ledger->closing_balance
+        ]);
+    }
+
 
     public function markInactive($id)
-{
-    $customer = Customer::findOrFail($id);
-    $customer->status = 'inactive';
-    $customer->save();
+    {
+        $customer = Customer::findOrFail($id);
+        $customer->status = 'inactive';
+        $customer->save();
 
-    return redirect()->route('customers.index')->with('success', 'Customer marked as inactive.');
-}
+        return redirect()->route('customers.index')->with('success', 'Customer marked as inactive.');
+    }
 
     public function inactiveCustomers()
-{
-    $customers = Customer::where('status', 'inactive')->latest()->get();
-    return view('admin_panel.customers.inactive', compact('customers'));
-}
+    {
+        $customers = Customer::where('status', 'inactive')->latest()->get();
+        return view('admin_panel.customers.inactive', compact('customers'));
+    }
 
     public function create()
     {
@@ -56,41 +58,43 @@ public function getCustomerLedger($id)
 
     public function store(Request $request)
     {
-        // dd($request->all());
         $data = $request->validate([
-            'customer_id' => 'required|unique:customers',
-            'customer_name' => 'nullable',
-            'customer_name_ur' => 'nullable',
-            'cnic' => 'nullable',
-            'filer_type' => 'nullable',
-            'zone' => 'nullable',
-            'contact_person' => 'nullable',
-            'mobile' => 'nullable',
-            'email_address' => 'nullable|email',
-            'contact_person_2' => 'nullable',
-            'mobile_2' => 'nullable',
-            'email_address_2' => 'nullable|email',
-            'opening_balance' => 'nullable',
-            // 'credit' => 'nullable|numeric',
-            'address' => 'nullable',
-            'customer_type' => 'nullable',
+            'customer_id'        => 'required|unique:customers',
+            'customer_name'      => 'nullable',
+            'customer_name_ur'   => 'nullable',
+            'cnic'               => 'nullable',
+            'filer_type'         => 'nullable',
+            'zone'               => 'nullable',
+            'contact_person'     => 'nullable',
+            'mobile'             => 'nullable',
+            'email_address'      => 'nullable|email',
+            'contact_person_2'   => 'nullable',
+            'mobile_2'           => 'nullable',
+            'email_address_2'    => 'nullable|email',
+            'opening_balance'    => 'nullable|numeric',
+            'address'            => 'nullable',
+            'customer_type'      => 'nullable',
         ]);
 
+        // Customer create
+        $customer = Customer::create($data);
 
-    // Customer create
-    $customer = Customer::create($data);
+        // Ledger me entry agar opening balance dia gaya ho
+        $opening = $data['opening_balance'] ?? 0;
 
-    // Ledger me entry agar opening balance dia gaya ho
-    if (!empty($data['opening_balance']) && $data['opening_balance'] > 0) {
-        CustomerLedger::create([
-            'customer_id' => $customer->id,
-            'admin_or_user_id' => Auth::id(),
-            'previous_balance' => 0,
-            'closing_balance' => $data['opening_balance'],
-        ]);
-    }
+        if ($opening > 0) {
+            CustomerLedger::create([
+                'customer_id'      => $customer->id,
+                'admin_or_user_id' => Auth::id(),
+                'previous_balance' => 0,
+                'opening_balance'  => $opening,           // ✅ yahan set karna zaroori hai
+                'closing_balance'  => $opening,
+            ]);
+        }
+
         return redirect()->route('customers.index')->with('success', 'Customer created successfully.');
     }
+
 
     public function edit($id)
     {
@@ -117,82 +121,101 @@ public function getCustomerLedger($id)
 
     // customer ledger start
 
-// Customer Ledger View
-public function customer_ledger()
-{
-    if (Auth::check()) {
-        $userId = Auth::id();
-        $CustomerLedgers = CustomerLedger::with('customer')
-            ->where('admin_or_user_id', $userId)
-            ->get();
+    // Customer Ledger View
+    public function customer_ledger()
+    {
+        if (Auth::check()) {
+            $userId = Auth::id();
+            $CustomerLedgers = CustomerLedger::with('customer')
+                ->where('admin_or_user_id', $userId)
+                ->get();
+            return view('admin_panel.customers.customer_ledger', compact('CustomerLedgers'));
+        } else {
+            return redirect()->back();
+        }
+    }
+    // customer payment start
 
-        return view('admin_panel.customers.customer_ledger', compact('CustomerLedgers'));
-    } else {
-        return redirect()->back();
+
+    // View all customer payments
+    public function customer_payments()
+    {
+        $payments = CustomerPayment::with('customer')->orderByDesc('id')->get();
+        $customers = Customer::all();
+        return view('admin_panel.customers.customer_payments', compact('payments', 'customers'));
+    }
+
+    // Store a customer payment
+    public function store_customer_payment(Request $request)
+    {
+        $request->validate([
+            'customer_id' => 'required|exists:customers,id',
+            'amount' => 'required|numeric|min:0',
+            'adjustment_type' => 'required|in:plus,minus',
+            'payment_method' => 'nullable|string',
+            'payment_date' => 'required|date',
+            'note' => 'nullable|string',
+        ]);
+
+        $userId = Auth::id();
+
+        // Save the payment
+        CustomerPayment::create([
+            'customer_id'      => $request->customer_id,
+            'admin_or_user_id' => $userId,
+            'amount'           => $request->amount,
+            'payment_method'   => $request->payment_method,
+            'payment_date'     => $request->payment_date,
+            'note'             => $request->note,
+        ]);
+
+        // Get latest ledger record
+        $ledger = CustomerLedger::where('customer_id', $request->customer_id)->latest()->first();
+
+        if ($ledger) {
+            // Calculate new balance
+            $newBalance = $request->adjustment_type === 'plus'
+                ? $ledger->closing_balance + $request->amount
+                : $ledger->closing_balance - $request->amount;
+
+            // Update existing ledger record only
+            $ledger->update([
+                'closing_balance' => $newBalance,
+            ]);
+        }
+
+        return back()->with('success', 'Payment adjusted and ledger updated.');
+    }
+
+    public function destroy_payment($id)
+    {
+        $payment = CustomerPayment::findOrFail($id);
+
+        $customerId = $payment->customer_id;
+        $amount     = $payment->amount;
+
+        // Latest ledger record for that customer
+        $ledger = CustomerLedger::where('customer_id', $customerId)
+            ->orderBy('id', 'desc')
+            ->first();
+        if ($ledger) {
+            $ledger->closing_balance += $amount;
+            $ledger->save();
+        }
+
+        // Delete the payment entry
+        $payment->delete();
+
+        return redirect()->back()->with('success', 'Payment deleted and customer ledger updated successfully.');
+    }
+
+
+    public function getByType(Request $request)
+    {
+        $type = $request->get('type');
+
+        $customers = Customer::where('customer_type', $type)->get(['id', 'customer_name']);
+
+        return response()->json(['customers' => $customers]);
     }
 }
-// customer payment start
-
-
-// View all customer payments
-public function customer_payments()
-{
-    $payments = CustomerPayment::with('customer')->orderByDesc('id')->get();
-    $customers = Customer::all();
-    return view('admin_panel.customers.customer_payments', compact('payments', 'customers'));
-}
-
-// Store a customer payment
-public function store_customer_payment(Request $request)
-{
-    $request->validate([
-        'customer_id' => 'required|exists:customers,id',
-        'amount' => 'required|numeric|min:0',
-        'adjustment_type' => 'required|in:plus,minus',
-        'payment_method' => 'nullable|string',
-        'payment_date' => 'required|date',
-        'note' => 'nullable|string',
-    ]);
-
-    $userId = Auth::id();
-
-    // Save the payment
-    CustomerPayment::create([
-        'customer_id' => $request->customer_id,
-        'admin_or_user_id' => $userId,
-        'amount' => $request->amount,
-        'payment_method' => $request->payment_method,
-        'payment_date' => $request->payment_date,
-        'note' => $request->note,
-    ]);
-
-    // Ledger update logic
-    $ledger = CustomerLedger::where('customer_id', $request->customer_id)->latest()->first();
-    $prevBalance = $ledger->closing_balance ?? 0;
-
-    // Determine new closing balance based on adjustment type
-    $newBalance = $request->adjustment_type === 'plus'
-        ? $prevBalance + $request->amount
-        : $prevBalance - $request->amount;
-
-    // Insert new ledger entry
-    CustomerLedger::create([
-        'customer_id' => $request->customer_id,
-        'admin_or_user_id' => $userId,
-        'previous_balance' => $prevBalance,
-        'closing_balance' => $newBalance,
-    ]);
-
-    return back()->with('success', 'Payment adjusted and ledger updated.');
-}
-
- public function getByType(Request $request)
-{
-    $type = $request->get('type');
-
-    $customers = Customer::where('customer_type',$type)->get(['id', 'customer_name']);
-
-    return response()->json(['customers' => $customers]);
-}
-}
-

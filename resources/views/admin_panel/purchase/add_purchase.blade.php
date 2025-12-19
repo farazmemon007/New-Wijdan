@@ -18,530 +18,445 @@
     }
 </style>
 @section('content')
-    <div class="main-content">
-        <div class="main-content-inner">
-            <div class="container">
-                <div class="row">
-                    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
-                        rel="stylesheet">
+<div class="main-content">
+    <div class="main-content-inner">
+        <div class="container">
+            <div class="row">
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+                    rel="stylesheet">
 
-                    <style>
-                        .table-scroll tbody {
-                            display: block;
-                            max-height: calc(60px * 5);
-                            /* Assuming each row is ~40px tall */
-                            overflow-y: auto;
-                        }
+                <style>
+                    .table-scroll tbody {
+                        display: block;
+                        max-height: calc(60px * 5);
+                        /* Assuming each row is ~40px tall */
+                        overflow-y: auto;
+                    }
 
-                        .table-scroll thead,
-                        .table-scroll tbody tr {
-                            display: table;
-                            width: 100%;
-                            table-layout: fixed;
-                        }
+                    .table-scroll thead,
+                    .table-scroll tbody tr {
+                        display: table;
+                        width: 100%;
+                        table-layout: fixed;
+                    }
 
-                        /* Optional: Hide scrollbar width impact */
-                        .table-scroll thead {
-                            width: calc(100% - 1em);
-                        }
+                    /* Optional: Hide scrollbar width impact */
+                    .table-scroll thead {
+                        width: calc(100% - 1em);
+                    }
 
-                        .table-scroll .icon-col {
-                            width: 51px;
-                            /* Ya jitni chhoti chahiye */
-                            min-width: 51px;
-                            max-width: 40px;
-                        }
+                    .table-scroll .icon-col {
+                        width: 51px;
+                        /* Ya jitni chhoti chahiye */
+                        min-width: 51px;
+                        max-width: 40px;
+                    }
 
-                        .table-scroll {
-                            max-height: none !important;
-                            overflow-y: visible !important;
-                        }
-
-
-                        .disabled-row input {
-                            background-color: #f8f9fa;
-                            pointer-events: none;
-                        }
-                    </style>
-
-                    <body>
-                        <!-- page-wrapper start -->
-
-                        <div class="body-wrapper">
-                            <div class="bodywrapper__inner">
-                                <div
-                                    class="d-flex justify-content-between align-items-center mb-3 flex-nowrap overflow-auto">
-                                    <!-- Title on the left -->
-                                    <div class="flex-grow-1">
-                                        <h6 class="page-title m-0">INWARDS GATE PASSES</h6>
-                                    </div>
-
-                                    <!-- Buttons on the right -->
-                                    <div class="d-flex gap-4 justify-content-end flex-wrap">
-                                        <button type="button" class="btn btn-outline-primary " style="margin-right: 5px"
-                                            data-bs-toggle="modal" data-bs-target="#supplierModal">
-                                            <i class="la la-truck-loading"></i> Add New Vendor
-                                        </button>
-
-                                        <button type="button" class="btn btn-outline-success " style="margin-right: 5px"
-                                            data-bs-toggle="modal" data-bs-target="#transportModal">
-                                            <i class="la la-truck"></i> Add New Transport
-                                        </button>
-
-                                        <button type="button" class="btn btn-outline-warning text-dark "
-                                            style="margin-right: 5px" data-bs-toggle="modal"
-                                            data-bs-target="#warehouseModal">
-                                            <i class="la la-warehouse"></i> Add New Warehouse
-                                        </button>
-
-                                        <a href="#" class="btn btn-outline-info " style="margin-right: 5px">
-                                            <i class="la la-plus"></i> Add Product
-                                        </a>
-
-                                        {{-- <button type="button" class="btn btn-outline-danger " id="cancelBtn">
-            Cancel
-        </button> --}}
-                                        <a href="{{ route('Purchase.home') }}" class="btn btn-danger">Back </a>
-                                    </div>
+                    .table-scroll {
+                        max-height: none !important;
+                        overflow-y: visible !important;
+                    }
 
 
+                    .disabled-row input {
+                        background-color: #f8f9fa;
+                        pointer-events: none;
+                    }
+                </style>
 
-                                </div>
+                <body>
+                    <!-- page-wrapper start -->
 
+                   <form action="{{ route('store.Purchase') }}" method="POST">
+@csrf
 
+<style>
+    body { background:#f5f6fa; }
 
-                                <div class="row gy-3">
-                                    <div class="col-lg-12 col-md-12 mb-30">
-                                        <div class="card">
-                                            <div class="card-body">
-                                                {{-- <form action="{{ route('store-Purchase') }}" method="POST"> --}}
-                                                @if ($errors->any())
-                                                    <div class="alert alert-danger">
-                                                        <ul>
-                                                            @foreach ($errors->all() as $error)
-                                                                <li>{{ $error }}</li>
-                                                            @endforeach
-                                                        </ul>
-                                                    </div>
-                                                @endif
-                                                @if (session('success'))
-                                                    <div class="alert alert-success alert-dismissible fade show"
-                                                        role="alert">
-                                                        <strong>Success!</strong> {{ session('success') }}
-                                                        <button type="button" class="btn-close" data-bs-dismiss="alert"
-                                                            aria-label="Close"></button>
-                                                    </div>
-                                                @endif
+    .card {
+        border-radius: 10px;
+        border: 1px solid #e0e3ea;
+        box-shadow: 0 2px 8px rgba(0,0,0,.05);
+    }
 
-                                                <form action="{{ route('store.Purchase') }}" method="POST">
-                                                    @csrf
-                                                    <div class="row mb-3 g-3 mt-4">
-                                                        <div class="col-xl-12">
-                                                            <div class="row g-3">
-                                                                <div class="col-xl-3 col-sm-6 mt-3">
-                                                                    <label><i
-                                                                            class="bi bi-calendar-date text-primary me-1"></i>
-                                                                        Current Date</label>
-                                                                    <input name="purchase_date" value="{{ date('Y-m-d') }}"
-                                                                        type="date" class="form-control">
-                                                                </div>
+    .card-header {
+        background: linear-gradient(90deg,#f8f9fc,#eef1f7);
+        font-weight: 600;
+        font-size: 17px;
+        color: #2c3e50;
+    }
 
-                                                                <div class="col-xl-3 col-sm-6 mt-3">
-                                                                    <label><i class="bi bi-receipt text-primary me-1"></i>
-                                                                        Companies/Vendors</label>
-                                                                    {{-- <input name="challan_no" type="text" class="form-control"> --}}
-                                                                    <select name="vendor_id" class="form-control">
-                                                                        <option disabled selected>Select One</option>
+    label {
+        font-size: 14px;
+        font-weight: 500;
+        color: #495057;
+    }
 
-                                                                        @foreach ($Vendor as $item)
-                                                                            <option value="{{ $item->id }}">
-                                                                                {{ $item->name }}</option>
-                                                                        @endforeach
-                                                                    </select>
-                                                                </div>
-                                                                <div class="col-xl-3 col-sm-6 mt-3">
-                                                                    <label><i
-                                                                            class="bi bi-file-earmark-text text-primary me-1"></i>
-                                                                        Company Inv #</label>
-                                                                    <input name="purchase_order_no" type="text"
-                                                                        class="form-control">
-                                                                </div>
-                                                                <div class="col-xl-3 col-sm-6 mt-3">
-                                                                    <label>
-                                                                        <i class="bi bi-building text-primary me-1"></i>
-                                                                        Warehouse
-                                                                    </label>
-                                                                    <select name="warehouse_id" class="form-control">
-                                                                        <option disabled selected>Select One</option>
-                                                                        @foreach ($Warehouse as $item)
-                                                                            <option value="{{ $item->id }}">
-                                                                                {{ $item->warehouse_name }}</option>
-                                                                        @endforeach
-                                                                    </select>
-                                                                </div>
+    .form-control, .form-select {
+        border-radius: 6px;
+        font-size: 14px;
+    }
 
+    .table thead th {
+        background: #f1f3f5;
+        font-weight: 600;
+        font-size: 14px;
+        text-align: center;
+        white-space: nowrap;
+    }
 
-                                                                <div class="col-xl-6 col-sm-6 mt-3">
-                                                                    <label><i class="bi bi-card-text text-primary me-1"></i>
-                                                                        Job No & Description</label>
-                                                                    <input name="note" type="text"
-                                                                        class="form-control">
-                                                                </div>
-                                                                <div class="col-xl-6 col-sm-6 mt-3">
-                                                                    <label><i class="bi bi-card-text text-primary me-1"></i>
-                                                                        Transport Name</label>
-                                                                    <input name="job_description" type="text"
-                                                                        class="form-control">
-                                                                </div>
-                                                            </div>
+    .table tbody td {
+        vertical-align: middle;
+        white-space: nowrap;
+    }
 
-                                                            <!-- Supplier Info Row -->
-                                                            <div class="row mt-4">
-                                                            </div>
-                                                        </div>
-                                                    </div>
+    .btn-primary {
+        padding: 8px 26px;
+        border-radius: 6px;
+    }
+</style>
+<style>
+     .gp-actions-center {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+        }
 
+        /* .gp-action-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      background: #f8f9fa;
+      text-decoration: none;
+      color: #333;
+      font-size: 14px;
+    } */
 
+        .gp-action-btn:hover {
+            background: #e9ecef;
+        }
 
-                                                    <!-- Item Code Table -->
+        .gp-action-btn.danger {
+            color: #dc3545;
+        }
 
-                                                    <div style="max-height: 300px; overflow-y: scroll; ">
-                                                        <table class="table mt-3 table-bordered">
-                                                            <thead>
-                                                                <tr class="text-center">
-                                                                    <th>product</th>
-                                                                    <th>Item Code</th>
+        .gp-action-btn {
+            width: 60px;
+            /* width kam */
+            height: 60px;
+            /* height zyada */
+            padding: 10px;
 
-                                                                    <th>Brand</th>
-                                                                    <th>Unit</th>
-                                                                    <th>Price</th>
-                                                                    <th>Discount</th>
-                                                                    <th>Qty</th>
-                                                                    <th>Total</th>
-                                                                    <th>Action</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody id="purchaseItems"
-                                                                style="max-height: 300px; overflow-y: auto;">
-                                                                <tr>
-                                                                    <td>
-                                                                        <input type="hidden" name="product_id[]"
-                                                                            class="product_id">
-                                                                        <input type="text"
-                                                                            class="form-control productSearch"
-                                                                            placeholder="Enter product name..."
-                                                                            autocomplete="off">
-                                                                        <ul class="searchResults list-group mt-1"></ul>
-                                                                    </td>
+            display: flex;
+            flex-direction: column;
+            /* icon upar, text neeche */
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
 
-                                                                    <td class="item_code border">
-                                                                        <input type="text" name="item_code[]"
-                                                                            class="form-control" readonly>
-                                                                    </td>
+            background-color: #f1f3f5;
+            border-radius: 10px;
+            text-decoration: none;
+            color: #333;
+            font-size: 13px;
+        }
 
-                                                                    <td class="uom border">
-                                                                        <input type="text" name="uom[]"
-                                                                            class="form-control" readonly>
-                                                                    </td>
+        .gp-action-btn i {
+            font-size: 20px;
+        }
+</style>
+   <div class="gp-header row align-items-center mb-2">
 
-                                                                    <td class="unit border">
-                                                                        <input type="text" name="unit[]"
-                                                                            class="form-control" readonly>
-                                                                    </td>
-
-                                                                    <!-- Price = wholesale_price (readonly) -->
-                                                                    <td>
-                                                                        <input type="number" step="0.01"
-                                                                            name="price[]" class="form-control price"
-                                                                            value="">
-                                                                    </td>
-
-                                                                    <!-- Per-item Discount (PKR, editable) -->
-                                                                    <td>
-                                                                        <input type="number" step="0.01"
-                                                                            name="item_disc[]"
-                                                                            class="form-control item_disc" value="">
-                                                                    </td>
-
-                                                                    <td class="qty">
-                                                                        <input type="number" name="qty[]"
-                                                                            class="form-control quantity" value=""
-                                                                            min="1">
-                                                                    </td>
-
-                                                                    <!-- Row Total (readonly) -->
-                                                                    <td class="total border">
-                                                                        <input type="text" name="total[]"
-                                                                            class="form-control row-total" readonly>
-                                                                    </td>
-
-                                                                    <td>
-                                                                        <button type="button"
-                                                                            class="btn btn-sm btn-danger remove-row">X</button>
-                                                                    </td>
-                                                                </tr>
-                                                            </tbody>
-
-
-                                                        </table>
-                                                    </div>
-                                                   
-                                                    <div class="row g-3 mt-3">
-                                                        <div class="col-md-3">
-                                                            <label>Subtotal</label>
-                                                            <input type="text" id="subtotal" class="form-control"
-                                                                value="0" name="subtotal" readonly>
-                                                        </div>
-
-                                                        <div class="col-md-3">
-                                                            <label>Discount (Overall)</label>
-                                                            <input type="number" step="0.01" id="overallDiscount"
-                                                                class="form-control" name="discount" value="0">
-                                                        </div>
-
-                                                        <div class="col-md-3">
-                                                            <label>Extra Cost</label>
-                                                            <input type="number" step="0.01" id="extraCost"
-                                                                class="form-control" name="extra_cost" value="0">
-                                                        </div>
-
-                                                        <div class="col-md-3">
-                                                            <label>Net Amount</label>
-                                                            <input type="text" id="netAmount"  name="net_amount" 
-                                                                class="form-control fw-bold" value="0" readonly>
-                                                        </div>
-                                                    </div>
-                                                    <!-- =========================== -->
-
-                                                    <!-- ===== END SUMMARY ===== -->
-
-
-
-{{-- 
-                                                    <button type="submit" class="btn btn-primary w-100 mt-4">Submit
-                                                        Purchase</button> --}}
-                                                        <button type="button" id="submitBtn" class="btn btn-primary">Submit</button>
-
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                            </div><!-- bodywrapper__inner end -->
-                        </div><!-- body-wrapper end -->
+            <!-- Left : Title -->
+            <div class="col-md-3">
+                <div class="gp-title">
+                    <h5 class="mb-0 fw-semibold" style="font-size:20px">Purchase Product</h5>
+                    {{-- <small class="text-muted">Create & manage inward stock entries</small> --}}
                 </div>
+            </div>
 
-                <!-- Warehouse Modal -->
-                <div class="modal fade" id="warehouseModal">
-                    <div class="modal-dialog" role="document">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Add New Warehouse</h5>
-                                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                                    <i class="las la-times"></i>
-                                </button>
-                            </div>
+            {{-- <div class="row"> --}}
+            <div class="col-7">
+                <div class="gp-actions-center text-center">
 
-                            <form action="" method="POST">
-                                @csrf
-                                <div class="modal-body">
-                                    <div class="form-group">
-                                        <label>Branch</label>
-                                        <select name="branch_id" class="form-control select2">
-                                            <option disabled selected>Select Branch</option>
-                                            <option value="0">Main Super Admin</option>
-                                            {{-- @foreach ($branches as $branch)
-                                        <option value="{{ $branch->id }}">{{ $branch->name }}</option>
-                                    @endforeach --}}
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Name</label>
-                                        <input type="text" name="name" class="form-control">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Address</label>
-                                        <input type="text" class="form-control" name="address">
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="submit" class="btn btn--primary w-100 h-45">Submit</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
+                    <a href="javascript:void(0)" class="gp-action-btn" data-bs-toggle="modal" data-bs-target="#vendorModal">
+                        <i class="fa fa-user-plus"></i>
+                        <span>Vendor</span>
+                    </a>
+
+
+                    <a href="#" class="gp-action-btn">
+                        <i class="fa fa-box"></i>
+                        <span>Item</span>
+                    </a>
+
+                    <a href="#" class="gp-action-btn danger" onclick="return confirm('Delete this gatepass?')">
+                        <i class="fa fa-trash"></i>
+                        <span>Delete</span>
+                    </a>
+
                 </div>
+            </div>
+            {{-- </div> --}}
 
-                <!-- Transport Modal -->
-                <div class="modal fade" id="transportModal">
-                    <div class="modal-dialog modal-lg" role="document">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Add New Transport</h5>
-                                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                                    <i class="las la-times"></i>
-                                </button>
-                            </div>
+            <!-- Right : Back Button -->
+            <div class="col-md-2 text-end">
+                <a href="{{ route('Purchase.home') }}" class="btn btn-outline-danger btn-sm">
+                    <i class="fa fa-arrow-left"></i> Back
+                </a>
+            </div>
 
-                            <form action="" method="POST">
-                                @csrf
-                                <div class="modal-body">
-                                    <div class="row">
-                                        <div class="col-lg-6">
-                                            <div class="form-group">
-                                                <label>Company Name</label>
-                                                <input type="text" name="company_name" class="form-control"
-                                                    autocomplete="off">
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-6">
-                                            <div class="form-group">
-                                                <label>Name</label>
-                                                <input type="text" name="name" class="form-control"
-                                                    autocomplete="off">
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-6">
-                                            <div class="form-group">
-                                                <label>Email</label>
-                                                <input type="email" class="form-control" name="email">
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-6">
-                                            <div class="form-group">
-                                                <label>Mobile</label>
-                                                <input type="number" name="mobile" class="form-control">
-                                            </div>
-                                        </div>
+        </div>
+<div class="container-fluid "style="background-color:white;padding:20px 20px;">
+   
 
-                                        <div class="col-lg-12">
-                                            <div class="form-group">
-                                                <label>Address</label>
-                                                <input type="text" name="address" class="form-control">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+    <!-- ================= TOP TWO COLUMNS ================= -->
+    <div class="row g-4 mt-3">
 
-                                <div class="modal-footer">
-                                    <button type="submit" class="btn btn--primary w-100 h-45">Submit</button>
-                                </div>
-                            </form>
+        <!-- LEFT : PURCHASE DETAILS -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header" style="font-size:20px">Purchase Details</div>
+                <div class="card-body">
+                    <div class="row g-3">
+
+                        <div class="col-md-6">
+                            <label>Current Date</label>
+                            <input type="date" name="purchase_date"
+                                   value="{{ date('Y-m-d') }}"
+                                   class="form-control">
                         </div>
-                    </div>
-                </div>
 
-                <!-- Veondor Modal -->
-                <div class="modal fade" id="supplierModal">
-                    <div class="modal-dialog modal-lg" role="document">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Add New Supplier</h5>
-                                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                                    <i class="las la-times"></i>
-                                </button>
-                            </div>
-
-                            <form action="" method="POST">
-                                @csrf
-                                <div class="modal-body">
-                                    <div class="row">
-                                        <div class="col-lg-6">
-                                            <div class="form-group">
-                                                <label>Name</label>
-                                                <input type="text" name="name" class="form-control"
-                                                    autocomplete="off">
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-6">
-                                            <div class="form-group">
-                                                <label class="form-label">E-Mail</label>
-                                                <input type="email" class="form-control" name="email">
-                                            </div>
-                                        </div>
-
-                                        <div class="col-lg-6">
-                                            <div class="form-group">
-                                                <label class="form-label">
-                                                    Mobile
-                                                    <i class="fa fa-info-circle text--primary"
-                                                        title="Type the mobile number including the country code. Otherwise, SMS won't send to that number."></i>
-                                                </label>
-                                                <input type="number" name="mobile" class="form-control">
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-6">
-                                            <div class="form-group">
-                                                <label>Company</label>
-                                                <input type="text" name="company_name" class="form-control">
-                                            </div>
-                                        </div>
-
-                                        <div class="col-lg-12">
-                                            <div class="form-group">
-                                                <label>Address</label>
-                                                <input type="text" name="address" class="form-control">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="modal-footer">
-                                    <button type="submit" class="btn btn--primary w-100 h-45">Submit</button>
-                                </div>
-                            </form>
+                        <div class="col-md-6">
+                            <label>Company Invoice #</label>
+                            <input type="text" name="purchase_order_no" class="form-control">
                         </div>
+
+                        <div class="col-md-6">
+                            <label>Warehouse</label>
+                            <select name="warehouse_id" class="form-control">
+                                <option disabled selected>Select Warehouse</option>
+                                @foreach ($Warehouse as $w)
+                                    <option value="{{ $w->id }}">{{ $w->warehouse_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label>Transport Name</label>
+                            <input type="text" name="transport_name" class="form-control">
+                        </div>
+
+                        <div class="col-md-12">
+                            <label>Job / Description</label>
+                            <input type="text" name="note" class="form-control">
+                        </div>
+
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- RIGHT : VENDOR DETAILS -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header" style="font-size:20px">Vendor Details</div>
+                <div class="card-body">
+                    <div class="row g-3">
+
+                        <div class="col-md-12">
+                            <label>Vendor</label>
+                            <select name="vendor_id" id="vendor_select" class="form-control">
+                                <option disabled selected>Select Vendor</option>
+                                @foreach ($Vendor as $v)
+                                    <option value="{{ $v->id }}"
+                                        data-phone="{{ $v->phone }}"
+                                        data-email="{{ $v->email }}"
+                                        data-address="{{ $v->address }}">
+                                        {{ $v->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label>Phone</label>
+                            <input type="text" id="vendor_phone" class="form-control" readonly>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label>Email</label>
+                            <input type="text" id="vendor_email" class="form-control" readonly>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label>Address</label>
+                            <input type="text" id="vendor_address" class="form-control" readonly>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ================= PRODUCT TABLE ================= -->
+    <div class="card mt-4">
+        <div class="card-header" style="font-size:20px">Product Details</div>
+        <div class="card-body p-0">
+
+            <div class="table-responsive">
+                <table class="table table-bordered mb-0" style="table-layout:fixed;">
+                    <thead>
+                        <tr>
+                            <th style="width:220px">Product</th>
+                            <th style="width:120px">Item Code</th>
+                            <th style="width:120px">Brand</th>
+                            <th style="width:90px">Unit</th>
+                            <th style="width:110px">Price</th>
+                            <th style="width:110px">Discount</th>
+                            <th style="width:80px">Qty</th>
+                            <th style="width:120px">Total</th>
+                            <th style="width:70px">Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="purchaseItems">
+                        <tr>
+                            <td>
+                                <input type="hidden" name="product_id[]">
+                                <input type="text" class="form-control" placeholder="Search product">
+                            </td>
+                            <td><input type="text" name="item_code[]" class="form-control" readonly></td>
+                            <td><input type="text" name="uom[]" class="form-control" readonly></td>
+                            <td><input type="text" name="unit[]" class="form-control" readonly></td>
+                            <td><input type="number" name="price[]" class="form-control"></td>
+                            <td><input type="number" name="item_disc[]" class="form-control"></td>
+                            <td><input type="number" name="qty[]" class="form-control" min="1"></td>
+                            <td><input type="text" name="total[]" class="form-control" readonly></td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-sm btn-danger">×</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ================= SUMMARY ================= -->
+    <div class="card mt-3">
+        <div class="card-body">
+            <div class="row g-3">
+
+                <div class="col-md-3">
+                    <label>Subtotal</label>
+                    <input type="text" class="form-control" readonly>
+                </div>
+
+                <div class="col-md-3">
+                    <label>Overall Discount</label>
+                    <input type="number" class="form-control">
+                </div>
+
+                <div class="col-md-3">
+                    <label>Extra Cost</label>
+                    <input type="number" class="form-control">
+                </div>
+
+                <div class="col-md-3">
+                    <label>Net Amount</label>
+                    <input type="text" class="form-control fw-bold text-success" readonly>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= SUBMIT ================= -->
+    <div class="text-end mt-4">
+        <button type="submit" class="btn btn-primary">
+            Save Purchase
+        </button>
+    </div>
+
+</div>
+</form>
+
+                                                <!-- =========================== -->
+
+                                                <!-- ===== END SUMMARY ===== -->
+
+
+
+                                                {{--
+                                                    <button type="submit" class="btn btn-primary w-100 mt-4">Submit
+                                                        Purchase</button> --}}
+                                                <button type="button" id="submitBtn" class="btn btn-primary mt-5">Submit</button>
+
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+            </div>
+        </div>
+    </div>
+
     @endsection
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const form = document.querySelector("form[action='{{ route('store.Purchase') }}']"); 
-    const submitBtn = document.getElementById("submitBtn");
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const form = document.querySelector("form[action='{{ route('store.Purchase') }}']");
+            const submitBtn = document.getElementById("submitBtn");
 
-    // Enter key se form submit disable
-    form.addEventListener("keydown", function (e) {
-        if (e.key === "Enter") {
-            e.preventDefault();
-        }
-    });
+            // Enter key se form submit disable
+            form.addEventListener("keydown", function(e) {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                }
+            });
 
-    // Sirf button click pe submit
-    submitBtn.addEventListener("click", function () {
-        form.submit();
-    });
-});
-</script>
+            // Sirf button click pe submit
+            submitBtn.addEventListener("click", function() {
+                form.submit();
+            });
+        });
+    </script>
 
     {{-- Success & Error Messages --}}
     @if (session('success'))
-        <script>
-            Swal.fire({
-                icon: 'success',
-                title: 'Success',
-                text: @json(session('success')),
-                confirmButtonColor: '#3085d6',
-            });
-        </script>
+    <script>
+        Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: @json(session('success')),
+            confirmButtonColor: '#3085d6',
+        });
+    </script>
     @endif
 
 
     @if ($errors->any())
-        <script>
-            Swal.fire({
-                icon: 'error',
-                title: 'Oops...',
-                html: {!! json_encode(implode('<br>', $errors->all())) !!},
-                confirmButtonColor: '#d33',
-            });
-        </script>
+    <script>
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            html: {
+                !!json_encode(implode('<br>', $errors - > all())) !!
+            },
+            confirmButtonColor: '#d33',
+        });
+    </script>
     @endif
 
     {{-- Cancel Button Confirmation --}}
@@ -586,14 +501,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 return isNaN(parseFloat(n)) ? 0 : parseFloat(n);
             }
 
-           function recalcRow($row) {
-    const qty = num($row.find('.quantity').val());
-    const price = num($row.find('.price').val());
-    const disc = num($row.find('.item_disc').val()); // per-item discount
-    let total = (qty * price) - (qty * disc);  // ✅ correct formula
-    if (total < 0) total = 0;
-    $row.find('.row-total').val(total.toFixed(2));
-}
+            function recalcRow($row) {
+                const qty = num($row.find('.quantity').val());
+                const price = num($row.find('.price').val());
+                const disc = num($row.find('.item_disc').val()); // per-item discount
+                let total = (qty * price) - (qty * disc); // ✅ correct formula
+                if (total < 0) total = 0;
+                $row.find('.row-total').val(total.toFixed(2));
+            }
 
 
             function recalcSummary() {

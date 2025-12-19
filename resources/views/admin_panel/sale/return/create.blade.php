@@ -93,6 +93,8 @@
             <form action="{{ route('sales.return.store') }}" method="POST">
                 @csrf
                 <input type="hidden" name="sale_id" value="{{ $sale->id }}">
+<input type="hidden" name="branch_id" value="1">
+<input type="hidden" name="warehouse_id" value="1">
 
                 {{-- Alerts --}}
                 @if (session('success'))

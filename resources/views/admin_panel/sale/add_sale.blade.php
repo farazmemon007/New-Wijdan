@@ -72,6 +72,8 @@
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 @endif
+<input type="hidden" name="branch_id" value="1">
+<input type="hidden" name="warehouse_id" value="1">
 
                 @if (session('error'))
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -175,7 +177,7 @@
                                         <input type="text" name="unit[]" class="form-control" readonly>
                                     </td>
 
-                                    <!-- Price = wholesale_price (readonly) -->
+                                    <!-- Price = price (readonly) -->
                                     <td>
                                         <input type="number" step="0.01" name="price[]" class="form-control price"
                                             value="">
@@ -446,7 +448,7 @@ $(document).ready(function () {
                     (data || []).forEach(p => {
                         const brand = (p.brand && p.brand.name) ? p.brand.name : '';
                         const unit = (p.unit_id ?? '');
-                        const price = (p.wholesale_price ?? 0);
+                        const price = (p.price ?? 0);
                         const code = (p.item_code ?? '');
                         const name = (p.item_name ?? '');
                         const id = (p.id ?? '');

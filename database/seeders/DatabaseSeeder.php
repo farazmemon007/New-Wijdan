@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
@@ -16,32 +15,32 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // \App\Models\User::factory(100)->create();
-
-        // \App\Models\User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
-
+        // Run other seeders
         $this->call([
             CategorySeeder::class,
             ProductSeeder::class,
-            WarehouseSeeder::class
+            WarehouseSeeder::class,
         ]);
 
-        
-        $branchUser = User::create([
-                    'name' => 'soban',
-                    'email' => 'soban@soban.com',
-                    'password' => Hash::make('soban')
-                ]);
-        $adminUser = User::create([
-                    'name' => 'admin',
-                    'email' => 'admin@admin.com',
-                    'password' => Hash::make('admin')
-                ]);
+        // Create or get users
+        $branchUser = User::firstOrCreate(
+            ['email' => 'soban@soban.com'],
+            [
+                'name' => 'soban',
+                'password' => Hash::make('soban'),
+            ]
+        );
 
-         $permissions = [
+        $adminUser = User::firstOrCreate(
+            ['email' => 'admin@admin.com'],
+            [
+                'name' => 'admin',
+                'password' => Hash::make('admin'),
+            ]
+        );
+
+        // Define permissions
+        $permissions = [
             'Create Product',
             'Delete Product',
             'View Product',
@@ -51,19 +50,16 @@ class DatabaseSeeder extends Seeder
         foreach ($permissions as $permission) {
             Permission::firstOrCreate(['name' => $permission]);
         }
-        
-        
-        // Create admin role if it doesn't exist
+
+        // Create roles if they don't exist
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
         $branchRole = Role::firstOrCreate(['name' => 'branch']);
 
-        // Assign all permissions to admin role
+        // Assign permissions to roles
         $adminRole->syncPermissions($permissions);
         $branchRole->syncPermissions($permissions);
 
-        // Optional: Assign role to admin user
-        $adminUser = User::where('email', 'admin@admin.com')->first();
-
+        // Assign roles to users
         if ($adminUser) {
             $adminUser->assignRole($adminRole);
         }

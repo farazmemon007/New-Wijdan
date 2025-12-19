@@ -15,11 +15,12 @@
 
             <div class="card mt-3">
                 <div class="card-body">
-                    <table class="table datanew">
+                    <table id="default-datatable" class="table ">
                         <thead>
                             <tr>
                                 <th>#</th>
                                 <th>Customer</th>
+                                <th>Opening Balance</th>
                                 <th>Previous Balance</th>
                                 <th>Closing Balance</th>
                                 <th>Created At</th>
@@ -30,6 +31,7 @@
                             <tr>
                                 <td>{{ $key+1 }}</td>
                                 <td>{{ $ledger->customer->customer_name ?? 'N/A' }}</td>
+                                <td>{{ number_format($ledger->opening_balance, 2) }}</td>
                                 <td>{{ number_format($ledger->previous_balance, 2) }}</td>
                                 <td>{{ number_format($ledger->closing_balance, 2) }}</td>
                                 <td>{{ $ledger->created_at->format('d-m-Y') }}</td>
@@ -47,7 +49,37 @@
 @endsection
 
 @push('scripts')
+<!-- DataTable CSS -->
+ <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+
+ <!-- jQuery -->
+ <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+ <!-- DataTable JS -->
+ <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+ <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+ <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+ <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+ <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+ <script src="{{ asset('assets/js/mycode.js') }}"> </script>
 <script>
-$('.datanew').DataTable();
+    $('.datanew').DataTable();
 </script>
+<script>
+     $(document).ready(function() {
+         $('#default-datatable').DataTable({
+             "pageLength": 10,
+             "lengthMenu": [5, 10, 25, 50, 100],
+             "order": [
+                 [0, 'desc']
+             ],
+             "language": {
+                 "search": "Search Category:",
+                 "lengthMenu": "Show _MENU_ entries"
+             }
+         });
+     });
+ </script>
 @endpush

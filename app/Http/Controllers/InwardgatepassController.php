@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\InwardGatepass;
 use App\Models\InwardGatepassItem;
@@ -16,157 +17,115 @@ class InwardgatepassController extends Controller
 {
     public function pdf($id)
     {
-        $gatepass = InwardGatepass::with(['branch', 'warehouse', 'vendor', 'items.product'])->findOrFail($id);
+        $gatepass = InwardGatepass::with(['branch','warehouse','vendor','items.product'])->findOrFail($id);
         $pdf = Pdf::loadView('admin_panel.inward.pdf', compact('gatepass'));
         return $pdf->download('gatepass_'.$gatepass->id.'.pdf');
     }
 
-    // 1. List all inward gatepasses
+    // LIST
     public function index()
     {
-        $gatepasses = InwardGatepass::with('items.product','branch','warehouse','vendor')
-            ->latest()->get();
-
+        $gatepasses = InwardGatepass::with('items.product','branch','warehouse','vendor')->latest()->get();
         return view('admin_panel.inward.index', compact('gatepasses'));
     }
 
-    // 2. Show create form
+    // CREATE FORM
     public function create()
     {
         $branches   = Branch::orderBy('name')->get();
         $warehouses = Warehouse::orderBy('warehouse_name')->get();
         $vendors    = Vendor::orderBy('name')->get();
-
         return view('admin_panel.inward.create', compact('branches','warehouses','vendors'));
     }
 
-    // 3. Store gatepass + items + update stock
-    // public function store(Request $request)
-    // {
-    //     $request->validate([
-    //         'branch_id'      => 'required|exists:branches,id',
-    //         'warehouse_id'   => 'required|exists:warehouses,id',
-    //         'vendor_id'      => 'required|exists:vendors,id',
-    //         'gatepass_date'  => 'required|date',
-    //         'product_id'     => 'required|array|min:1',
-    //         'product_id.*'   => 'required|exists:products,id',
-    //         'qty'            => 'required|array',
-    //         'qty.*'          => 'required|integer|min:1',
-    //     ]);
-
-    //     DB::transaction(function () use ($request) {
-    //         $gatepass = InwardGatepass::create([
-    //             'branch_id'    => $request->branch_id,
-    //             'warehouse_id' => $request->warehouse_id,
-    //             'vendor_id'    => $request->vendor_id,
-    //             'gatepass_date'=> $request->gatepass_date,
-    //             'note'         => $request->note ?? null,
-    //             'transport_name'=> $request->transport_name ?? null,
-    //             'created_by'   => auth()->id() ?? null,
-    //         ]);
-
-    //         $productIds = $request->input('product_id', []);
-    //         $qtys       = $request->input('qty', []);
-
-    //         for ($i = 0; $i < count($productIds); $i++) {
-    //             $pid = $productIds[$i];
-    //             $q   = isset($qtys[$i]) ? (int)$qtys[$i] : 0;
-    //             if (!$pid || $q <= 0) continue;
-
-    //             InwardGatepassItem::create([
-    //                 'inward_gatepass_id' => $gatepass->id,
-    //                 'product_id'         => $pid,
-    //                 'qty'                => $q,
-    //             ]);
-
-    //             $stock = Stock::firstOrNew([
-    //                 'branch_id'    => $request->branch_id,
-    //                 'warehouse_id' => $request->warehouse_id,
-    //                 'product_id'   => $pid,
-    //             ]);
-    //             $stock->qty = ($stock->qty ?? 0) + $q;
-    //             $stock->save();
-    //         }
-    //     });
-
-    //     return redirect()->route('InwardGatepass.home')
-    //                      ->with('success','Inward Gatepass Created Successfully');
-    // }
+    // STORE (movements + stocks)
     public function store(Request $request)
-{
-    $request->validate([
-        'branch_id'      => 'required|exists:branches,id',
-        'warehouse_id'   => 'required|exists:warehouses,id',
-        'vendor_id'      => 'required|exists:vendors,id',
-        'gatepass_date'  => 'required|date',
-        'product_id'     => 'required|array|min:1',
-        'product_id.*'   => 'required|exists:products,id',
-        'qty'            => 'required|array',
-        'qty.*'          => 'required|integer|min:1',
-    ]);
-
-    DB::transaction(function () use ($request) {
-        $gatepass = InwardGatepass::create([
-            'branch_id'    => $request->branch_id,
-            'warehouse_id' => $request->warehouse_id,
-            'vendor_id'    => $request->vendor_id,
-            'gatepass_date'=> $request->gatepass_date,
-            'note'         => $request->note ?? null,
-            'created_by'   => auth()->id() ?? null,
+    {
+        $request->validate([
+            'branch_id'      => 'required|exists:branches,id',
+            'warehouse_id'   => 'required|exists:warehouses,id',
+            'vendor_id'      => 'required|exists:vendors,id',
+            'gatepass_date'  => 'required|date',
+            'product_id'     => 'required|array|min:1',
+            'product_id.*'   => 'required|exists:products,id',
+            'qty'            => 'required|array',
+            'qty.*'          => 'required|numeric|min:1',
+            'note'           => 'nullable|string|max:200',
+            'transport_name' => 'nullable|string|max:200',
         ]);
 
-        $productIds = $request->input('product_id', []);
-        $qtys       = $request->input('qty', []);
-
-        for ($i = 0; $i < count($productIds); $i++) {
-            $pid = $productIds[$i];
-            $q   = isset($qtys[$i]) ? (int)$qtys[$i] : 0;
-            if (!$pid || $q <= 0) continue;
-
-            InwardGatepassItem::create([
-                'inward_gatepass_id' => $gatepass->id,
-                'product_id'         => $pid,
-                'qty'                => $q,
+        DB::transaction(function () use ($request) {
+            $gatepass = InwardGatepass::create([
+                'branch_id'      => $request->branch_id,
+                'warehouse_id'   => $request->warehouse_id,
+                'vendor_id'      => $request->vendor_id,
+                'gatepass_date'  => $request->gatepass_date,
+                'note'           => $request->note,
+                'transport_name' => $request->transport_name,
+                'created_by'     => auth()->id(),
+                'status'         => 'pending',
             ]);
 
-            $stock = Stock::firstOrNew([
-                'branch_id'    => $request->branch_id,
-                'warehouse_id' => $request->warehouse_id,
-                'product_id'   => $pid,
-            ]);
-            $stock->qty = ($stock->qty ?? 0) + $q;
-            $stock->save();
-        }
+            $pids = $request->input('product_id', []);
+            $qtys = $request->input('qty', []);
 
-        // Change status to 'pending' after inward gatepass is created
-        $gatepass->status = 'pending'; // Pending until bill is created
-        $gatepass->save();
-    });
+            $now = now();
+            $movementRows = [];
 
-    return redirect()->route('InwardGatepass.home')
-                     ->with('success','Inward Gatepass Created Successfully');
-}
+            for ($i=0; $i<count($pids); $i++) {
+                $pid = (int)($pids[$i] ?? 0);
+                $q   = (float)($qtys[$i] ?? 0);
+                if (!$pid || $q <= 0) continue;
 
+                InwardGatepassItem::create([
+                    'inward_gatepass_id' => $gatepass->id,
+                    'product_id'         => $pid,
+                    'qty'                => $q,
+                ]);
 
-    // 4. Show single gatepass
+                // movement (+)
+                $movementRows[] = [
+                    'product_id' => $pid,
+                    'type'       => 'in',
+                    'qty'        => $q,
+                    'ref_type'   => 'INWARD',
+                    'ref_id'     => $gatepass->id,
+                    'note'       => 'Inward gatepass',
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+
+                // stocks upsert
+                $this->upsertStocks($pid, +$q, (int)$request->branch_id, (int)$request->warehouse_id);
+            }
+
+            if (!empty($movementRows)) {
+                DB::table('stock_movements')->insert($movementRows);
+            }
+        });
+
+        return redirect()->route('InwardGatepass.home')
+                         ->with('success','Inward Gatepass Created Successfully');
+    }
+
+    // SHOW
     public function show($id)
     {
         $gatepass = InwardGatepass::with('items.product','branch','warehouse','vendor')->findOrFail($id);
         return view('admin_panel.inward.show', compact('gatepass'));
     }
 
-    // 5. Edit gatepass
+    // EDIT FORM
     public function edit($id)
     {
-        $gatepass = InwardGatepass::with('items')->findOrFail($id);
+        $gatepass   = InwardGatepass::with('items')->findOrFail($id);
         $branches   = Branch::orderBy('name')->get();
         $warehouses = Warehouse::orderBy('warehouse_name')->get();
         $vendors    = Vendor::orderBy('name')->get();
-
         return view('admin_panel.inward.edit', compact('gatepass','branches','warehouses','vendors'));
     }
 
-    // 6. Update gatepass + adjust stock
+    // UPDATE (delta movements + stocks)
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -177,106 +136,176 @@ class InwardgatepassController extends Controller
             'product_id'     => 'required|array|min:1',
             'product_id.*'   => 'required|exists:products,id',
             'qty'            => 'required|array',
-            'qty.*'          => 'required|integer|min:1',
+            'qty.*'          => 'required|numeric|min:1',
+            'note'           => 'nullable|string|max:200',
+            'transport_name' => 'nullable|string|max:200',
         ]);
 
         DB::transaction(function () use ($request, $id) {
             $gatepass = InwardGatepass::with('items')->findOrFail($id);
+            $oldBranch = (int)$gatepass->branch_id;
+            $oldWh     = (int)$gatepass->warehouse_id;
 
-            // rollback stock of old items
-            foreach ($gatepass->items as $item) {
-                $stock = Stock::where([
-                    'branch_id'    => $gatepass->branch_id,
-                    'warehouse_id' => $gatepass->warehouse_id,
-                    'product_id'   => $item->product_id,
-                ])->first();
-                if ($stock) {
-                    $stock->qty -= $item->qty;
-                    if ($stock->qty < 0) $stock->qty = 0; // safety
-                    $stock->save();
-                }
+            // old totals per product
+            $oldMap = $gatepass->items->groupBy('product_id')->map(fn($g)=> (float)$g->sum('qty'));
+
+            // new items map
+            $pids = $request->input('product_id', []);
+            $qtys = $request->input('qty', []);
+            $newMap = collect();
+            for ($i=0; $i<count($pids); $i++) {
+                $pid = (int)($pids[$i] ?? 0);
+                $q   = (float)($qtys[$i] ?? 0);
+                if (!$pid || $q<=0) continue;
+                $newMap[$pid] = ($newMap[$pid] ?? 0) + $q;
             }
 
-            // delete old items
-            InwardGatepassItem::where('inward_gatepass_id', $gatepass->id)->delete();
-
-            // update header
+            // header update
             $gatepass->update([
-                'branch_id'    => $request->branch_id,
-                'warehouse_id' => $request->warehouse_id,
-                'vendor_id'    => $request->vendor_id,
-                'gatepass_date'=> $request->gatepass_date,
-                'note'         => $request->note ?? null,
-                'transport_name'=> $request->transport_name ?? null,
+                'branch_id'      => $request->branch_id,
+                'warehouse_id'   => $request->warehouse_id,
+                'vendor_id'      => $request->vendor_id,
+                'gatepass_date'  => $request->gatepass_date,
+                'note'           => $request->note,
+                'transport_name' => $request->transport_name,
             ]);
 
-            // insert new items + stock update
-            $productIds = $request->input('product_id', []);
-            $qtys       = $request->input('qty', []);
-            for ($i = 0; $i < count($productIds); $i++) {
-                $pid = $productIds[$i];
-                $q   = isset($qtys[$i]) ? (int)$qtys[$i] : 0;
-                if (!$pid || $q <= 0) continue;
-
+            // replace items
+            InwardGatepassItem::where('inward_gatepass_id', $gatepass->id)->delete();
+            foreach ($newMap as $pid => $q) {
                 InwardGatepassItem::create([
                     'inward_gatepass_id' => $gatepass->id,
                     'product_id'         => $pid,
                     'qty'                => $q,
                 ]);
+            }
 
-                $stock = Stock::firstOrNew([
-                    'branch_id'    => $request->branch_id,
-                    'warehouse_id' => $request->warehouse_id,
-                    'product_id'   => $pid,
-                ]);
-                $stock->qty = ($stock->qty ?? 0) + $q;
-                $stock->save();
+            // deltas
+            $now = now();
+            $movs = [];
+            $allKeys = $oldMap->keys()->merge($newMap->keys())->unique();
+
+            foreach ($allKeys as $pid) {
+                $oldQ = (float)($oldMap[$pid] ?? 0);
+                $newQ = (float)($newMap[$pid] ?? 0);
+                $delta = $newQ - $oldQ;
+                if ($delta == 0) continue;
+
+                $type = $delta > 0 ? 'in' : 'out';
+                $qty  = abs($delta);
+
+                $movs[] = [
+                    'product_id' => (int)$pid,
+                    'type'       => $type,
+                    'qty'        => $qty,
+                    'ref_type'   => 'INWARD_EDIT',
+                    'ref_id'     => $gatepass->id,
+                    'note'       => 'Inward edit delta',
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+
+                // stocks adjust on NEW branch/wh (simple approach).
+                // If branch/wh changed, you may also want to reverse old and add to new; for now we apply on new header.
+                $this->upsertStocks((int)$pid, ($type==='in' ? +$qty : -$qty), (int)$request->branch_id, (int)$request->warehouse_id);
+            }
+
+            if (!empty($movs)) {
+                DB::table('stock_movements')->insert($movs);
             }
         });
 
-        return redirect()->route('InwardGatepass.home')
-                         ->with('success','Inward Gatepass Updated Successfully');
+        return redirect()->route('InwardGatepass.home')->with('success','Inward Gatepass Updated Successfully');
     }
 
-    // 7. Delete gatepass + adjust stock
+    // DELETE (reverse movements + stocks)
     public function destroy($id)
-    {
-        DB::transaction(function () use ($id) {
-            $gatepass = InwardGatepass::with('items')->findOrFail($id);
+{
+    DB::transaction(function () use ($id) {
+        $gatepass = InwardGatepass::with('items')->findOrFail($id);
+        $now = now();
+        $movs = [];
 
-            // rollback stock
-            foreach ($gatepass->items as $item) {
-                $stock = Stock::where([
-                    'branch_id'    => $gatepass->branch_id,
-                    'warehouse_id' => $gatepass->warehouse_id,
-                    'product_id'   => $item->product_id,
-                ])->first();
-                if ($stock) {
-                    $stock->qty -= $item->qty;
-                    if ($stock->qty < 0) $stock->qty = 0;
-                    $stock->save();
-                }
+        foreach ($gatepass->items as $item) {
+            // log reverse movement
+            $movs[] = [
+                'product_id' => (int)$item->product_id,
+                'type'       => 'out',
+                'qty'        => (float)$item->qty,
+                'ref_type'   => 'INWARD_DELETE',
+                'ref_id'     => $gatepass->id,
+                'note'       => 'Delete inward (reverse)',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+
+            // direct stock rollback (NO upsertStocks)
+            $stock = DB::table('stocks')
+                ->where('product_id', $item->product_id)
+                ->where('branch_id', $gatepass->branch_id)
+                ->where('warehouse_id', $gatepass->warehouse_id)
+                ->first();
+
+            if ($stock) {
+                $newQty = max(0, $stock->qty - $item->qty); // safety: no negative
+                DB::table('stocks')
+                    ->where('id', $stock->id)
+                    ->update([
+                        'qty'        => $newQty,
+                        'updated_at' => $now,
+                    ]);
             }
+        }
 
-            // delete gatepass + items
-            InwardGatepassItem::where('inward_gatepass_id', $gatepass->id)->delete();
-            $gatepass->delete();
-        });
+        if (!empty($movs)) {
+            DB::table('stock_movements')->insert($movs);
+        }
 
-        return redirect()->route('InwardGatepass.home')
-                         ->with('success','Inward Gatepass Deleted Successfully');
-    }
+        InwardGatepassItem::where('inward_gatepass_id', $gatepass->id)->delete();
+        $gatepass->delete();
+    });
 
-    // 8. Search products
+    return redirect()->route('InwardGatepass.home')
+                     ->with('success','Inward Gatepass Deleted Successfully');
+}
+
+    // PRODUCT SEARCH (grouped where fix)
     public function searchProducts(Request $request)
     {
-        $q = $request->get('q');
+        $q = $request->get('q','');
         $products = Product::with('brand')
-            ->where('item_name', 'like', "%{$q}%")
-            ->orWhere('item_code', 'like', "%{$q}%")
+            ->where(function($x) use ($q){
+                $x->where('item_name','like',"%{$q}%")
+                  ->orWhere('item_code','like',"%{$q}%");
+            })
             ->limit(10)
             ->get();
 
         return response()->json($products);
+    }
+
+    // --- small helper (same as ProductController) ---
+    private function upsertStocks(int $productId, float $qtyDelta, int $branchId, int $warehouseId): void
+    {
+        $affected = DB::table('stocks')
+            ->where('product_id', $productId)
+            ->where('branch_id', $branchId)
+            ->where('warehouse_id', $warehouseId)
+            ->update([
+                'qty'        => DB::raw('qty + '.($qtyDelta+0)),
+                'updated_at' => now(),
+            ]);
+
+        if ($affected === 0) {
+            DB::table('stocks')->insert([
+                'product_id'   => $productId,
+                'branch_id'    => $branchId,
+                'warehouse_id' => $warehouseId,
+                'qty'          => $qtyDelta,
+                'reserved_qty' => 0,
+                'created_at'   => now(),
+                'updated_at'   => now(),
+            ]);
+        }
     }
 }

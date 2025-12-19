@@ -16,7 +16,7 @@
               @if(auth()->user()->can(' Discount.index') || auth()->user()->email === 'admin@admin.com')
             <a href="{{ route('discount.index') }}" class="btn btn-success btn-sm">
                 View Discount
-            </a>    
+            </a>
         @endif
           <a href="create_prodcut" class="btn btn-primary"> Add product</a>
 
@@ -24,7 +24,7 @@
         ➡ Create Discount
     </button>
         </div>
-      
+
     </div>
 
     <div class="card-body">
@@ -62,8 +62,8 @@
                         <td class="fw-bold">{{ $product->item_code }}</td>
                         <td>
                             @if($product->image)
-                                <img src="{{ asset('uploads/products/' . $product->image) }}" 
-                                     alt="Product" width="50" height="50" 
+                                <img src="{{ asset('uploads/products/' . $product->image) }}"
+                                     alt="Product" width="50" height="50"
                                      class="rounded border">
                             @else
                                 <span class="badge bg-secondary">No Img</span>
@@ -85,10 +85,17 @@
                                     ✏ Edit
                                 </a>
                             @endif
-                           
-                            <a href="{{ route('product.barcode', $product->id) }}" class="btn btn-sm btn-outline-success">
+
+                            <a href="{{ route('generate-barcode-image', $product->id) }}" class="btn btn-sm btn-outline-success">
                                 🏷 Barcode
                             </a>
+                            @if($product->is_assembled)
+  <a class="btn btn-sm btn-outline-primary"
+     href="{{ route('assembly.report.show', $product->id) }}">
+     <i class="fas fa-cogs"></i> Assembly Report
+  </a>
+@endif
+
                         </td>
                     </tr>
                     @endforeach
@@ -140,7 +147,7 @@
                             <label class="form-label">Size</label> --}}
                             {{-- <select class="form-control" name="size" id="sizeSelect" required>
                                 <option value="">Select Size</option>
-                           
+
                             </select> --}}
                         {{-- </div> --}}
                         {{-- <div class="col-md-6 mb-3">
@@ -211,7 +218,7 @@ $(document).ready(function() {
                 icon: "error",
                 title: "Oops...",
                 text: "Please select at least one product!",
-               
+
             });
             return;
         }
@@ -262,7 +269,7 @@ $(document).ready(function() {
         // Add Product Modal: Fetch Subcategories on Category Change
         $('#categorySelect').change(function() {
             var categoryId = $(this).val();
-        
+
             $('#subCategorySelect').html('<option value="">Loading...</option>');
 
             if (categoryId) {

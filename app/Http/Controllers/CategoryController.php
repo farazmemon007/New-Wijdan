@@ -17,36 +17,60 @@ class CategoryController extends Controller
 
     }
 
-    public function store(request $request){
+    public function store(Request $request)
+{
+    
+    // Validation
+    $validator = Validator::make($request->all(), [
+        'name' => 'required|unique:categories,name,' . $request->edit_id . ',id',
+    ]);
 
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|unique:categories,name,'.$request->edit_id,
+     if ($validator->fails()) {
+
+    return redirect()->back()
+        ->withErrors($validator)
+        ->withInput()
+        ->with('catagory_swal_error', $validator->errors()->first());
+}
+
+    /**
+     * UPDATE CATEGORY
+     */
+    if ($request->filled('edit_id')) {
+        $category = Category::findOrFail($request->edit_id);
+        $category->name = $request->name;
+        $category->save();
+
+        return response()->json([
+            'success' => 'Category Updated Successfully',
+            'reload'  => true
         ]);
-
-        if ($validator->fails()) {
-            return ['errors' => $validator->errors()];
-        }
-
-
-        if($request->has('edit_id') && $request->edit_id != '' || $request->edit_id != null ){
-            $Company = Category::find($request->edit_id);
-            $msg = [
-                'success' => 'Category Updated Successfully',
-                'reload' => true
-            ];
-        }
-        else{
-            $Company = new Category();
-            $msg = [
-                'success' => 'Category Created Successfully',
-                'redirect' => route('Category.home')
-            ];
-        }
-        $Company->name = $request->name;
-        $Company->save();
-
-        return response()->json($msg);
     }
+
+    /**
+     * CREATE CATEGORY
+     */
+    $category = new Category();
+    $category->name = $request->name;
+    $category->save();
+
+    /**
+     * IF REQUEST FROM PRODUCT PAGE
+     */
+    $obj = Category::all();
+    if ($request->page === 'product_page') {
+        
+       return redirect()->route('store')->with('success', 'Category saved successfully');
+    }
+
+    /**
+     * NORMAL FLOW
+     */
+    return response()->json([
+        'success'  => 'Category Created Successfully',
+        'redirect' => route('Category.home')
+    ]);
+}
 
     public function delete($id)
     {

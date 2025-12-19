@@ -47,7 +47,7 @@
                                                 </td>
                                                 <td>
                                                     <a href="{{ route('InwardGatepass.show', $gp->id) }}" class="btn btn-sm btn-info mb-1">View</a>
-                                                    
+
                                                     @if ($gp->status == 'pending')
                                                         <a href="{{ route('add_bill', $gp->id) }}" class="btn btn-sm btn-info mb-1">Add Bill</a>
                                                     @elseif($gp->status == 'linked')

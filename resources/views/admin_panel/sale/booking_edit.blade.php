@@ -69,6 +69,9 @@
             </div>
             <form action="{{ route('sales.store') }}" method="POST">
                 @csrf
+                <input type="hidden" name="branch_id" value="1">
+<input type="hidden" name="warehouse_id" value="1">
+
                 @if (session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         {{ session('success') }}

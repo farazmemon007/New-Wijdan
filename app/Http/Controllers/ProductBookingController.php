@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\ProductBooking;
@@ -14,11 +15,11 @@ class ProductBookingController extends Controller
         $bookings = ProductBooking::with('customer_relation')->latest()->get();
         return view('admin_panel.booking.index', compact('bookings'));
     }
-public function receipt($id)
-{
-    $booking = ProductBooking::with('customer_relation')->findOrFail($id);
-    return view('admin_panel.booking.receipt', compact('booking'));
-}
+    public function receipt($id)
+    {
+        $booking = ProductBooking::with('customer_relation')->findOrFail($id);
+        return view('admin_panel.booking.receipt', compact('booking'));
+    }
 
     public function create()
     {
@@ -93,7 +94,7 @@ public function receipt($id)
 
             $booking->total_amount_Words = $request->total_amount_Words;
             $booking->total_bill_amount  = $request->total_subtotal;
-            $booking->total_extradiscount= $request->total_extra_cost;
+            $booking->total_extradiscount = $request->total_extra_cost;
             $booking->total_net          = $request->total_net;
 
             $booking->cash   = $request->cash;

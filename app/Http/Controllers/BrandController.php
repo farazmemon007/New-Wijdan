@@ -17,36 +17,64 @@ class BrandController extends Controller
 
     }
 
-    public function store(request $request){
+    public function store(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'name' => 'required|unique:brands,name,' . $request->edit_id,
+    ]);
 
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|unique:brands,name,'.$request->edit_id,
-        ]);
+  if ($validator->fails()) {
 
-        if ($validator->fails()) {
-            return ['errors' => $validator->errors()];
+    return redirect()->back()
+        ->withErrors($validator)
+        ->withInput()
+        ->with('swal_error', $validator->errors()->first());
+}
+
+
+    // UPDATE
+    if ($request->filled('edit_id')) {
+
+        $brand = Brand::find($request->edit_id);
+
+        if (!$brand) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Brand not found'
+            ], 404);
         }
 
-
-        if($request->has('edit_id') && $request->edit_id != '' || $request->edit_id != null ){
-            $Company = Brand::find($request->edit_id);
-            $msg = [
-                'success' => 'Brand Updated Successfully',
-                'reload' => true
-            ];
-        }
-        else{
-            $Company = new Brand();
-            $msg = [
-                'success' => 'Brand Created Successfully',
-                'redirect' => route('Brand.home')
-            ];
-        }
-        $Company->name = $request->name;
-        $Company->save();
-
-        return response()->json($msg);
+        $message = 'Brand Updated Successfully';
     }
+    // CREATE
+    else {
+        $brand = new Brand();
+        $message = 'Brand Created Successfully';
+    }
+
+    $brand->name = $request->name;
+    $brand->save();
+
+    // PRODUCT PAGE RESPONSE
+    if ($request->page === 'product_page') {
+        
+        $msg = 'Brand Created Successfully';
+         return redirect()->route('store')->with('success',$msg);
+        //response()->json([
+        //     'status' => 'success',
+        //     'message' => $message,
+        //     'redirect' => route('store')
+        // ]);
+    }
+
+    // NORMAL RESPONSE
+    return response()->json([
+        'status' => 'success',
+        'message' => $message,
+        'reload' => true
+    ]);
+}
+
 
     public function delete($id)
     {

@@ -19,38 +19,57 @@ class SubcategoryController extends Controller
 
     }
 
-    public function store(request $request){
+public function store(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'name' => 'required|unique:subcategories,name,' . $request->edit_id,
+        'category_id' => 'required',
+    ]);
 
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|unique:subcategories,name,'.$request->edit_id,
-            'category_id' => 'required'.$request->edit_id,
-        ]);
+   if ($validator->fails()) {
 
-        if ($validator->fails()) {
-            return ['errors' => $validator->errors()];
+    return redirect()->back()
+        ->withErrors($validator)
+        ->withInput()
+        ->with('catagory_swal_error', $validator->errors()->first());
+}
+
+    // UPDATE
+    if ($request->filled('edit_id')) {
+
+        $subcategory = Subcategory::find($request->edit_id);
+
+        if (!$subcategory) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Record not found'
+            ], 404);
         }
 
+        $message = 'Subcategory Updated Successfully';
 
-        if($request->has('edit_id') && $request->edit_id != '' || $request->edit_id != null ){
-            $Company = Subcategory::find($request->edit_id);
-            $msg = [
-                'success' => 'Subcategory Updated Successfully',
-                'reload' => true
-            ];
-        }
-        else{
-            $Company = new Subcategory();
-            $msg = [
-                'success' => 'Subcategory Created Successfully',
-                'redirect' => route('subcategory.home')
-            ];
-        }
-        $Company->name = $request->name;
-        $Company->category_id = $request->category_id;
-        $Company->save();
-
-        return response()->json($msg);
     }
+    // CREATE
+    else {
+        $subcategory = new Subcategory();
+        $message = 'Subcategory Created Successfully';
+    }
+
+    $subcategory->name = $request->name;
+    $subcategory->category_id = $request->category_id;
+    $subcategory->save();
+
+    // RESPONSE FOR ALERT
+    if ($request->page === 'product_page') {
+        return redirect()->route('store')->with('success',$message);
+    }
+
+    return response()->json([
+        'status' => 'success',
+        'message' => $message,
+        'reload' => true
+    ]);
+}
 
     public function delete($id)
     {
