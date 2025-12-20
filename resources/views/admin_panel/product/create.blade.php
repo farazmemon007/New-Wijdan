@@ -356,42 +356,50 @@
                                                     </div>
 {{-- //////////////////// --}}
 
-
+{{-- Packaging Type< --}}
                                                     <div class="col-sm-4">
                                                         <label class="form-label">Packaging Type</label>
                                                         <div class="input-group">
+                                                         <input type="text" id="packing_type" value="{{ old('packing_type') }}"
+                                                            name="packing_type" class="form-control" required>
 
+                                                         
+                                                        </div>
+                                                    </div>
+                                                    {{-- quentity of packing --}}
+                                                    <div class="col-sm-4">
+                                                        <label class="form-label">Packaging Quantity</label>
+                                                        <div class="input-group">
+                                                         <input type="text" id="packing_qty" value="{{ old('packing_qty') }}"
+                                                            name="packing_qty" class="form-control" required>
 
-                                                            <select name="pakage_id" class="form-select" required>
-                                                                <option value="" disabled selected>Select One</option>
-                                                                {{-- @foreach ($pakage_type as $pt)
-                                                                    <option value="{{ $pt->id }}">{{ $pt->name }}
-                                                                    </option>
-                                                                @endforeach --}}
-                                                            </select>
-                                                            <button type="button" class="btn btn-primary add-btn"
-                                                                data-bs-toggle="modal" data-bs-target="#PakageTypeModal"
-                                                                title="Add New Category">
-                                                                <i class="fa-solid fa-plus"></i>
-                                                            </button>
+                                                         
                                                         </div>
                                                     </div>
 {{--  --}}
 
                                                     <div class="col-sm-4">
-                                                        <label class="form-label">Unit (UOM)</label>
-                                                        <select name="unit" class="form-select" required>
+                                                        <label class="form-label">Unit per Packing</label>
+                                                         <input id="unit_per_package" type="text" value="{{ old('unit_per_package') }}"
+                                                            name="unit_per_package" class="form-control" required>
+                                                        {{-- <select name="unit" class="form-select" required>
                                                             <option value="" disabled selected>Select One</option>
                                                             @foreach ($units as $u)
                                                                 <option value="{{ $u->id }}">{{ $u->name }}
                                                                 </option>
                                                             @endforeach
-                                                        </select>
+                                                        </select> --}}
+                                                    </div>
+                                                    <div class="col-sm-4">
+                                                        <label class="form-label">loose piece</label>
+                                                         <input id="loose_piece" type="text" value="{{ old('unit_per_package') }}"
+                                                            name="loose_piece" class="form-control" required>
+                                                       
                                                     </div>
 
                                                     <div class="col-sm-4">
                                                         <label class="form-label">Opening Stock (pcs)</label>
-                                                        <input type="number" name="Stock" class="form-control"
+                                                        <input type="number" id="opening_stock" name="Stock" class="form-control"
                                                             value="0" min="0">
                                                         <div class="small-help">This will create an opening entry in stock
                                                             ledger.</div>
@@ -583,7 +591,7 @@
             </div>
         </div>
         {{-- Pakagetype model --}}
-        <div id="PakageTypeModal" class="modal fade" tabindex="-1" role="dialog">
+        {{-- <div id="PackageTypeModal" class="modal fade" tabindex="-1" role="dialog">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -607,7 +615,7 @@
                     </form>
                 </div>
             </div>
-        </div>
+        </div> --}}
 
         {{-- Parts/BOM Modal --}}
         <div class="modal fade" id="partsModal" tabindex="-1" aria-hidden="true">
@@ -669,6 +677,34 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    function calculateOpeningStock() {
+
+        let packingQty = parseFloat(document.getElementById('packing_qty').value) || 0;
+        let unitPerPackage = parseFloat(document.getElementById('unit_per_package').value) || 0;
+        let loosePiece = parseFloat(document.getElementById('loose_piece').value) || 0;
+
+        let packedStock = 0;
+
+        // Multiply only if both are entered
+        if (packingQty > 0 && unitPerPackage > 0) {
+            packedStock = packingQty * unitPerPackage;
+        } 
+        // If only one is entered
+        else {
+            packedStock = packingQty + unitPerPackage;
+        }
+
+        let totalStock = packedStock + loosePiece;
+
+        document.getElementById('opening_stock').value = totalStock;
+    }
+
+    document.getElementById('packing_qty').addEventListener('input', calculateOpeningStock);
+    document.getElementById('unit_per_package').addEventListener('input', calculateOpeningStock);
+    document.getElementById('loose_piece').addEventListener('input', calculateOpeningStock);
+</script>
+
 
 
     <script>

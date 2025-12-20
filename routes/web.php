@@ -1,5 +1,4 @@
 <?php
-use App\Http\Controllers\PackageTypeController;
 use App\Http\Controllers\AccountsHeadController;
 use App\Http\Controllers\AssemblyController;
 use App\Http\Controllers\BranchController;
@@ -10,6 +9,7 @@ use App\Http\Controllers\DiscountController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InwardgatepassController;
 use App\Http\Controllers\NarrationController;
+use App\Http\Controllers\PakageTypeController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProductBookingController;
 use App\Http\Controllers\ProductController;
@@ -28,7 +28,9 @@ use App\Http\Controllers\VoucherController;
 use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\WarehouseStockController;
 use App\Http\Controllers\ZoneController;
+use App\Http\Controllers\PackageTypeController;
 use Illuminate\Support\Facades\Route;
+
 
 /*
     |--------------------------------------------------------------------------
@@ -113,17 +115,17 @@ Route::middleware('auth')->group(function () {
 // package type controller
 
 
-Route::get('/package-types', [PackageTypeController::class, 'index'])
-    ->name('package-type.index');
+// Route::get('/package-types', [PakageTypeController::class, 'index'])
+//     ->name('package-type.index');
 
-Route::post('/package-type/store', [PackageTypeController::class, 'store'])
-    ->name('package-type.store');
+// Route::post('/package-type/store', [PackageTypeController::class, 'store'])
+//     ->name('package-type.store');
 
-Route::post('/package-type/update', [PackageTypeController::class, 'update'])
-    ->name('package-type.update');
+// Route::post('/package-type/update', [PackageTypeController::class, 'update'])
+//     ->name('package-type.update');
 
-Route::get('/package-type/delete/{id}', [PackageTypeController::class, 'destroy'])
-    ->name('package-type.delete');
+// Route::get('/package-type/delete/{id}', [PackageTypeController::class, 'destroy'])
+//     ->name('package-type.delete');
 
 
 
