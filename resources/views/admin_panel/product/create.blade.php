@@ -343,6 +343,25 @@
                                                         </div>
                                                     </div>
 
+                                                    <div class="col-sm-4">
+                                                        <label class="form-label">Model</label>
+                                                        <div class="input-group">
+                                                         <input type="text" id="model" value="{{ old('model') }}"
+                                                            name="model" class="form-control" required>
+
+                                                         
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-sm-4">
+                                                        <label class="form-label">HS Code</label>
+                                                        <div class="input-group">
+                                                         <input type="text" id="model" value="{{ old('hs_code') }}"
+                                                            name="hs_code" class="form-control" required>
+
+                                                         
+                                                        </div>
+                                                    </div>
+
 
                                                     <div class="col-sm-4">
                                                         <label class="form-label">Color</label>
@@ -380,8 +399,8 @@
 
                                                     <div class="col-sm-4">
                                                         <label class="form-label">Unit per Packing</label>
-                                                         <input id="unit_per_package" type="text" value="{{ old('unit_per_package') }}"
-                                                            name="unit_per_package" class="form-control" required>
+                                                         <input id="piece_per_pack" type="text" value="{{ old('piece_per_package') }}"
+                                                            name="piece_per_pack" class="form-control" required>
                                                         {{-- <select name="unit" class="form-select" required>
                                                             <option value="" disabled selected>Select One</option>
                                                             @foreach ($units as $u)
@@ -681,7 +700,7 @@
     function calculateOpeningStock() {
 
         let packingQty = parseFloat(document.getElementById('packing_qty').value) || 0;
-        let unitPerPackage = parseFloat(document.getElementById('unit_per_package').value) || 0;
+        let unitPerPackage = parseFloat(document.getElementById('piece_per_pack').value) || 0;
         let loosePiece = parseFloat(document.getElementById('loose_piece').value) || 0;
 
         let packedStock = 0;
@@ -701,7 +720,7 @@
     }
 
     document.getElementById('packing_qty').addEventListener('input', calculateOpeningStock);
-    document.getElementById('unit_per_package').addEventListener('input', calculateOpeningStock);
+    document.getElementById('piece_per_pack').addEventListener('input', calculateOpeningStock);
     document.getElementById('loose_piece').addEventListener('input', calculateOpeningStock);
 </script>
 
