@@ -85,6 +85,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/assembly/ensure-part-for-sale', [AssemblyController::class, 'ensurePartForSale']) ->name('assembly.ensure_part_for_sale');
 
     Route::get('/Product', [ProductController::class, 'product'])->name('product');
+    Route::get('/productview/{id}', [ProductController::class, 'productview'])->name('productview');
+
     Route::get('/create_prodcut', [ProductController::class, 'view_store'])->name('store');
     Route::post('/store-product', [ProductController::class, 'store_product'])->name('store-product');
     Route::put('/product/update/{id}', [ProductController::class, 'update'])->name('product.update');

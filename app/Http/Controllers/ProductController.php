@@ -177,6 +177,19 @@ class ProductController extends Controller
         return view('admin_panel.product.index', compact('products', 'categories'));
     }
 
+ public function productview($id)
+{
+    $product = Product::with([
+        'category_relation',
+        'sub_category_relation',
+        'brand',
+        'stock'
+    ])->findOrFail($id);
+
+    return response()->json($product);
+}
+
+
     // ===== Create page =====
     public function view_store()
     {
