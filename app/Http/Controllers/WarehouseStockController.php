@@ -8,6 +8,32 @@ use App\Models\Product;
 
 class WarehouseStockController extends Controller
 {
+
+///////////
+public function getByWarehouse($warehouseId)
+{
+    $products = WarehouseStock::with('product')
+        ->where('warehouse_id', $warehouseId)
+        ->get()
+        ->map(function ($row) {
+            return [
+                'id'   => $row->product->id,
+                'name' => $row->product->item_name,
+                'qty'  => $row->quantity,
+            ];
+        });
+// echo"<pre>";
+// print_r($products);
+// echo"</pre>";
+//         dd();
+    return response()->json($products);
+}
+
+//////////////////
+
+
+
+
     public function index() {
         $stocks = WarehouseStock::with('warehouse', 'product')->get();
         return view('admin_panel.warehouses.warehouse_stocks.index', compact('stocks'));

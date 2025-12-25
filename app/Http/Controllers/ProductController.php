@@ -19,6 +19,11 @@ use Milon\Barcode\DNS1D;
 class ProductController extends Controller
 {
 
+    public function productget(){
+        $products=Product::all();
+        return response()->json($products);
+    }
+
     private function upsertStocks(int $productId, float $qtyDelta, int $branchId = 1, int $warehouseId = 1): void
     {
         $updated = Stock::where([
@@ -184,10 +189,16 @@ class ProductController extends Controller
         'sub_category_relation',
         'brand',
         'stock'
-    ])->findOrFail($id);
+    ])->find($id);
 
     return response()->json($product);
 }
+
+////////////////////////
+
+
+
+///////////////////////////
 
 
     // ===== Create page =====

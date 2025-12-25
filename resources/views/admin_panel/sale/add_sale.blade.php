@@ -88,7 +88,13 @@
                             <label class="form-label fw-bold">Customer:</label>
                             <select name="customer" class="form-control form-control-sm">
                                 <option value="">Select Customer</option>
+                                @php
+                                    
+                                   print_r($Customer);
+                                    
+                                @endphp
                                 @foreach ($Customer as $c)
+                                
                                     <option value="{{ $c->id }}">{{ $c->customer_name }}</option>
                                 @endforeach
                             </select>

@@ -23,4 +23,18 @@ class Sale extends Model
     {
         return $this->belongsTo(Product::class, 'product', 'id');
     }
+    public static function generateInvoiceNo()
+    {
+        $lastSale = self::orderBy('id', 'desc')->first();
+
+        if (!$lastSale || !$lastSale->invoice_no) {
+            return 'INV-0001';
+        }
+
+        // Extract numeric part
+        $lastNumber = (int) str_replace('INV-', '', $lastSale->invoice_no);
+
+        // Increment + format
+        return 'INV-' . str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
+    }
 }

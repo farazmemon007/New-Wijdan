@@ -9,6 +9,7 @@ use App\Http\Controllers\DiscountController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InwardgatepassController;
 use App\Http\Controllers\NarrationController;
+use App\Http\Controllers\PackageTypeController;
 use App\Http\Controllers\PakageTypeController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProductBookingController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\ReportingController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\SalesOfficerController;
+use App\Http\Controllers\StocksController;
 use App\Http\Controllers\StockTransferController;
 use App\Http\Controllers\SubcategoryController;
 use App\Http\Controllers\UnitController;
@@ -28,8 +30,8 @@ use App\Http\Controllers\VoucherController;
 use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\WarehouseStockController;
 use App\Http\Controllers\ZoneController;
-use App\Http\Controllers\PackageTypeController;
 use Illuminate\Support\Facades\Route;
+
 
 
 /*
@@ -83,10 +85,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/assembly/summary', [ProductController::class, 'assemblySummary'])->name('assembly.summary');
 
     Route::post('/assembly/ensure-part-for-sale', [AssemblyController::class, 'ensurePartForSale']) ->name('assembly.ensure_part_for_sale');
+    Route::get('productget',[ProductController::class,'productget'])->name('productget');
 
     Route::get('/Product', [ProductController::class, 'product'])->name('product');
     Route::get('/productview/{id}', [ProductController::class, 'productview'])->name('productview');
-
+////////////
+// Route::get(
+//     'warehouse/products/{warehouse}',
+//     [WarehouseStockController::class, 'getByWarehouse']
+// )->name('warehouse.products');
+//////////
     Route::get('/create_prodcut', [ProductController::class, 'view_store'])->name('store');
     Route::post('/store-product', [ProductController::class, 'store_product'])->name('store-product');
     Route::put('/product/update/{id}', [ProductController::class, 'update'])->name('product.update');
@@ -141,7 +149,13 @@ Route::middleware('auth')->group(function () {
     // routes/web.php
 
     // Customer Routes
+// Dropdown list (by type)
+Route::get('sale/customers', [CustomerController::class, 'saleindex'])
+    ->name('salecustomers.index');
 
+// Single customer detail
+Route::get('sale/customers/{id}', [CustomerController::class, 'show'])
+    ->name('salecustomers.show');
     // Cutomer create
     Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
     Route::get('/customers/create', [CustomerController::class, 'create'])->name('customers.create');
@@ -254,7 +268,7 @@ Route::middleware('auth')->group(function () {
     // Route::get('booking/system', [SaleController::class,'booking-system'])->name('booking.index');
     Route::get('sale', [SaleController::class, 'index'])->name('sale.index');
     Route::get('sale/create', [SaleController::class, 'addsale'])->name('sale.add');
-    // Route::get('/products/search', [SaleController::class, 'searchProducts'])->name('products.search');
+    Route::get('/products/search', [SaleController::class, 'searchProducts'])->name('products.search');
     Route::get('/search-product-name', [SaleController::class, 'searchpname'])->name('search-product-name');
     Route::post('/sales/store', [SaleController::class, 'store'])->name('sales.store');
     Route::get('/sales/{id}/return', [SaleController::class, 'saleretun'])->name('sales.return.create');
@@ -281,7 +295,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/get-customers-by-type', [CustomerController::class, 'getByType']);
     Route::resource('warehouse_stocks', WarehouseStockController::class);
     Route::resource('stock_transfers', StockTransferController::class);
-
+    ////////////
+    Route::get('/get-stock/{product}', [StocksController::class, 'getStock'])
+    ->name('get.stock');
+    //////////
     Route::resource('narrations', NarrationController::class)->only(['index', 'store', 'destroy']);
     Route::get('vouchers/{type}', [VoucherController::class, 'index'])->name('vouchers.index');
     Route::post('vouchers/store', [VoucherController::class, 'store'])->name('vouchers.store');

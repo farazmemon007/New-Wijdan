@@ -10,9 +10,47 @@ use Illuminate\Support\Facades\Auth;
 
 class CustomerController extends Controller
 {
+
+//////////////
+  // 🔹 Load customers list by type
+  public function saleindex(Request $request)
+
+{
+    // echo "<pre>";
+    // print_r($request->type);
+    // echo "<pre>";
+    // dd();
+    $type = $request->type ?? 'Main Customer' ;
+    
+    $customers = Customer::where('customer_type', $type)->get();
+    
+    // $customers=Customer::all();
+    
+    // dd($customers);
+    return response()->json($customers);
+}
+
+    // 🔹 Single customer detail
+    public function show($id)
+    {
+        return Customer::findOrFail($id);
+    }
+
+
+    ////////////
+
+
+
+
+
     public function index()
     {
         $customers = Customer::latest()->get(); // no status filter
+
+            // echo "<pre>";
+            // print_r($customers);
+            // echo "</pre>";
+            // dd();
         return view('admin_panel.customers.index', compact('customers'));
     }
 

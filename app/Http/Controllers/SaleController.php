@@ -9,6 +9,7 @@ use App\Models\ProductBooking;
 use App\Models\Sale;
 use App\Models\SalesReturn;
 use App\Models\Stock;
+use App\Models\Warehouse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -17,6 +18,39 @@ class SaleController extends Controller
     /**
      * Display a listing of the resource.
      */
+//////////////
+    // public function index  (Request $request)
+    // {
+    //     $type = $request->type ?? 'customer';
+
+    //     $customers = Customer::where('type', $type)
+    //         ->orderBy('name')
+    //         ->get(['id', 'name', 'mobile']);
+    //         dd($customers);
+
+    //     return response()->json($customers);
+    // }
+
+    // // 🔹 Single customer detail
+    // public function show($id, Request $request)
+    // {
+    //     $type = $request->type ?? 'customer';
+
+    //     $customer = Customer::where('id', $id)
+    //         ->where('type', $type)
+    //         ->firstOrFail();
+
+    //     return response()->json([
+    //         'address' => $customer->address,
+    //         'mobile' => $customer->mobile,
+    //         'remarks' => $customer->remarks,
+    //         'previous_balance' => $customer->previous_balance,
+    //     ]);
+    // }
+
+
+
+    ////////////
     public function index()
     {
         $sales = Sale::with(['customer_relation', 'product_relation'])->get();
@@ -27,9 +61,16 @@ class SaleController extends Controller
     public function addsale()
     {
         $products = Product::get();
-        $Customer = Customer::get();
+        $customer = Customer::all();
+        $warehouse = Warehouse::all();
+        // dd($Customer);$warehouses = Warehouse::all();
+        // $customers = Customer::all();
+        // $accounts = Account::all();
+        // Get next invoice from Sale model generator (ensures INVSLE-003 -> INVSLE-004)
+        $nextInvoiceNumber = Sale::generateInvoiceNo();
 
-        return view('admin_panel.sale.add_sale', compact('products', 'Customer'));
+
+          return view('admin_panel.sale.add_sale222', compact('warehouse', 'customer', 'nextInvoiceNumber'));
     }
 
     public function searchpname(Request $request)
