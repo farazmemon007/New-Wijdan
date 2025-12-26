@@ -771,26 +771,18 @@
     </td>
 
 <!-- DISCOUNT -->
+<!-- DISCOUNT % / PKR -->
 <td class="large-col">
-  <div class="discount-wrapper d-flex align-items-center gap-1">
-
+  <div class="discount-wrapper">
     <input type="text"
            class="form-control discount-value text-end"
            placeholder="">
 
-    <!-- TOGGLE BUTTON -->
     <button type="button"
             class="btn btn-outline-secondary discount-toggle"
-            data-type="percent">
-      %
-    </button>
-
+            data-type="percent">%</button>
   </div>
 </td>
-
-
-
-
 
 
 
@@ -813,6 +805,28 @@
 
 
   }
+
+// discunt % field
+$(document).on('click', '.discount-toggle', function () {
+
+  const $btn = $(this);
+  const currentType = $btn.data('type');
+
+  if (currentType === 'percent') {
+    $btn.data('type', 'pkr').text('PKR');
+  } else {
+    $btn.data('type', 'percent').text('%');
+  }
+
+  // re-calc row
+  const $row = $btn.closest('tr');
+  computeRow($row);
+  updateGrandTotals();
+});
+
+
+
+
 
 
 
@@ -1037,7 +1051,7 @@
     }
 function computeRow($row) {
 
-  const rp  = toNum($row.find('.retail-price').val()); // retail price
+  const rp  = toNum($row.find('.retail-price').val());
   const qty = toNum($row.find('.sales-qty').val());
 
   const discValue = toNum($row.find('.discount-value').val());
@@ -1045,29 +1059,27 @@ function computeRow($row) {
 
   let dam = toNum($row.find('.discount-amount').val());
 
-  // 🔹 GROSS = retail × qty
+  // 🔹 GROSS
   const gross = rp * qty;
 
-  /* ================= DISCOUNT LOGIC ================= */
-
-  // ✅ Case 1: user entered discount-value → auto calc
+  /* ===== AUTO DISCOUNT ===== */
   if (discValue > 0) {
 
     if (discType === 'percent') {
-      // % discount from retail
-      dam = (gross * discValue) / 100;
+      dam = (gross * discValue) / 100;   // % from retail
     } else {
-      // PKR discount per unit
-      dam = discValue * qty;
+      dam = discValue * qty;            // PKR × qty
     }
 
     $row.find('.discount-amount').val(dam.toFixed(2));
+
+  } else {
+    // ✅ NEW FEATURE → jab disc% / PKR empty ya 0 ho
+    dam = 0;
+    $row.find('.discount-amount').val('0.00');
   }
 
-  // ✅ Case 2: user manually typed discount-amount
-  // (dam already picked from input, no overwrite)
-
-  /* ================= NET ================= */
+  /* ===== NET ===== */
   const net = Math.max(0, gross - dam);
   $row.find('.sales-amount').val(net.toFixed(2));
 }
@@ -1075,12 +1087,15 @@ function computeRow($row) {
 
 
 
-    $(document).on('input', ' .sales-qty, .discount-percent', function() {
-      const $row = $(this).closest('tr');
-      computeRow($row, false); // % drives amount
-      updateGrandTotals();
-      refreshPostedState();
-    });
+
+
+ $(document).on('input', '.sales-qty, .discount-value', function () {
+  const $row = $(this).closest('tr');
+  computeRow($row);
+  updateGrandTotals();
+  refreshPostedState();
+});
+
     $(document).on('input', '.discount-amount', function() {
       const $row = $(this).closest('tr');
       computeRow($row, true); // manual amount respected
@@ -1100,56 +1115,58 @@ function computeRow($row) {
     });
 
     /* ---------- Totals ---------- */
-    function updateGrandTotals() {
-      let tQty = 0,
-        tGross = 0,
-        tLineDisc = 0,
-        tNet = 0;
+   function updateGrandTotals() {
 
-      $('#salesTableBody tr').each(function() {
-        const $r = $(this);
-        const sp = toNum($r.find('.sales-price').val());
-        const rp = toNum($r.find('.retail-price').val());
-        const qty = toNum($r.find('.sales-qty').val());
-        const pct = toNum($r.find('.discount-percent').val());
-        const dam = toNum($r.find('.discount-amount').val());
+  let tQty = 0;
+  let tGross = 0;
+  let tLineDisc = 0;
+  let tNet = 0;
 
-        const gross = sp * qty;
-        const lineDisc = (pct > 0 && dam == 0) ? ((rp * qty) * pct / 100.0) : dam; // safeguard
-        const net = Math.max(0, gross - lineDisc);
+  $('#salesTableBody tr').each(function () {
 
-        tQty += qty;
-        tGross += gross;
-        tLineDisc += lineDisc;
-        tNet += net;
-      });
+    const $r = $(this);
 
-      // Order discount
-      const orderPct = toNum($('#discountPercent').val());
-      const orderDisc = (tGross * orderPct) / 100.0;
+    const rp  = toNum($r.find('.retail-price').val());
+    const qty = toNum($r.find('.sales-qty').val());
+    const dam = toNum($r.find('.discount-amount').val());
 
-      const prev = toNum($('#previousBalance').val());
-      const receipts = toNum($('#receiptsTotal').text());
+    const gross = rp * qty;
+    const net   = Math.max(0, gross - dam);
 
-      const subTotal = Math.max(0, tGross - tLineDisc);
-      const payable = Math.max(0, subTotal - orderDisc + prev - receipts);
+    tQty      += qty;
+    tGross    += gross;
+    tLineDisc += dam;
+    tNet      += net;   // ✅ NET TOTAL
+  });
 
-      // UI
-      $('#tQty').text(tQty.toFixed(0));
-      $('#tGross').text(tGross.toFixed(2));
-      $('#tLineDisc').text(tLineDisc.toFixed(2));
-      $('#tSub').text(subTotal.toFixed(2));
-      $('#tOrderDisc').text(orderDisc.toFixed(2));
-      $('#tPrev').text(prev.toFixed(2));
-      $('#tPayable').text(payable.toFixed(2));
-      $('#totalAmount').text(tNet.toFixed(2));
+  // ===== ORDER LEVEL =====
+  const orderPct  = toNum($('#discountPercent').val());
+  const orderDisc = (tNet * orderPct) / 100;
 
-      // mirrors for backend
-      $('#subTotal1').val(tGross.toFixed(2));
-      $('#subTotal2').val(subTotal.toFixed(2));
-      $('#discountAmount').val(orderDisc.toFixed(2));
-      $('#totalBalance').val(payable.toFixed(2));
-    }
+  const prev      = toNum($('#previousBalance').val());
+  const receipts = toNum($('#receiptsTotal').text());
+
+  const payable = Math.max(0, tNet - orderDisc + prev - receipts);
+
+  // ===== UI UPDATE =====
+  $('#tQty').text(tQty.toFixed(0));
+  $('#tGross').text(tGross.toFixed(2));
+  $('#tLineDisc').text(tLineDisc.toFixed(2));
+  $('#tSub').text(tNet.toFixed(2));
+  $('#tOrderDisc').text(orderDisc.toFixed(2));
+  $('#tPrev').text(prev.toFixed(2));
+  $('#tPayable').text(payable.toFixed(2));
+
+  // 🔥 TABLE FOOTER TOTAL
+  $('#totalAmount').text(tNet.toFixed(2));
+
+  // ===== BACKEND MIRRORS =====
+  $('#subTotal1').val(tGross.toFixed(2));
+  $('#subTotal2').val(tNet.toFixed(2));
+  $('#discountAmount').val(orderDisc.toFixed(2));
+  $('#totalBalance').val(payable.toFixed(2));
+}
+
     $(document).on('input', '#previousBalance, #discountPercent', updateGrandTotals);
 
     /* ---------- Row auto-add ---------- */
@@ -1161,7 +1178,7 @@ function computeRow($row) {
     });
 
     /* ---------- Add new row when user presses Enter in Disc % (only on last row) ---------- */
-    $('#salesTableBody').on('keydown', '.discount-percent', function(e) {
+    $('#salesTableBody').on('keydown', '.discount-value', function(e) {
       if (e.key === 'Enter' || e.keyCode === 13) {
         e.preventDefault(); // prevent accidental form submit
         const $current = $(this).closest('tr');
@@ -1484,7 +1501,7 @@ function computeRow($row) {
       const prod = $row.find('.product').val();
       const wh = $row.find('.warehouse').val();
       const qty = parseFloat($row.find('.sales-qty').val() || '0') || 0;
-      const discPct = parseFloat($row.find('.discount-percent').val() || '0') || 0;
+      const discPct = parseFloat($row.find('.discount-value.discount-percent').val() || '0') || 0;
       const discAmt = parseFloat($row.find('.discount-amount').val() || '0') || 0;
 
       // consider row meaningful if product selected OR qty > 0 OR discount entered OR warehouse selected
