@@ -10,28 +10,31 @@ class WarehouseController extends Controller
 {
 
      // Return warehouses for a given product_id
-   public function getWarehouses(Request $request)
+public function getWarehouses(Request $request)
 {
     $productId = $request->input('product_id');
 
-    // Get all warehouse stock entries for this product
-    $warehouseStocks = WarehouseStock::where('product_id', $productId)->get();
-
-    // echo"<pre>";
-    // print_r($warehouseStocks);
-    // echo"</pre>";
-
-
-    $response = $warehouseStocks->map(function($ws) {
-        return [
-            'id' => $ws->warehouse_id,   // warehouse id
-            'name' => optional($ws->warehouse)->name ?? 'Warehouse '.$ws->warehouse_id, // agar relation hai to name, nahi to id
-            'stock' => $ws->quantity     // product quantity in that warehouse
-        ];
-    });
+    $warehouseStocks = WarehouseStock::with('stockWarehouse')
+    ->where('product_id', $productId)
+    ->get();
+// $warehouseStocks = WarehouseStock::where('product_id', $productId)
+//     ->get();
+ 
+ $response = $warehouseStocks->map(function ($ws) {
+    return [
+        'warehouse_id'   => $ws->warehouse_id,
+        'warehouse_name' => optional($ws->stockWarehouse)->warehouse_name,
+        'stock'          => $ws->quantity,
+    ];
+});
+//    echo "<pre>";
+//     print_r($response);
+//     echo "</pre>";
+// dd();
 
     return response()->json($response);
 }
+
 
 
 

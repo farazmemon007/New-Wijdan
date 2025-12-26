@@ -20,6 +20,13 @@ class WarehouseStock extends Model
     public function warehouse() {
         return $this->belongsTo(Warehouse::class);
     }
+    // App\Models\WarehouseStock.php
+ //  Rename relation
+    public function stockWarehouse()
+    {
+        return $this->belongsTo(Warehouse::class, 'warehouse_id');
+    }
+
 
     // public function product() {
     //     return $this->belongsTo(Product::class);

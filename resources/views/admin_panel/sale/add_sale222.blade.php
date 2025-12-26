@@ -105,6 +105,32 @@
     color: #3730a3;
   }
 </style>
+<style>
+  
+/* ===== Sales Table UI Fix ===== */
+.sales-table td.product-col {
+    min-width: 180px;
+}
+.sales-table td.warehouse-col {
+    min-width: 170px;
+}
+.sales-table td.small-col {
+    width: 110px;
+}
+.sales-table td.medium-col {
+    width: 120px;
+}
+.sales-table td.action-col {
+    width: 100px;
+    text-align: center;
+}
+.input-readonly {
+    background: #f1f3f5;
+    font-weight: 600;
+}
+</style>
+
+ 
 
 <div class="container-fluid py-4">
   <div class="main-container bg-white border shadow-sm mx-auto p-3 rounded-3">
@@ -204,7 +230,7 @@
           </div>
 
           <div class="table-responsive">
-            <table class="table table-bordered mb-0" style="min-width:1000px">
+            <table class="table table-bordered sales-table mb-0" style="min-width:1000px">
               <thead>
                 <tr>
                   <th style="width:10px">Product</th>
@@ -276,13 +302,13 @@
               <div class="col-5 text-end fw-semibold"><span id="tSub">0.00</span></div>
             </div>
             <div class="row py-1">
-              <div class="col-7">Order Discount %</div>
+              <div class="col-7">Aditional Discount %</div>
               <div class="col-5 text-end">
                 <input type="text" class="form-control text-end" name="discountPercent" id="discountPercent" value="0" style="max-width:120px; margin-left:auto">
               </div>
             </div>
             <div class="row py-1">
-              <div class="col-7 text-muted">Order Discount Rs</div>
+              <div class="col-7 text-muted">Aditional Discount Rs</div>
               <div class="col-5 text-end"><span id="tOrderDisc">0.00</span></div>
             </div>
             <div class="row py-1">
@@ -331,7 +357,7 @@
   <script>   // Load products once
   // When product changes, load warehouses for that product
   $(document).on('change', '.product', function () {
-  alert('product change');
+  
       const $row = $(this).closest('tr');
       const productId = $(this).val();
       // console.log(productId);
@@ -349,20 +375,25 @@
                 .html('<option>Loading warehouses...</option>');
 
       // Call WarehouseController
-      $.get('{{ route("warehouses.get") }}', { product_id: productId })
-      .done(function (warehouses) {
-          let html = '<option value="">Select Warehouse</option>';
-          warehouses.forEach(function (w) {
-              html += `<option value="${w.id}" data-stock="${w.stock}">${w.name}</option>`;
-          });
+     $.get('{{ route("warehouses.get") }}', { product_id: productId })
+  .done(function (warehouses) {
 
-          $warehouse.html(html).prop('disabled', false);
-          $stock.val(''); // clear stock until warehouse is selected
-      })
-      .fail(function () {
-          $warehouse.html('<option value="">Error loading warehouses</option>').prop('disabled', false);
-          $stock.val('');
+      let html = '<option value="">Select Warehouse</option>';
+
+      warehouses.forEach(function (w) {
+          html += `<option value="${w.warehouse_id}" data-stock="${w.stock}">
+                      ${w.warehouse_name}
+                   </option>`;
       });
+
+      $warehouse.html(html).prop('disabled', false);
+      $stock.val('');
+  })
+  .fail(function () {
+      $warehouse.html('<option value="">Error loading warehouses</option>').prop('disabled', false);
+      $stock.val('');
+  });
+
   });
 
   // When warehouse is selected, update stock
@@ -560,31 +591,59 @@ function init() {
   function addNewRow() {
   $('#salesTableBody').append(`
 <tr>
- <td>
-  <select class="form-select product" name="product_id[]">
-    <option value="">Loading products...</option>
-  </select>
-</td>
+  <!-- PRODUCT -->
+  <td class="product-col">
+    <select class="form-select product" name="product_id[]">
+      <option value="">Loading products...</option>
+    </select>
+  </td>
 
-  <td>
+  <!-- WAREHOUSE -->
+  <td class="warehouse-col">
     <select class="form-select warehouse" name="warehouse_id[]" disabled>
       <option value="">Select Warehouse</option>
     </select>
   </td>
 
-  <td><input type="text" class="form-control stock text-center input-readonly" readonly></td>
-  <td><input type="text" class="form-control sales-price text-end input-readonly" value="0" readonly></td>
-  <td><input type="text" class="form-control sales-qty text-end"></td>
-  <td><input type="text" class="form-control retail-price text-end input-readonly" value="0" readonly></td>
-  <td><input type="text" class="form-control discount-percent text-end"></td>
-  <td><input type="text" class="form-control discount-amount text-end"></td>
-  <td><input type="text" class="form-control sales-amount text-end input-readonly" value="0" readonly></td>
+  <!-- STOCK -->
+  <td class="small-col">
+    <input type="text" class="form-control stock text-center input-readonly" readonly>
+  </td>
 
-  <td class="text-center">
+ 
+
+  <!-- QTY -->
+  <td class="small-col">
+    <input type="text" class="form-control sales-qty text-end">
+  </td>
+
+  <!-- RETAIL PRICE -->
+  <td class="medium-col">
+    <input type="text" class="form-control retail-price text-end input-readonly" value="0" readonly>
+  </td>
+
+  <!-- DISCOUNT % -->
+  <td class="small-col">
+    <input type="text" class="form-control discount-percent text-end">
+  </td>
+
+  <!-- DISCOUNT AMOUNT -->
+  <td class="medium-col">
+    <input type="text" class="form-control discount-amount text-end">
+  </td>
+
+  <!-- NET AMOUNT -->
+  <td class="medium-col">
+    <input type="text" class="form-control sales-amount text-end input-readonly" value="0" readonly>
+  </td>
+
+  <!-- ACTION -->
+  <td class="action-col">
     <button type="button" class="btn btn-sm btn-outline-danger del-row">&times;</button>
   </td>
 </tr>
 `);
+
 
 }
 

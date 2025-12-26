@@ -187,7 +187,7 @@ Route::get('sale/customers/{id}', [CustomerController::class, 'show'])
 
     // Warehouse Routes
     /////
-    Route::get('/warehouses/get', [WarehouseController::class, 'getWarehouses'])->name('warehouses.get');
+    Route::get('/warehouses/get/', [WarehouseController::class, 'getWarehouses'])->name('warehouses.get');
 
     /////
     Route::get('/warehouse', [WarehouseController::class, 'index']);
