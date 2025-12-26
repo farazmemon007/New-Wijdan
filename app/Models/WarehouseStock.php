@@ -29,4 +29,13 @@ class WarehouseStock extends Model
     {
         return $this->belongsTo(Product::class, 'product_id');
     }
+
+
+  public function products()
+    {
+        return $this->belongsToMany(Product::class, 'warehouse_stocks', 'warehouse_id', 'product_id')
+                    ->withPivot('quantity', 'price', 'remarks');
+    }
+
+
 }

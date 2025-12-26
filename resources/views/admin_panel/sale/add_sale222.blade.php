@@ -328,27 +328,87 @@
 
 {{-- hajshdsadsdsksa --}}
 
-<script>
-  function loadProducts($select) {
+  <script>   // Load products once
+  // When product changes, load warehouses for that product
+  $(document).on('change', '.product', function () {
+  alert('product change');
+      const $row = $(this).closest('tr');
+      const productId = $(this).val();
+      // console.log(productId);
+      const $warehouse = $row.find('.warehouse');
+      const $stock = $row.find('.stock');
 
-  $.get('{{ route("productget") }}', function (products) {
+      // Reset if no product selected
+      if (!productId) {
+          $warehouse.html('<option value="">Select Warehouse</option>').prop('disabled', true);
+          $stock.val('');
+          return;
+      }
 
-    $select.html('<option value="">Select Product</option>');
+      $warehouse.prop('disabled', true)
+                .html('<option>Loading warehouses...</option>');
 
-    products.forEach(function (p) {
-      $select.append(`
-        <option value="${p.id}">
-          ${p.name}
-        </option>
-      `);
-    });
+      // Call WarehouseController
+      $.get('{{ route("warehouses.get") }}', { product_id: productId })
+      .done(function (warehouses) {
+          let html = '<option value="">Select Warehouse</option>';
+          warehouses.forEach(function (w) {
+              html += `<option value="${w.id}" data-stock="${w.stock}">${w.name}</option>`;
+          });
 
-  }).fail(function () {
-    $select.html('<option value="">Error loading products</option>');
+          $warehouse.html(html).prop('disabled', false);
+          $stock.val(''); // clear stock until warehouse is selected
+      })
+      .fail(function () {
+          $warehouse.html('<option value="">Error loading warehouses</option>').prop('disabled', false);
+          $stock.val('');
+      });
   });
-}
 
-</script>
+  // When warehouse is selected, update stock
+  $(document).on('change', '.warehouse', function () {
+      const $row = $(this).closest('tr');
+      const stock = $(this).find(':selected').data('stock') || 0;
+      $row.find('.stock').val(stock);
+  });
+
+  </script> 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!--fgdffhjkjkhgkhkh  -->
+
 <script>
 $(document).ready(function () {
 function init() {
@@ -443,7 +503,7 @@ function init() {
     .done(function (products) {
 
       let html = '<option value="">Select Product</option>';
-      console.log(products);
+      // console.log(products);
       products.forEach(function (p) {
         html += `<option value="${p.id}">${p.item_name}</option>`;
       });
@@ -458,9 +518,9 @@ function init() {
     });
 }
 
-</script>
+</script> 
 
-<script>
+ <script>
   $(document).on('focus click', '.product', function () {
   loadProductsAjax($(this));
 });

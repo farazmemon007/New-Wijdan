@@ -19,6 +19,11 @@ class Product extends Model
     //     'wholesale_price', 'retail_price', 'initial_stock', 'alert_quantity'
     // ];
     // app/Models/Product.php
+ public function warehouses()
+    {
+        return $this->belongsToMany(Warehouse::class, 'warehouse_stocks', 'product_id', 'warehouse_id')
+                    ->withPivot('quantity', 'price', 'remarks');
+    }
 
     // app/Models/Product.php
 

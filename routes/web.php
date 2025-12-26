@@ -186,6 +186,10 @@ Route::get('sale/customers/{id}', [CustomerController::class, 'show'])
     Route::post('/vendor/bilties', [VendorController::class, 'store_vendor_bilty'])->name('vendor.bilties.store');
 
     // Warehouse Routes
+    /////
+    Route::get('/warehouses/get', [WarehouseController::class, 'getWarehouses'])->name('warehouses.get');
+
+    /////
     Route::get('/warehouse', [WarehouseController::class, 'index']);
     Route::post('/warehouse/store', [WarehouseController::class, 'store']);
     Route::get('/warehouse/delete/{id}', [WarehouseController::class, 'delete']);
