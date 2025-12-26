@@ -19,6 +19,16 @@ use Milon\Barcode\DNS1D;
 class ProductController extends Controller
 {
 
+    public function getPrice(Request $request)
+{
+    $product = Product::find($request->product_id);
+
+    return response()->json([
+        'retail_price' => $product?->price ?? 0
+    ]);
+    
+}
+
     public function productget(){
         $products=Product::all();
         return response()->json($products);

@@ -90,10 +90,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/Product', [ProductController::class, 'product'])->name('product');
     Route::get('/productview/{id}', [ProductController::class, 'productview'])->name('productview');
 ////////////
-// Route::get(
-//     'warehouse/products/{warehouse}',
-//     [WarehouseStockController::class, 'getByWarehouse']
-// )->name('warehouse.products');
+Route::get('/products/price', [ProductController::class, 'getPrice'])
+    ->name('products.price');
+
 //////////
     Route::get('/create_prodcut', [ProductController::class, 'view_store'])->name('store');
     Route::post('/store-product', [ProductController::class, 'store_product'])->name('store-product');
