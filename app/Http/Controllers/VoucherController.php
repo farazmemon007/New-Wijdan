@@ -238,6 +238,10 @@ class VoucherController extends Controller
      public function getAccountsByHead($headId)
     {
         $accounts = Account::where('head_id', $headId)->where('status', 1)->get();
+        // echo "<pre>";
+        // print_r($accounts);
+        // echo "</pre>";
+        // dd();
         return response()->json($accounts);
     }
 public function getOpeningBalance($type, $id)
@@ -426,6 +430,10 @@ if ($request->row_account_id && $request->amount) {
         $narrations = \App\Models\Narration::where('expense_head', 'Payment voucher')
             ->pluck('narration', 'id');
         $AccountHeads = AccountHead::get();
+        // echo"<pre>";
+        // print_r($AccountHeads);
+        // echo"</pre>";
+        // dd();
 
         // Last RVID nikalna
         $lastVoucher = \App\Models\PaymentVoucher::latest('id')->first();
@@ -558,7 +566,7 @@ if ($request->row_account_id && $request->amount) {
         }
     }
 
-    public function all_Payment_vochers()
+     public function all_Payment_vochers()
     {
         $receipts = \App\Models\PaymentVoucher::orderBy('id', 'DESC')->get();
 

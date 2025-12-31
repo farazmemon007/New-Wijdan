@@ -19,12 +19,10 @@ class PurchaseController extends Controller
 {
      public function getPartyList(Request $request)
     {
-        $type = strtolower($request->query('type', 'vendor'));
-
-        if ($type === 'vendor') {
-            $vendors = Vendor::select('id', 'name as text')->get();
-            return response()->json($vendors);
-        } elseif ($type === 'customer') {
+        $type = strtolower($request->query('type', 'Main Customer'));
+// echo $type;
+// dd();
+       if ($type === 'customer') {
             $customers = Customer::where('customer_type', 'Main Customer')
                 ->select('id', 'customer_name as text')
                 ->get();
