@@ -328,7 +328,11 @@ Route::middleware('auth')->group(function () {
 route::post('/Payment/vochers/stote', [VoucherController::class, 'store_Pay_vochers'])->name('Payment.vochers.store');
 Route::get('/all-Payment-vochers', [VoucherController::class, 'all_Payment_vochers'])->name('all-Payment-vochers');
 Route::get('/Payment-voucher/print/{id}', [VoucherController::class, 'Paymentprint'])->name('PaymentVoucher.print');
-    
+    ////// expense voucher 
+    Route::get('/all-expense-vochers', [VoucherController::class, 'all_expense_vochers'])->name('all-expense-vochers');
+Route::get('/expense-vochers', [VoucherController::class, 'expense_vochers'])->name('expense-vochers');
+route::post('/expense/vochers/stote', [VoucherController::class, 'store_expense_vochers'])->name('expense.vochers.store');
+Route::get('/expense-voucher/print/{id}', [VoucherController::class, 'expenseprint'])->name('expenseVoucher.print');
     // reporting routes
 
     Route::get('/report/item-stock', [ReportingController::class, 'item_stock_report'])->name('report.item_stock');
