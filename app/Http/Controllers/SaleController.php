@@ -9,12 +9,54 @@ use App\Models\ProductBooking;
 use App\Models\Sale;
 use App\Models\SalesReturn;
 use App\Models\Stock;
+use App\Models\Vendor;
 use App\Models\Warehouse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class SaleController extends Controller
 {
+      public function getCustomerData($id, Request $request)
+    {
+        $type = strtolower($request->query('type', 'customer'));
+
+        if ($type === 'vendor') {
+            // Fetch Vendor data
+            $v = Vendor::find($id);
+            if (!$v) {
+                return response()->json(['error' => 'Vendor not found'], 404);
+            }
+
+            return response()->json([
+                'address' => $v->address,
+                'mobile' => $v->phone, // assuming 'phone' field for vendors
+                'remarks' => '', // No remarks for vendors
+                'previous_balance' => 0, // Vendors may not have balance logic
+            ]);
+        }
+
+        // Default: Fetch Customer data (including walking)
+        $c = Customer::find($id);
+        if (!$c) {
+            return response()->json(['error' => 'Customer not found'], 404);
+        }
+
+        // Retrieve the latest ledger entry for the customer
+        $latestLedger = CustomerLedger::where('customer_id', $id)->latest()->first();
+
+        // If a ledger entry exists, use its closing_balance; otherwise, set it to 0
+        $previous_balance = $latestLedger ? $latestLedger->closing_balance : 0;
+
+        return response()->json([
+            'filer_type' => $c->filer_type,
+            'customer_type' => $c->customer_type,
+            'address' => $c->address,
+            'mobile' => $c->mobile,
+            'remarks' => $c->remarks ?? '',
+            'previous_balance' => $previous_balance, // Use the latest closing_balance
+        ]);
+    }
+
     /**
      * Display a listing of the resource.
      */

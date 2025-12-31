@@ -2,20 +2,42 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Purchase;
+use App\Models\Customer;
+use App\Models\Inwardgatepass;
 use App\Models\Product;
-use Illuminate\Http\Request;
-use App\Models\Vendor;
-use App\Models\Warehouse;
+use App\Models\Purchase;
 use App\Models\PurchaseItem;
 use App\Models\Stock;
-use Illuminate\Support\Facades\DB;
+use App\Models\Vendor;
 use App\Models\VendorLedger;
-use App\Models\Inwardgatepass;
+use App\Models\Warehouse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class PurchaseController extends Controller
 {
+     public function getPartyList(Request $request)
+    {
+        $type = strtolower($request->query('type', 'vendor'));
+
+        if ($type === 'vendor') {
+            $vendors = Vendor::select('id', 'name as text')->get();
+            return response()->json($vendors);
+        } elseif ($type === 'customer') {
+            $customers = Customer::where('customer_type', 'Main Customer')
+                ->select('id', 'customer_name as text')
+                ->get();
+            return response()->json($customers);
+        } elseif ($type === 'walkin') {
+            $walkins = Customer::where('customer_type', 'Walking Customer')
+                ->select('id', 'customer_name as text')
+                ->get();
+            return response()->json($walkins);
+        }
+
+        return response()->json([]);
+    }
     /** Keep stocks table in sync for a (branch,warehouse,product) */
 private function upsertStocks(int $productId, float $qtyDelta, int $branchId, int $warehouseId): void
 {

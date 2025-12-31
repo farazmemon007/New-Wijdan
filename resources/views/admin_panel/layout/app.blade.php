@@ -261,8 +261,9 @@
         <div class="submenu">
             <ul class="submenu-item">
                 <li><a href="{{ route('view_all') }}"><i class="fa-solid fa-money-bill-wave"></i> Char Of Accounts</a></li>
+                <li><a href="{{ route('narrations.index') }}"><i class="fa-solid fa-money-bill-wave"></i> Narrations</a></li>
                 <li><a href="{{ route('vouchers.index', 'expense voucher') }}"><i class="fa-solid fa-money-bill-wave"></i> Expense Voucher</a></li>
-                <li><a href="{{ route('vouchers.index', 'receipt voucher') }}"><i class="fa-solid fa-wallet"></i> Receipts Voucher</a></li>
+                <li><a href="{{ route('all-recepit-vochers') }}"><i class="fa-solid fa-wallet"></i> Receipts Voucher</a></li>
                 <li><a href="{{ route('vouchers.index', 'journal voucher') }}"><i class="fa-solid fa-wallet"></i> Journal Voucher</a></li>
                 <li><a href="{{ route('vouchers.index', 'payment voucher') }}"><i class="fa-solid fa-wallet"></i> Payment Voucher</a></li>
                 <li><a href="{{ route('vouchers.index', 'income voucher') }}"><i class="fa-solid fa-wallet"></i> Income Voucher</a></li>

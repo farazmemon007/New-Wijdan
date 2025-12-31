@@ -71,6 +71,25 @@
     font-size: 15px;
 }
 
+/* custom drop down button */
+.custom-dropdown {
+    border-radius: 10px;
+    padding: 6px;
+    min-width: 190px;
+}
+
+.custom-dropdown .dropdown-item {
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+}
+
+.custom-dropdown .dropdown-item:hover {
+    background: #f1f3f5;
+    transform: translateX(3px);
+}
+
 
 </style>
  <div class="card shadow-sm border-0">
@@ -146,34 +165,59 @@
                         <td>{{ $product->stock->qty ?? '- ' }}</td>
                         <td>{{ $product->alert_quantity }}</td>
                         <td>{{ $product->brand->name ?? '-' }}</td>
-                        <td class="text-center">
-<button 
-    type="button"
-    class="btn btn-sm btn-warning viewProductBtn"
-    data-id="{{ $product->id }}">
-    View
-</button>
+                       <td class="text-center">
 
+    <!-- VIEW BUTTON -->
+    <button 
+        type="button"
+        class="btn btn-sm btn-warning viewProductBtn"
+        data-id="{{ $product->id }}">
+        👁 View
+    </button>
 
-                            @if(auth()->user()->can('Edit Product') || auth()->user()->email === 'admin@admin.com')
-                                <a href="{{ route('products.edit', $product->id) }}" class="btn btn-sm btn-outline-primary">
-                                    ✏ Edit
-                                </a>
-                            @endif
+    <!-- MORE OPTIONS DROPDOWN -->
+    <div class="btn-group">
+        <button 
+            type="button" 
+            class="btn btn-sm btn-secondary dropdown-toggle"
+            data-bs-toggle="dropdown"
+            aria-expanded="false">
+            More
+        </button>
 
-                            <a href="{{ route('generate-barcode-image', $product->id) }}" class="btn btn-sm btn-outline-success">
-                                🏷 Barcode
-                            </a>
-                            @if($product->is_assembled)
-  <a class="btn btn-sm btn-outline-primary"
-     href="{{ route('assembly.report.show', $product->id) }}">
-     <i class="fas fa-cogs"></i> Assembly Report
-  </a>
-@endif
+       
+        <ul class="dropdown-menu dropdown-menu-end shadow-lg custom-dropdown">
 
+            @if(auth()->user()->can('Edit Product') || auth()->user()->email === 'admin@admin.com')
+                <li>
+                     <a class="dropdown-item d-flex align-items-center gap-2"
+                       href="{{ route('products.edit', $product->id) }}">
+                        ✏ Edit Product
+                    </a>
+                </li>
+            @endif
 
-                        </td>
-                    </tr>
+            <li>
+                <a class="dropdown-item d-flex align-items-center gap-2"
+                   href="{{ route('generate-barcode-image', $product->id) }}">
+                    🏷 Generate Barcode
+                </a>
+            </li>
+
+            @if($product->is_assembled)
+                <li>
+                   <a class="dropdown-item d-flex align-items-center gap-2"
+                       href="{{ route('assembly.report.show', $product->id) }}">
+                        ⚙ Assembly Report
+                    </a>
+                </li>
+            @endif
+
+        </ul>
+    </div>
+
+</td>
+
                     @endforeach
                 </tbody>
             </table>

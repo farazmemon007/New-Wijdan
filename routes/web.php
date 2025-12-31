@@ -1,4 +1,5 @@
 <?php
+
 use App\Http\Controllers\AccountsHeadController;
 use App\Http\Controllers\AssemblyController;
 use App\Http\Controllers\BranchController;
@@ -58,6 +59,10 @@ Route::get('/', function () {
 // })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
+
+
+
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -78,22 +83,22 @@ Route::middleware('auth')->group(function () {
     Route::get('/subcategory/delete/{id}', [SubcategoryController::class, 'delete'])->name('delete.subcategory');
     route::post('/subcategory/stote', [SubcategoryController::class, 'store'])->name('store.subcategory');
 
-    Route::post('/assembly/pluck-part', [AssemblyController::class, 'pluckPart']) ->name('assembly.pluck.part');
+    Route::post('/assembly/pluck-part', [AssemblyController::class, 'pluckPart'])->name('assembly.pluck.part');
     Route::post('/assembly/repair-incomplete', [AssemblyController::class, 'repairIncomplete'])->name('assembly.repair.incomplete');
     Route::post('/assembly/build-auto', [AssemblyController::class, 'buildAuto'])->name('assembly.build.auto');
     Route::get('/products/{id}/assembly-report', [ProductController::class, 'assemblyReport'])->name('products.assembly-report');
     Route::get('/assembly/summary', [ProductController::class, 'assemblySummary'])->name('assembly.summary');
 
-    Route::post('/assembly/ensure-part-for-sale', [AssemblyController::class, 'ensurePartForSale']) ->name('assembly.ensure_part_for_sale');
-    Route::get('productget',[ProductController::class,'productget'])->name('productget');
+    Route::post('/assembly/ensure-part-for-sale', [AssemblyController::class, 'ensurePartForSale'])->name('assembly.ensure_part_for_sale');
+    Route::get('productget', [ProductController::class, 'productget'])->name('productget');
 
     Route::get('/Product', [ProductController::class, 'product'])->name('product');
     Route::get('/productview/{id}', [ProductController::class, 'productview'])->name('productview');
-////////////
-Route::get('/products/price', [ProductController::class, 'getPrice'])
-    ->name('products.price');
+    ////////////
+    Route::get('/products/price', [ProductController::class, 'getPrice'])
+        ->name('products.price');
 
-//////////
+    //////////
     Route::get('/create_prodcut', [ProductController::class, 'view_store'])->name('store');
     Route::post('/store-product', [ProductController::class, 'store_product'])->name('store-product');
     Route::put('/product/update/{id}', [ProductController::class, 'update'])->name('product.update');
@@ -121,20 +126,20 @@ Route::get('/products/price', [ProductController::class, 'getPrice'])
     Route::post('/stock-adjust/bulk', [AssemblyController::class, 'adjustBulk'])
         ->name('assembly.adjust.bulk');
 
-// package type controller
+    // package type controller
 
 
-// Route::get('/package-types', [PakageTypeController::class, 'index'])
-//     ->name('package-type.index');
+    // Route::get('/package-types', [PakageTypeController::class, 'index'])
+    //     ->name('package-type.index');
 
-// Route::post('/package-type/store', [PackageTypeController::class, 'store'])
-//     ->name('package-type.store');
+    // Route::post('/package-type/store', [PackageTypeController::class, 'store'])
+    //     ->name('package-type.store');
 
-// Route::post('/package-type/update', [PackageTypeController::class, 'update'])
-//     ->name('package-type.update');
+    // Route::post('/package-type/update', [PackageTypeController::class, 'update'])
+    //     ->name('package-type.update');
 
-// Route::get('/package-type/delete/{id}', [PackageTypeController::class, 'destroy'])
-//     ->name('package-type.delete');
+    // Route::get('/package-type/delete/{id}', [PackageTypeController::class, 'destroy'])
+    //     ->name('package-type.delete');
 
 
 
@@ -148,13 +153,14 @@ Route::get('/products/price', [ProductController::class, 'getPrice'])
     // routes/web.php
 
     // Customer Routes
-// Dropdown list (by type)
-Route::get('sale/customers', [CustomerController::class, 'saleindex'])
-    ->name('salecustomers.index');
+    // Dropdown list (by type)
+    Route::get('sale/customers', [CustomerController::class, 'saleindex'])
+        ->name('salecustomers.index');
 
-// Single customer detail
-Route::get('sale/customers/{id}', [CustomerController::class, 'show'])
-    ->name('salecustomers.show');
+    // Single customer detail
+    Route::get('sale/customers/{id}', [CustomerController::class, 'show'])
+        ->name('salecustomers.show');
+    Route::get('/get-customer/{id}', [SaleController::class, 'getCustomerData'])->name('customers.show');
     // Cutomer create
     Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
     Route::get('/customers/create', [CustomerController::class, 'create'])->name('customers.create');
@@ -238,7 +244,7 @@ Route::get('sale/customers/{id}', [CustomerController::class, 'show'])
     Route::get('purchase/return', [PurchaseController::class, 'purchaseReturnIndex'])->name('purchase.return.index');
     Route::get('purchase/return/{id}', [PurchaseController::class, 'showReturnForm'])->name('purchase.return.show');
     Route::post('purchase/return/store', [PurchaseController::class, 'storeReturn'])->name('purchase.return.store');
-
+    Route::get('/getPartyList', [PurchaseController::class, 'getPartyList'])->name('party.list');
     // Inward Gatepass Routes
     Route::get('/InwardGatepass', [InwardgatepassController::class, 'index'])->name('InwardGatepass.home');
     Route::get('/add/InwardGatepass', [InwardgatepassController::class, 'create'])->name('add_inwardgatepass');
@@ -294,20 +300,29 @@ Route::get('sale/customers/{id}', [CustomerController::class, 'show'])
     // web.php
     Route::get('/warehouse-stock-quantity', [StockTransferController::class, 'getStockQuantity'])->name('warehouse.stock.quantity');
 
-    // narratiions
+
     Route::get('/get-customers-by-type', [CustomerController::class, 'getByType']);
     Route::resource('warehouse_stocks', WarehouseStockController::class);
     Route::resource('stock_transfers', StockTransferController::class);
     ////////////
     Route::get('/get-stock/{product}', [StocksController::class, 'getStock'])
-    ->name('get.stock');
+        ->name('get.stock');
     //////////
+    // narratiions
     Route::resource('narrations', NarrationController::class)->only(['index', 'store', 'destroy']);
     Route::get('vouchers/{type}', [VoucherController::class, 'index'])->name('vouchers.index');
     Route::post('vouchers/store', [VoucherController::class, 'store'])->name('vouchers.store');
     Route::get('/view_all', [AccountsHeadController::class, 'index'])->name('view_all');
     Route::get('/get-vendor-balance/{id}', [VendorController::class, 'getVendorBalance']);
+    ///// Recipt Vouchers
+    Route::get('/receipt-voucher/print/{id}', [VoucherController::class, 'print'])->name('receiptVoucher.print');
+    Route::get('/get-accounts-by-head/{headId}', [VoucherController::class, 'getAccountsByHead']);
+    Route::get('/get-opening-balance/{type}/{id}', [VoucherController::class, 'getOpeningBalance']);
 
+
+    Route::get('/all-recepit-vochers', [VoucherController::class, 'all_recepit_vochers'])->name('all-recepit-vochers');
+    Route::get('/recepit-vochers', [VoucherController::class, 'recepit_vochers'])->name('recepit-vochers');
+    Route::post('/recepit/vochers/stote', [VoucherController::class, 'store_rec_vochers'])->name('recepit.vochers.store');
     // reporting routes
 
     Route::get('/report/item-stock', [ReportingController::class, 'item_stock_report'])->name('report.item_stock');
@@ -324,6 +339,10 @@ Route::get('sale/customers/{id}', [CustomerController::class, 'show'])
 
     Route::get('reports/onhand', [ReportingController::class, 'onhand'])->name('reports.onhand');
     // reports
-
+    Route::prefix('coa')->group(function () {
+        Route::get('/', [AccountsHeadController::class, 'index'])->name('coa.index');
+        Route::post('/head', [AccountsHeadController::class, 'storeHead'])->name('coa.head.store');
+        Route::post('/account', [AccountsHeadController::class, 'storeAccount'])->name('coa.account.store');
+    });
 });
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
