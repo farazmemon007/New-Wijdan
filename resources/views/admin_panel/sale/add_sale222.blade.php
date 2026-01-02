@@ -387,10 +387,10 @@
             <div id="rvWrapper" class="border rounded-3 p-2">
               <div class="d-flex gap-2 align-items-center mb-2 rv-row">
                 <select class="form-select rv-account" name="receipt_account_id[]" style="max-width: 320px">
-                  {{-- @foreach ($accounts as $acc)
+                  @foreach ($accounts as $acc)
                   <option value="" disabled>Select account</option>
                   <option value="{{ $acc->id }}">{{ $acc->title }}</option>
-                  @endforeach --}}
+                  @endforeach
                 </select>
                 <input type="text" class="form-control text-end rv-amount" name="receipt_amount[]" placeholder="0.00" style="max-width:160px">
                 <button type="button" class="btn btn-outline-primary btn-sm" id="btnAddRV">Add more</button>
@@ -854,33 +854,45 @@ $(document).on('click', '.discount-toggle', function () {
       return $('#saleForm').serialize();
     }
 
-    function ensureSaved() {
-      return new Promise(function(resolve, reject) {
-        const existing = $('#booking_id').val();
-        if (existing) return resolve(existing);
+ function ensureSaved() {
+  return new Promise(function(resolve, reject) {
 
-        $('#btnSave, #btnHeaderPosted, #btnPosted').prop('disabled', true); // disable while saving
+    const existing = $('#booking_id').val();
+    if (existing) return resolve(existing);
 
-        $.post('{{ route("sales.store") }}', serializeForm())
-          .done(function(res) {
-            $('#btnSave, #btnHeaderPosted, #btnPosted').prop('disabled', false);
-            if (res?.ok) {
-              $('#booking_id').val(res.booking_id);
-              showAlert('success', 'Saved (Booking #' + res.booking_id + ')');
-              resolve(res.booking_id);
-            } else {
-              showAlert('danger', res.msg || 'Save failed');
-              reject(res);
-            }
-          })
-          .fail(function(xhr) {
-            $('#btnSave, #btnHeaderPosted, #btnPosted').prop('disabled', false);
-            console.error(xhr.responseText);
-            showAlert('danger', 'Save error');
-            reject(xhr);
-          });
+    // 🔴 TESTING: form ka data console me print
+    const formData = serializeForm();
+    console.log('🚀 DATA GOING TO sale.ajax.save:', formData);
+
+    $('#btnSave, #btnHeaderPosted, #btnPosted').prop('disabled', true);
+
+    $.post('{{ route("sale.ajax.save") }}', formData)
+
+      .done(function(res) {
+        console.log('✅ RESPONSE FROM SERVER:', res);
+
+        $('#btnSave, #btnHeaderPosted, #btnPosted').prop('disabled', false);
+
+        if (res?.ok) {
+          $('#booking_id').val(res.booking_id);
+          showAlert('success', 'Saved (Booking #' + res.booking_id + ')');
+          resolve(res.booking_id);
+        } else {
+          showAlert('danger', res.msg || 'Save failed');
+          reject(res);
+        }
+      })
+
+      .fail(function(xhr) {
+        console.error('❌ AJAX ERROR RESPONSE:', xhr.responseText);
+
+        $('#btnSave, #btnHeaderPosted, #btnPosted').prop('disabled', false);
+        showAlert('danger', 'Save error');
+        reject(xhr);
       });
-    }
+  });
+}
+
 
     function postNow() {
       $.post('{{ route('sales.store') }}', serializeForm())
@@ -914,6 +926,7 @@ $(document).on('click', '.discount-toggle', function () {
       showAlert('success', 'Form cleared');
     });
     $('#btnSave').on('click', function() {
+      alert();
       ensureSaved();
     });
     $('#btnPrint').on('click', function() {

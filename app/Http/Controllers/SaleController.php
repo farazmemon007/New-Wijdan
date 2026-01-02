@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Account;
 use App\Models\Customer;
 use App\Models\CustomerLedger;
 use App\Models\Product;
-use App\Models\ProductBooking;
+use App\Models\Productbooking;
+use App\Models\ProductBookingItem;
 use App\Models\Sale;
 use App\Models\SalesReturn;
 use App\Models\Stock;
@@ -16,6 +18,123 @@ use Illuminate\Support\Facades\DB;
 
 class SaleController extends Controller
 {
+     public function ajaxSave(Request $request)
+
+    {
+        
+        return DB::transaction(function () use ($request) {
+            $attempts = 0;
+            $maxAttempts = 5;
+
+            // if updating existing booking, keep previous behavior
+            $bookingId = $request->input('booking_id');
+            if ($bookingId) {
+                $booking = Productbooking::findOrFail($bookingId);
+                ProductBookingItem::where('booking_id', $booking->id)->delete();
+                // update fields below & save as before
+                $booking->manual_invoice = $request->Invoice_main;
+                // ... other fields ...
+                $booking->save();
+
+                // recreate items (same as your existing code)...
+                // (you can keep your existing foreach here)
+                // ...
+                return response()->json(['ok' => true, 'booking_id' => $booking->id]);
+            }
+
+            // NEW booking path -> must ensure invoice_no unique
+            do {
+                $attempts++;
+
+                // generate invoice - adapt to your existing generator if you have one
+                // e.g. Productbooking::generateInvoiceNo() or Sale::generateInvoiceNo()
+                // I'll attempt to call a method; if you don't have it, create below.
+                $invoiceNo = method_exists(Productbooking::class, 'generateInvoiceNo')
+                    ? Productbooking::generateInvoiceNo()
+                    : ('INVSLE-' . str_pad((Productbooking::max('id') ?? 0) + 1, 3, '0', STR_PAD_LEFT));
+
+                $booking = new Productbooking();
+                $booking->invoice_no = $invoiceNo;
+                $booking->manual_invoice = $request->Invoice_main;
+                $booking->party_type = $request->input('partyType');
+                $booking->customer_id = $request->customer;
+                $booking->sub_customer = $request->customerType;
+                $booking->filer_type = $request->filerType;
+                $booking->address = $request->address;
+                $booking->tel = $request->tel;
+                $booking->remarks = $request->remarks;
+                $booking->sub_total1 = $request->subTotal1 ?? 0;
+                $booking->sub_total2 = $request->subTotal2 ?? 0;
+                $booking->discount_percent = $request->discountPercent ?? 0;
+                $booking->discount_amount = $request->discountAmount ?? 0;
+                $booking->previous_balance = $request->previousBalance ?? 0;
+                $booking->total_balance = $request->totalBalance ?? 0;
+                $booking->receipt1 = $request->receipt1 ?? 0;
+                $booking->receipt2 = $request->receipt2 ?? 0;
+                $booking->final_balance1 = $request->finalBalance1 ?? 0;
+                $booking->final_balance2 = $request->finalBalance2 ?? 0;
+                $booking->weight = $request->weight;
+
+                try {
+                    $booking->save(); // may throw unique constraint exception
+                } catch (QueryException $ex) {
+                    // 23000 / 1062 is duplicate key — try again with new invoice
+                    if ($ex->getCode() == '23000' || str_contains($ex->getMessage(), 'Duplicate entry')) {
+                        // if max reached, rethrow
+                        if ($attempts >= $maxAttempts) {
+                            throw $ex;
+                        }
+                        // otherwise try again (loop)
+                        continue;
+                    }
+                    throw $ex;
+                }
+
+                // if saved ok -> create items
+                $totalQty = 0;
+                foreach ($request->warehouse_name ?? [] as $i => $warehouse_id) {
+                    $productId = $request->input("product_name.$i");
+                    $qty = (float) $request->input("sales-qty.$i", 0);
+
+                    // Skip invalid/empty or zero-qty lines
+                    if (empty($warehouse_id) || empty($productId) || $qty <= 0) {
+                        continue;
+                    }
+
+                    $totalQty += $qty;
+
+                    ProductBookingItem::create([
+                        'booking_id' => $booking->id,
+                        'warehouse_id' => $warehouse_id,
+                        'product_id' => $productId,
+                        'stock' => (float) $request->input("stock.$i", 0),
+                        'price_level' => (float) $request->input("price.$i", 0),
+                        'sales_price' => (float) $request->input("sales-price.$i", 0),
+                        'sales_qty' => $qty,
+                        'retail_price' => (float) $request->input("retail-price.$i", 0),
+                        'discount_percent' => (float) $request->input("discount-percent.$i", 0),
+                        'discount_amount' => (float) $request->input("discount-amount.$i", 0),
+                        'amount' => (float) $request->input("sales-amount.$i", 0),
+                    ]);
+                }
+
+
+                $booking->quantity = $totalQty;
+                $booking->save();
+
+                return response()->json(['ok' => true, 'booking_id' => $booking->id]);
+            } while ($attempts < $maxAttempts);
+
+            // if we somehow exit loop
+            return response()->json(['ok' => false, 'msg' => 'Failed to allocate invoice no'], 500);
+        });
+    }
+
+
+
+
+
+
       public function getCustomerData($id, Request $request)
     {
         $type = strtolower($request->query('type', 'customer'));
@@ -107,12 +226,12 @@ class SaleController extends Controller
         $warehouse = Warehouse::all();
         // dd($Customer);$warehouses = Warehouse::all();
         // $customers = Customer::all();
-        // $accounts = Account::all();
+        $accounts = Account::all();
         // Get next invoice from Sale model generator (ensures INVSLE-003 -> INVSLE-004)
         $nextInvoiceNumber = Sale::generateInvoiceNo();
 
 
-          return view('admin_panel.sale.add_sale222', compact('warehouse', 'customer', 'nextInvoiceNumber'));
+          return view('admin_panel.sale.add_sale222', compact('warehouse', 'customer','accounts', 'nextInvoiceNumber'));
     }
 
     public function searchpname(Request $request)

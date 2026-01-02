@@ -288,7 +288,9 @@ Route::middleware('auth')->group(function () {
     Route::put('/sales/{id}', [SaleController::class, 'updatesale'])->name('sales.update');
     Route::get('/sales/{id}/dc', [SaleController::class, 'saledc'])->name('sales.dc');
     Route::get('/sales/{id}/recepit', [SaleController::class, 'salerecepit'])->name('sales.recepit');
-
+// AJAX (no refresh)
+    Route::post('/sale/ajax/save', [SaleController::class, 'ajaxSave'])->name('sale.ajax.save');
+    Route::post('/sale/ajax/post', [SaleController::class, 'ajaxPost'])->name('sale.ajax.post');
     // booking system
 
     Route::get('bookings', [ProductBookingController::class, 'index'])->name('bookings.index');
