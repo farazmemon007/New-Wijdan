@@ -18,6 +18,94 @@ use Illuminate\Support\Facades\DB;
 
 class SaleController extends Controller
 {
+       public function ajaxPost(Request $request)
+    {
+        return DB::transaction(function () use ($request) {
+            $bookingId = $request->input('booking_id');
+
+            if ($bookingId) {
+                $booking = Productbooking::with('items')->findOrFail($bookingId);
+
+                $sale = Sale::create([
+                    'invoice_no' => $booking->invoice_no,
+                    'manual_invoice' => $booking->manual_invoice,
+                    'partyType' => $booking->party_type,
+                    'customer_id' => $booking->customer_id,
+                    'sub_customer' => $booking->sub_customer,
+                    'filer_type' => $booking->filer_type,
+                    'address' => $booking->address,
+                    'tel' => $booking->tel,
+                    'remarks' => $booking->remarks,
+                    'sub_total1' => $booking->sub_total1,
+                    'sub_total2' => $booking->sub_total2,
+                    'discount_percent' => $booking->discount_percent,
+                    'discount_amount' => $booking->discount_amount,
+                    'previous_balance' => $booking->previous_balance,
+                    'total_balance' => $booking->total_balance,
+                    'receipt1' => $booking->receipt1,
+                    'receipt2' => $booking->receipt2,
+                    'final_balance1' => $booking->final_balance1,
+                    'final_balance2' => $booking->final_balance2,
+                    'weight' => $booking->weight,
+                ]);
+
+                foreach ($booking->items as $it) {
+                    if (!$it) {
+                        continue;
+                    } // guard
+
+                    $salesQty = (float) data_get($it, 'sales_qty', 0);
+                    $salesPrice = (float) data_get($it, 'sales_price', 0);
+                    $retail = (float) data_get($it, 'retail_price', 0);
+                    $discPct = (float) data_get($it, 'discount_percent', 0);
+                    $discAmt = (float) data_get($it, 'discount_amount', 0);
+                    $amount = (float) data_get($it, 'amount', 0);
+
+                    // Per-warehouse stock
+                    if ($ws = WarehouseStock::where('warehouse_id', $it->warehouse_id)->where('product_id', $it->product_id)->first()) {
+                        $ws->quantity = max(0, $ws->quantity - $salesQty);
+                        $ws->save();
+                    }
+                    // Global stock
+                    if ($p = Product::find($it->product_id)) {
+                        $p->stock = max(0, ($p->stock ?? 0) - $salesQty);
+                        $p->save();
+                    }
+
+                    SaleItem::create([
+                        'sale_id' => $sale->id,
+                        'warehouse_id' => $it->warehouse_id,
+                        'product_id' => $it->product_id,
+                        'stock' => (float) data_get($it, 'stock', 0),
+                        'price_level' => (float) data_get($it, 'price_level', 0),
+                        'sales_price' => $salesPrice,
+                        'sales_qty' => $salesQty,
+                        'retail_price' => $retail,
+                        'discount_percent' => $discPct,
+                        'discount_amount' => $discAmt,
+                        'amount' => $amount,
+                    ]);
+                }
+
+                return response()->json([
+                    'ok' => true,
+                    'sale_id' => $sale->id,
+                    'invoice_url' => route('sale.invoice', $sale->id),
+                ]);
+            }
+
+            // Direct form -> sale (rare path)
+            $request->merge(['booking' => false]);
+            $this->store($request);
+            $sale = Sale::latest('id')->first();
+
+            return response()->json([
+                'ok' => true,
+                'sale_id' => $sale->id,
+                'invoice_url' => route('sale.invoice', $sale->id),
+            ]);
+        });
+    }
      public function ajaxSave(Request $request)
 
     {
@@ -250,197 +338,126 @@ class SaleController extends Controller
         return response()->json($products);
     }
 
-   public function store(Request $request)
+    public function store(Request $request)
     {
-        $action = $request->input('action'); // 'booking' or 'sale'
-        $booking_id = $request->booking_id;
+        $isBooking = $request->has('booking');
+        if ($isBooking) {
+            $booking = Productbooking::create([
+                'invoice_no' => $request->Invoice_no,
+                'manual_invoice' => $request->Invoice_main,
+                'customer_id' => $request->customer,
+                'party_type' => $request->input('partyType') ?? null,
+                'sub_customer' => $request->customerType,
+                'filer_type' => $request->filerType,
+                'address' => $request->address,
+                'tel' => $request->tel,
+                'remarks' => $request->remarks,
+                'sub_total1' => $request->subTotal1 ?? 0,
+                'sub_total2' => $request->subTotal2 ?? 0,
+                'discount_percent' => $request->discountPercent ?? 0,
+                'discount_amount' => $request->discountAmount ?? 0,
+                'previous_balance' => $request->previousBalance ?? 0,
+                'total_balance' => $request->totalBalance ?? 0,
+                'receipt1' => $request->receipt1 ?? 0,
+                'receipt2' => $request->receipt2 ?? 0,
+                'final_balance1' => $request->finalBalance1 ?? 0,
+                'final_balance2' => $request->finalBalance2 ?? 0,
+                'weight' => $request->weight ?? null,
+            ]);
 
-        $branchId = (int) ($request->input('branch_id', 1));
-        $warehouseId = (int) ($request->input('warehouse_id', 1));
-
-        DB::beginTransaction();
-
-        try {
-            $saleMovements = [];
-
-            // request arrays
-            $product_ids = $request->product_id ?? [];
-            $product_names = $request->product ?? $request->product_id;
-            $product_codes = $request->item_code ?? [];
-            $brands = $request->uom ?? [];
-            $units = $request->unit ?? [];
-            $prices = $request->price ?? [];
-            $discounts = $request->item_disc ?? [];
-            $quantities = $request->qty ?? [];
-            $totals = $request->total ?? [];
-            $colors = $request->color ?? [];
-
-            $combined_products = $combined_codes = $combined_brands = $combined_units = [];
-            $combined_prices = $combined_discounts = $combined_qtys = $combined_totals = $combined_colors = [];
-
-            $total_items = 0;
-
-            foreach ($product_ids as $index => $product_id_raw) {
-                $product_id = (int) $product_id_raw;
-                $qty = max(0.0, (float) ($quantities[$index] ?? 0));
-                $price = max(0.0, (float) ($prices[$index] ?? 0));
-
-                if (! $product_id || $qty <= 0 || $price <= 0) {
+            $totalQty = 0;
+            foreach ($request->warehouse_name ?? [] as $i => $warehouse_id) {
+                $productId = $request->input("product_name.$i");
+                if (empty($warehouse_id) || empty($productId)) {
                     continue;
                 }
 
-                if ($action === 'sale') {
-                    $stockRow = Stock::where('product_id', $product_id)
-                        ->where('branch_id', $branchId)
-                        ->where('warehouse_id', $warehouseId)
-                        ->lockForUpdate()
-                        ->first();
+                $qty = (float) $request->input("sales-qty.$i", 0);
+                $totalQty += $qty;
 
-                    $onHand = (float) ($stockRow->qty ?? 0);
-                    $short = max(0.0, $qty - $onHand);
-
-                    if ($short > 0) {
-                        $product = Product::find($product_id);
-
-                        // Safe detection
-                        $isFg = (bool) ($product->is_assembly ?? DB::table('product_boms')->where('product_id', $product_id)->exists());
-                        $isPart = (bool) DB::table('product_boms')->where('part_id', $product_id)->exists();
-
-                        \Log::info('SALE_AUTO_COVER_DECISION', [
-                            'product_id'   => $product_id,
-                            'product_name' => $product->item_name ?? '',
-                            'isFg'         => $isFg,
-                            'isPart'       => $isPart,
-                            'qty_requested'=> $qty,
-                            'onHand'       => $onHand,
-                            'short'        => $short,
-                            'branch'       => $branchId,
-                            'warehouse'    => $warehouseId,
-                        ]);
-
-                        if ($isFg && $isPart) {
-                            throw new \Exception("Ambiguous product role (both FG & Part) for product ID {$product_id}. Manual handling required.");
-                        }
-
-                        // Auto-cover logic
-                        if ($isFg) {
-                            // Selling FG → try to assemble FG only if missing (consumes parts)
-                            app(AssemblyController::class)->ensureFgForSale($product_id, $short, $branchId, $warehouseId);
-                        } elseif ($isPart) {
-                            // Selling Part → borrow part from FG only (creates that part only)
-                            app(AssemblyController::class)->borrowPartFromBestFg($product_id, $short, $branchId, $warehouseId);
-                        }
-
-                        // Refresh stock row
-                        $stockRow = Stock::where('product_id', $product_id)
-                            ->where('branch_id', $branchId)
-                            ->where('warehouse_id', $warehouseId)
-                            ->lockForUpdate()
-                            ->first();
-
-                        $onHand = (float) ($stockRow->qty ?? 0);
-                        if ($onHand < $qty) {
-                            throw new \Exception("Not enough stock even after auto-cover for product: {$product->item_name}");
-                        }
-                    }
-
-                    if (! $stockRow) {
-                        throw new \Exception("Stock record not found for product ID {$product_id} (branch:{$branchId}, wh:{$warehouseId}).");
-                    }
-
-                    // Decrement only the sold product (not its parts)
-                    $stockRow->qty -= $qty;
-                    $stockRow->save();
-
-                    $saleMovements[] = [
-                        'product_id' => $product_id,
-                        'type'       => 'out',
-                        'qty'        => -1 * (float) $qty,
-                        'ref_type'   => 'SO',
-                        'ref_id'     => null,
-                        'note'       => 'POS sale',
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ];
-                }
-
-                // combine for sale record
-                $combined_products[] = $product_names[$index] ?? '';
-                $combined_codes[] = $product_codes[$index] ?? '';
-                $combined_brands[] = $brands[$index] ?? '';
-                $combined_units[] = $units[$index] ?? '';
-                $combined_prices[] = $prices[$index] ?? 0;
-                $combined_discounts[] = $discounts[$index] ?? 0;
-                $combined_qtys[] = $quantities[$index] ?? 0;
-                $combined_totals[] = $totals[$index] ?? 0;
-                $combined_colors[] = json_encode($colors[$index] ?? []);
-                $total_items += $qty;
+                ProductBookingItem::create([
+                    'booking_id' => $booking->id,
+                    'warehouse_id' => $warehouse_id,
+                    'product_id' => $productId,
+                    'stock' => (float) $request->input("stock.$i", 0),
+                    'price_level' => (float) $request->input("price.$i", 0),
+                    'sales_price' => (float) $request->input("sales-price.$i", 0),
+                    'sales_qty' => $qty,
+                    'retail_price' => (float) $request->input("retail-price.$i", 0),
+                    'discount_percent' => (float) $request->input("discount-percent.$i", 0),
+                    'discount_amount' => (float) $request->input("discount-amount.$i", 0),
+                    'amount' => (float) $request->input("sales-amount.$i", 0),
+                ]);
             }
+            $booking->quantity = $totalQty;
+            $booking->save();
 
-            // save Sale / Booking
-            $model = ($action === 'booking')
-                ? ($booking_id ? ProductBooking::findOrFail($booking_id) : new ProductBooking)
-                : new Sale;
-
-            $model->customer = $request->customer;
-            $model->reference = $request->reference;
-            $model->product = implode(',', $combined_products);
-            $model->product_code = implode(',', $combined_codes);
-            $model->brand = implode(',', $combined_brands);
-            $model->unit = implode(',', $combined_units);
-            $model->per_price = implode(',', $combined_prices);
-            $model->per_discount = implode(',', $combined_discounts);
-            $model->qty = implode(',', $combined_qtys);
-            $model->per_total = implode(',', $combined_totals);
-            $model->color = json_encode($combined_colors);
-            $model->total_amount_Words = $request->total_amount_Words;
-            $model->total_bill_amount = $request->total_subtotal;
-            $model->total_extradiscount = $request->total_extra_cost;
-            $model->total_net = $request->total_net;
-            $model->cash = $request->cash;
-            $model->card = $request->card;
-            $model->change = $request->change;
-            $model->total_items = $total_items;
-            $model->save();
-
-            // add movements
-            if ($action === 'sale' && ! empty($saleMovements)) {
-                foreach ($saleMovements as &$m) {
-                    $m['ref_id'] = $model->id;
-                }
-                unset($m);
-
-                DB::table('stock_movements')->insert($saleMovements);
-            }
-
-            // Ledger update
-            if ($action === 'sale') {
-                $customer_id = $request->customer;
-                $ledger = CustomerLedger::where('customer_id', $customer_id)->latest('id')->first();
-
-                if ($ledger) {
-                    $ledger->previous_balance = $ledger->closing_balance;
-                    $ledger->closing_balance += $request->total_net;
-                    $ledger->save();
-                } else {
-                    CustomerLedger::create([
-                        'customer_id'      => $customer_id,
-                        'admin_or_user_id' => auth()->id(),
-                        'previous_balance' => 0,
-                        'closing_balance'  => $request->total_net,
-                        'opening_balance'  => $request->total_net,
-                    ]);
-                }
-            }
-
-            DB::commit();
-
-            return back()->with('success', $action === 'sale' ? 'Sale completed.' : 'Booking updated successfully!');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            \Log::error('SALE_STORE_ERROR', ['err' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
-            return back()->with('error', 'Error: '.$e->getMessage());
+            return back()->with('success', 'Booking saved successfully!');
         }
+
+        // Direct Sale (stock minus)
+        return DB::transaction(function () use ($request) {
+            $invoiceNo = Sale::generateInvoiceNo();
+            $sale = Sale::create([
+                'invoice_no' => $invoiceNo,
+                'manual_invoice' => $request->Invoice_main ?? null,
+                'partyType' => $request->input('partyType') ?? null,
+                'customer_id' => $request->customer ?? null,
+                'sub_customer' => $request->customerType ?? null,
+                'filer_type' => $request->filerType ?? null,
+                'address' => $request->address ?? null,
+                'tel' => $request->tel ?? null,
+                'remarks' => $request->remarks ?? null,
+                'sub_total1' => $request->subTotal1 ?? 0,
+                'sub_total2' => $request->subTotal2 ?? 0,
+                'discount_percent' => $request->discountPercent ?? 0,
+                'discount_amount' => $request->discountAmount ?? 0,
+                'previous_balance' => $request->previousBalance ?? 0,
+                'total_balance' => $request->totalBalance ?? 0,
+                'receipt1' => $request->receipt1 ?? 0,
+                'receipt2' => $request->receipt2 ?? 0,
+                'final_balance1' => $request->finalBalance1 ?? 0,
+                'final_balance2' => $request->finalBalance2 ?? 0,
+                'weight' => $request->weight ?? null,
+            ]);
+
+            foreach ($request->warehouse_name ?? [] as $i => $warehouse_id) {
+                $productId = $request->input("product_name.$i");
+                if (empty($warehouse_id) || empty($productId)) {
+                    continue;
+                }
+
+                $saleQty = (float) $request->input("sales-qty.$i", 0);
+
+                // Per-warehouse stock
+                if ($ws = WarehouseStock::where('warehouse_id', $warehouse_id)->where('product_id', $productId)->first()) {
+                    $ws->quantity = max(0, $ws->quantity - $saleQty);
+                    $ws->save();
+                }
+
+                // Global stock
+                if ($p = Product::find($productId)) {
+                    $p->stock = max(0, ($p->stock ?? 0) - $saleQty);
+                    $p->save();
+                }
+
+                SaleItem::create([
+                    'sale_id' => $sale->id,
+                    'warehouse_id' => $warehouse_id,
+                    'product_id' => $productId,
+                    'stock' => (float) $request->input("stock.$i", 0),
+                    'price_level' => (float) $request->input("price.$i", 0),
+                    'sales_price' => (float) $request->input("sales-price.$i", 0),
+                    'sales_qty' => $saleQty,
+                    'retail_price' => (float) $request->input("retail-price.$i", 0),
+                    'discount_percent' => (float) $request->input("discount-percent.$i", 0),
+                    'discount_amount' => (float) $request->input("discount-amount.$i", 0),
+                    'amount' => (float) $request->input("sales-amount.$i", 0),
+                ]);
+            }
+
+            return back()->with('success', 'Sale saved successfully!');
+        });
     }
 
     /**

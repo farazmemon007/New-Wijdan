@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('invoice_no')->unique();
             $table->string('manual_invoice')->nullable();
+            $table->string('party_type')->nullable();
             $table->unsignedBigInteger('customer_id')->nullable();
             $table->string('sub_customer')->nullable();
             $table->string('filer_type')->nullable();

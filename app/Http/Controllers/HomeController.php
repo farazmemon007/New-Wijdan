@@ -10,6 +10,10 @@ use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
 {
+     public function testingform(Request $request)
+    {
+        return view('admin_panel.sale.testing_form') ;
+    }
     public function index()
     {
         if (!Auth::check()) {

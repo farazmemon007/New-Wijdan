@@ -47,6 +47,7 @@ use Illuminate\Support\Facades\Route;
     */
 
 Route::get('/home', [HomeController::class, 'index'])->middleware('auth')->name('home');
+// Route::get('/testing', [HomeController::class, 'testingform'])->middleware('auth')->name('testingform');
 
 // Route::get('/adminpage', [HomeController::class, 'adminpage'])->middleware(['auth','admin'])->name('adminpage');
 
