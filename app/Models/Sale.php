@@ -7,22 +7,31 @@ use Illuminate\Database\Eloquent\Model;
 
 class Sale extends Model
 {
-    protected $fillable = [
-        'customer', 'product', 'reference', 'product_code', 'brand', 'unit', 'per_price', 
-        'per_discount', 'qty', 'per_total', 'total_amount_Words', 'total_bill_amount',
-        'total_extradiscount', 'total_net', 'cash', 'card', 'change', 'total_discount',
-        'total_subtotal', 'total_items','color'
-    ];
+    // protected $fillable = [
+    //     'customer', 'product', 'reference', 'product_code', 'brand', 'unit', 'per_price', 
+    //     'per_discount', 'qty', 'per_total', 'total_amount_Words', 'total_bill_amount',
+    //     'total_extradiscount', 'total_net', 'cash', 'card', 'change', 'total_discount',
+    //     'total_subtotal', 'total_items','color'
+    // ];
+    protected $guarded=[];
+    public function items()
+{
+    return $this->hasMany(\App\Models\SaleItem::class, 'sale_id');
+}
 
-    public function customer_relation()
-    {
-        return $this->belongsTo(Customer::class, 'customer', 'id');
-    }
 
-    public function product_relation()
-    {
-        return $this->belongsTo(Product::class, 'product', 'id');
-    }
+  public function customer()
+{
+    return $this->belongsTo(Customer::class, 'customer_id', 'id');
+}
+
+
+   public function product()
+{
+    return $this->belongsTo(Product::class, 'product_id', 'id');
+}
+
+    
     public static function generateInvoiceNo()
     {
         $lastSale = self::orderBy('id', 'desc')->first();

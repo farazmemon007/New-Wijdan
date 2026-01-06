@@ -6,18 +6,15 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-   Schema::create('productbookings', function (Blueprint $table) {
+        // Main sales table
+        Schema::create('sales', function (Blueprint $table) {
             $table->id();
             $table->string('invoice_no')->unique();
             $table->string('manual_invoice')->nullable();
             $table->string('party_type')->nullable();
             $table->unsignedBigInteger('customer_id')->nullable();
-            $table->unsignedBigInteger('product_id')->nullable();
             $table->string('sub_customer')->nullable();
             $table->string('filer_type')->nullable();
             $table->text('address')->nullable();
@@ -36,19 +33,19 @@ return new class extends Migration
             $table->decimal('final_balance1', 12, 2)->default(0);
             $table->decimal('final_balance2', 12, 2)->default(0);
             // $table->text('weight')->nullable();
+            $table->int('total_net')->nullable();
+            
 
             $table->timestamps();
-});
+        });
 
-
-
+        // Sales items table
+       
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('productbookings');
+
+        Schema::dropIfExists('sales');
     }
 };

@@ -8,217 +8,241 @@ use App\Models\CustomerLedger;
 use App\Models\Product;
 use App\Models\Productbooking;
 use App\Models\ProductBookingItem;
+use App\Models\ReceiptsVoucher;
 use App\Models\Sale;
+use App\Models\SaleItem;
 use App\Models\SalesReturn;
 use App\Models\Stock;
 use App\Models\Vendor;
 use App\Models\Warehouse;
+use App\Models\WarehouseStock;
+use Carbon\Carbon;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\StockMovement;
+
 
 class SaleController extends Controller
 {
-       public function ajaxPost(Request $request)
-    {
-        return DB::transaction(function () use ($request) {
-            $bookingId = $request->input('booking_id');
 
-            if ($bookingId) {
-                $booking = Productbooking::with('items')->findOrFail($bookingId);
+    
+   
+public function ajaxPost(Request $request)
+{
+    return DB::transaction(function () use ($request) {
 
-                $sale = Sale::create([
-                    'invoice_no' => $booking->invoice_no,
-                    'manual_invoice' => $booking->manual_invoice,
-                    'partyType' => $booking->party_type,
-                    'customer_id' => $booking->customer_id,
-                    'sub_customer' => $booking->sub_customer,
-                    'filer_type' => $booking->filer_type,
-                    'address' => $booking->address,
-                    'tel' => $booking->tel,
-                    'remarks' => $booking->remarks,
-                    'sub_total1' => $booking->sub_total1,
-                    'sub_total2' => $booking->sub_total2,
-                    'discount_percent' => $booking->discount_percent,
-                    'discount_amount' => $booking->discount_amount,
-                    'previous_balance' => $booking->previous_balance,
-                    'total_balance' => $booking->total_balance,
-                    'receipt1' => $booking->receipt1,
-                    'receipt2' => $booking->receipt2,
-                    'final_balance1' => $booking->final_balance1,
-                    'final_balance2' => $booking->final_balance2,
-                    'weight' => $booking->weight,
-                ]);
+        if (!$request->booking_id) {
+            abort(422, 'Booking ID is required');
+        }
 
-                foreach ($booking->items as $it) {
-                    if (!$it) {
-                        continue;
-                    } // guard
+        /* ================= FETCH BOOKING ================= */
+        $booking = Productbooking::with('items')
+            ->lockForUpdate()
+            ->findOrFail($request->booking_id);
 
-                    $salesQty = (float) data_get($it, 'sales_qty', 0);
-                    $salesPrice = (float) data_get($it, 'sales_price', 0);
-                    $retail = (float) data_get($it, 'retail_price', 0);
-                    $discPct = (float) data_get($it, 'discount_percent', 0);
-                    $discAmt = (float) data_get($it, 'discount_amount', 0);
-                    $amount = (float) data_get($it, 'amount', 0);
+        if ($booking->is_posted) {
+            abort(422, 'This invoice is already posted');
+        }
 
-                    // Per-warehouse stock
-                    if ($ws = WarehouseStock::where('warehouse_id', $it->warehouse_id)->where('product_id', $it->product_id)->first()) {
-                        $ws->quantity = max(0, $ws->quantity - $salesQty);
-                        $ws->save();
-                    }
-                    // Global stock
-                    if ($p = Product::find($it->product_id)) {
-                        $p->stock = max(0, ($p->stock ?? 0) - $salesQty);
-                        $p->save();
-                    }
+        /* ================= CREATE SALE ================= */
+        $sale = Sale::create([
+            'invoice_no'       => $booking->invoice_no,
+            'manual_invoice'   => $booking->manual_invoice,
+            'customer_id'      => $booking->customer_id,
+            'party_type'       => $booking->party_type,
+            'address'          => $booking->address,
+            'tel'              => $booking->tel,
+            'remarks'          => $booking->remarks,
+            'sub_total1'       => $booking->sub_total1,
+            'sub_total2'       => $booking->sub_total2,
+            'discount_percent' => $booking->discount_percent,
+            'discount_amount'  => $booking->discount_amount,
+            'previous_balance' => $booking->previous_balance,
+            'total_balance'    => $booking->total_balance,
+            'total_net'        => $booking->sub_total2 ?? 0,
+        ]);
 
-                    SaleItem::create([
-                        'sale_id' => $sale->id,
-                        'warehouse_id' => $it->warehouse_id,
-                        'product_id' => $it->product_id,
-                        'stock' => (float) data_get($it, 'stock', 0),
-                        'price_level' => (float) data_get($it, 'price_level', 0),
-                        'sales_price' => $salesPrice,
-                        'sales_qty' => $salesQty,
-                        'retail_price' => $retail,
-                        'discount_percent' => $discPct,
-                        'discount_amount' => $discAmt,
-                        'amount' => $amount,
-                    ]);
-                }
+        /* ================= ITEMS + STOCK HANDLING ================= */
+        foreach ($booking->items as $it) {
 
-                return response()->json([
-                    'ok' => true,
-                    'sale_id' => $sale->id,
-                    'invoice_url' => route('sale.invoice', $sale->id),
-                ]);
-            }
-
-            // Direct form -> sale (rare path)
-            $request->merge(['booking' => false]);
-            $this->store($request);
-            $sale = Sale::latest('id')->first();
-
-            return response()->json([
-                'ok' => true,
-                'sale_id' => $sale->id,
-                'invoice_url' => route('sale.invoice', $sale->id),
+            // 1️⃣ Sale Item
+            SaleItem::create([
+                'sale_id'      => $sale->id,
+                'warehouse_id' => $it->warehouse_id,
+                'product_id'   => $it->product_id,
+                'sales_qty'    => $it->sales_qty,
+                'retail_price' => $it->retail_price,
+                'amount'       => $it->amount,
             ]);
-        });
-    }
-     public function ajaxSave(Request $request)
 
-    {
-        
-        return DB::transaction(function () use ($request) {
-            $attempts = 0;
-            $maxAttempts = 5;
+            // 2️⃣ LOCK STOCK ROW
+            $stock = Stock::lockForUpdate()
+                ->where('warehouse_id', $it->warehouse_id)
+                ->where('product_id', $it->product_id)
+                ->first();
 
-            // if updating existing booking, keep previous behavior
-            $bookingId = $request->input('booking_id');
-            if ($bookingId) {
-                $booking = Productbooking::findOrFail($bookingId);
-                ProductBookingItem::where('booking_id', $booking->id)->delete();
-                // update fields below & save as before
-                $booking->manual_invoice = $request->Invoice_main;
-                // ... other fields ...
-                $booking->save();
-
-                // recreate items (same as your existing code)...
-                // (you can keep your existing foreach here)
-                // ...
-                return response()->json(['ok' => true, 'booking_id' => $booking->id]);
+            if (!$stock) {
+                abort(422, 'Stock not found for product ID ' . $it->product_id);
             }
 
-            // NEW booking path -> must ensure invoice_no unique
-            do {
-                $attempts++;
+            if ($stock->qty < $it->sales_qty) {
+                abort(422, 'Insufficient stock for product ID ' . $it->product_id);
+            }
 
-                // generate invoice - adapt to your existing generator if you have one
-                // e.g. Productbooking::generateInvoiceNo() or Sale::generateInvoiceNo()
-                // I'll attempt to call a method; if you don't have it, create below.
-                $invoiceNo = method_exists(Productbooking::class, 'generateInvoiceNo')
-                    ? Productbooking::generateInvoiceNo()
-                    : ('INVSLE-' . str_pad((Productbooking::max('id') ?? 0) + 1, 3, '0', STR_PAD_LEFT));
+            // 3️⃣ MINUS FROM STOCK
+            $stock->qty -= $it->sales_qty;
+            $stock->save();
 
-                $booking = new Productbooking();
-                $booking->invoice_no = $invoiceNo;
-                $booking->manual_invoice = $request->Invoice_main;
-                $booking->party_type = $request->input('partyType');
-                $booking->customer_id = $request->customer;
-                $booking->sub_customer = $request->customerType;
-                $booking->filer_type = $request->filerType;
-                $booking->address = $request->address;
-                $booking->tel = $request->tel;
-                $booking->remarks = $request->remarks;
-                $booking->sub_total1 = $request->subTotal1 ?? 0;
-                $booking->sub_total2 = $request->subTotal2 ?? 0;
-                $booking->discount_percent = $request->discountPercent ?? 0;
-                $booking->discount_amount = $request->discountAmount ?? 0;
-                $booking->previous_balance = $request->previousBalance ?? 0;
-                $booking->total_balance = $request->totalBalance ?? 0;
-                $booking->receipt1 = $request->receipt1 ?? 0;
-                $booking->receipt2 = $request->receipt2 ?? 0;
-                $booking->final_balance1 = $request->finalBalance1 ?? 0;
-                $booking->final_balance2 = $request->finalBalance2 ?? 0;
-                $booking->weight = $request->weight;
+            // 4️⃣ STOCK MOVEMENT (OUT)
+            StockMovement::create([
+                'product_id'   => $it->product_id,
+                'type'         => 'out',
+                'qty'          => $it->sales_qty,
+                'ref_type'     => 'SALE',
+                'ref_id'       => $sale->id,
+                'ref_uuid'     => $booking->invoice_no,
+                'is_auto_pluck'=> 1,
+                'note'         => 'Sale Invoice ' . $booking->invoice_no,
+            ]);
+        }
 
-                try {
-                    $booking->save(); // may throw unique constraint exception
-                } catch (QueryException $ex) {
-                    // 23000 / 1062 is duplicate key — try again with new invoice
-                    if ($ex->getCode() == '23000' || str_contains($ex->getMessage(), 'Duplicate entry')) {
-                        // if max reached, rethrow
-                        if ($attempts >= $maxAttempts) {
-                            throw $ex;
-                        }
-                        // otherwise try again (loop)
-                        continue;
-                    }
-                    throw $ex;
-                }
+        /* ================= RECEIPTS ================= */
+        $receipts = ReceiptsVoucher::where(
+            'reference_no',
+            $booking->invoice_no
+        )->get();
 
-                // if saved ok -> create items
-                $totalQty = 0;
-                foreach ($request->warehouse_name ?? [] as $i => $warehouse_id) {
-                    $productId = $request->input("product_name.$i");
-                    $qty = (float) $request->input("sales-qty.$i", 0);
+        foreach ($receipts as $rv) {
+            $account = Account::lockForUpdate()->find($rv->row_account_id);
+            if ($account) {
+                $account->opening_balance += $rv->amount;
+                $account->save();
+            }
+        }
 
-                    // Skip invalid/empty or zero-qty lines
-                    if (empty($warehouse_id) || empty($productId) || $qty <= 0) {
-                        continue;
-                    }
+        /* ================= CUSTOMER LEDGER ================= */
+        $ledger = CustomerLedger::lockForUpdate()
+            ->where('customer_id', $booking->customer_id)
+            ->first();
 
-                    $totalQty += $qty;
+        if ($ledger) {
+            $ledger->previous_balance = $ledger->closing_balance;
+            $ledger->closing_balance -= $receipts->sum('amount');
+            if ($ledger->closing_balance < 0) {
+                $ledger->closing_balance = 0;
+            }
+            $ledger->save();
+        }
 
-                    ProductBookingItem::create([
-                        'booking_id' => $booking->id,
-                        'warehouse_id' => $warehouse_id,
-                        'product_id' => $productId,
-                        'stock' => (float) $request->input("stock.$i", 0),
-                        'price_level' => (float) $request->input("price.$i", 0),
-                        'sales_price' => (float) $request->input("sales-price.$i", 0),
-                        'sales_qty' => $qty,
-                        'retail_price' => (float) $request->input("retail-price.$i", 0),
-                        'discount_percent' => (float) $request->input("discount-percent.$i", 0),
-                        'discount_amount' => (float) $request->input("discount-amount.$i", 0),
-                        'amount' => (float) $request->input("sales-amount.$i", 0),
-                    ]);
-                }
+        /* ================= MARK POSTED ================= */
+        $booking->update([
+            'is_posted' => 1,
+            'posted_at'=> now(),
+        ]);
+
+        return response()->json([
+            'ok'          => true,
+            'sale_id'     => $sale->id,
+            'invoice_url' => route('sale.invoice', $sale->id),
+        ]);
+    });
+}
 
 
-                $booking->quantity = $totalQty;
-                $booking->save();
 
-                return response()->json(['ok' => true, 'booking_id' => $booking->id]);
-            } while ($attempts < $maxAttempts);
+public function ajaxSave(Request $request)
+{
+    return DB::transaction(function () use ($request) {
 
-            // if we somehow exit loop
-            return response()->json(['ok' => false, 'msg' => 'Failed to allocate invoice no'], 500);
-        });
-    }
+        /* ================= UPDATE / CREATE BOOKING ================= */
+        if ($request->filled('booking_id')) {
 
+            $booking = Productbooking::findOrFail($request->booking_id);
 
+            ProductBookingItem::where('booking_id', $booking->id)->delete();
+            ReceiptsVoucher::where('reference_no', $booking->invoice_no)->delete();
+
+        } else {
+
+            $booking = new Productbooking();
+            $booking->invoice_no = 'INVSLE-' . str_pad(
+                (Productbooking::max('id') ?? 0) + 1,
+                4,
+                '0',
+                STR_PAD_LEFT
+            );
+        }
+
+        /* ================= SAVE HEADER ================= */
+        $booking->manual_invoice   = $request->Invoice_main;
+        $booking->party_type       = $request->partyType;
+        $booking->customer_id      = $request->customer_id;
+        $booking->address          = $request->address;
+        $booking->tel              = $request->tel;
+        $booking->remarks          = $request->remarks;
+        $booking->sub_total1       = $request->subTotal1 ?? 0;
+        $booking->sub_total2       = $request->subTotal2 ?? 0;
+        $booking->discount_percent = $request->discountPercent ?? 0;
+        $booking->discount_amount  = $request->discountAmount ?? 0;
+        $booking->previous_balance = $request->previousBalance ?? 0;
+        $booking->total_balance    = $request->totalBalance ?? 0;
+
+        $booking->quantity = 0;
+        $booking->save();
+
+        /* ================= SAVE ITEMS ================= */
+        $totalQty = 0;
+
+        foreach ($request->product_id ?? [] as $i => $productId) {
+
+            $qty = (float) ($request->sales_qty[$i] ?? 0);
+            if (!$productId || $qty <= 0) continue;
+
+            $totalQty += $qty;
+
+            ProductBookingItem::create([
+                'booking_id' => $booking->id,
+                'warehouse_id' => $request->warehouse_id[$i],
+                'product_id' => $productId,
+                'sales_qty' => $qty,
+                'retail_price' => $request->retail_price[$i] ?? 0,
+                'discount_amount' => $request->discount_amount[$i] ?? 0,
+                'amount' => $request->sales_amount[$i] ?? 0,
+            ]);
+        }
+
+        $booking->quantity = $totalQty;
+        $booking->save();
+
+        /* ================= SAVE RECEIPTS ================= */
+        foreach ($request->receipt_account_id ?? [] as $i => $accId) {
+
+            $amt = (float) ($request->receipt_amount[$i] ?? 0);
+            if (!$accId || $amt <= 0) continue;
+
+            ReceiptsVoucher::create([
+                'rvid' => ReceiptsVoucher::generateRVID(),
+                'receipt_date' => Carbon::today(),
+                'entry_date' => Carbon::now(),
+                'type' => 'SALE_RECEIPT',
+                'party_id' => $booking->customer_id,
+                'tel' => $booking->tel,
+                'remarks' => $booking->remarks,
+                'reference_no' => $booking->invoice_no,
+                'row_account_head' => 'Cash/Bank',
+                'row_account_id' => $accId,
+                'amount' => $amt,
+                'total_amount' => $amt,
+            ]);
+        }
+
+        return response()->json([
+            'ok' => true,
+            'booking_id' => $booking->id
+        ]);
+    });
+}
 
 
 
@@ -302,7 +326,7 @@ class SaleController extends Controller
     ////////////
     public function index()
     {
-        $sales = Sale::with(['customer_relation', 'product_relation'])->get();
+        $sales = Sale::with(['customer', 'product'])->get();
 
         return view('admin_panel.sale.index', compact('sales'));
     }
@@ -735,7 +759,7 @@ class SaleController extends Controller
     public function salereturnview()
     {
         // Fetch all sale returns with the original sale and customer info
-        $salesReturns = SalesReturn::with('sale.customer_relation')->orderBy('created_at', 'desc')->get();
+        $salesReturns = SalesReturn::with('sale.customer')->orderBy('created_at', 'desc')->get();
 
         return view('admin_panel.sale.return.index', [
             'salesReturns' => $salesReturns,
@@ -744,7 +768,7 @@ class SaleController extends Controller
 
     public function saleinvoice($id)
     {
-        $sale = Sale::with('customer_relation')->findOrFail($id);
+        $sale = Sale::with('customer')->findOrFail($id);
 
         // Decode sale pivot or comma fields
         $products = explode(',', $sale->product);
@@ -939,7 +963,7 @@ class SaleController extends Controller
 
     public function saledc($id)
     {
-        $sale = Sale::with('customer_relation')->findOrFail($id);
+        $sale = Sale::with('customer')->findOrFail($id);
 
         // Decode sale pivot or comma fields
         $products = explode(',', $sale->product);
@@ -981,7 +1005,7 @@ class SaleController extends Controller
 
     public function salerecepit($id)
     {
-        $sale = Sale::with('customer_relation')->findOrFail($id);
+        $sale = Sale::with('customer')->findOrFail($id);
 
         // Decode sale pivot or comma fields
         $products = explode(',', $sale->product);
@@ -1020,4 +1044,61 @@ class SaleController extends Controller
             'saleItems' => $items,
         ]);
     }
+
+
+ /* -------- Prints -------- */
+    public function invoice(Sale $sale)
+    { 
+   $sale->load([
+        'items.product',
+        'items.warehouse',
+        'customer'
+    ]);
+        return view('admin_panel.sale.invoice', compact('sale'));
+    }
+    public function print2(Sale $sale)
+    {
+        return view('admin_panel.sale.prints.print2', compact('sale'));
+    }
+    public function dc(Sale $sale)
+    {
+        return view('admin_panel.sale.prints.dc', compact('sale'));
+    }
+
+    public function bookingPrint(Productbooking $booking)
+    {
+        return view('admin_panel.sale.booking.prints.print', compact('booking'));
+    }
+    public function bookingPrint2(Productbooking $booking)
+    {
+        return view('admin_panel.sale.booking.prints.print2', compact('booking'));
+    }
+public function bookingDc(Productbooking $booking)
+{
+    /* ================= CUSTOMER ================= */
+    $customer = Customer::find($booking->customer_id);
+
+    /* ================= ITEMS + CORRECT WAREHOUSE ================= */
+    $items = ProductBookingItem::query()
+        ->where('product_booking_items.booking_id', $booking->id)
+        ->leftJoin('products', 'products.id', '=', 'product_booking_items.product_id')
+        ->leftJoin('warehouses', 'warehouses.id', '=', 'product_booking_items.warehouse_id')
+        ->select([
+            'product_booking_items.*',
+            'products.item_name',
+            'warehouses.warehouse_name',
+            'warehouses.location',
+        ])
+        ->get();
+
+    return view(
+        'admin_panel.sale.booking.prints.dc',
+        compact('booking', 'customer', 'items')
+    );
+}
+
+
+
+
+
 }

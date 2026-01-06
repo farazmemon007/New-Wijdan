@@ -292,6 +292,15 @@ Route::middleware('auth')->group(function () {
 // AJAX (no refresh)
     Route::post('/sale/ajax/save', [SaleController::class, 'ajaxSave'])->name('sale.ajax.save');
     Route::post('/sale/ajax/post', [SaleController::class, 'ajaxPost'])->name('sale.ajax.post');
+
+        // Prints
+    Route::get('/booking/dc/{booking}', [SaleController::class, 'bookingDc'])->name('booking.dc');
+    // Route::get('/booking/dc/{id}', function(){
+
+    // });
+    Route::get('/sale/invoice/{sale}', [SaleController::class, 'invoice'])->name('sale.invoice');
+    // Route::get('/sale/print2/{sale}', [SaleController::class, 'print2'])->name('sale.print2');
+    // Route::get('/sale/dc/{sale}', [SaleController::class, 'dc'])->name('sale.dc');
     // booking system
 
     Route::get('bookings', [ProductBookingController::class, 'index'])->name('bookings.index');

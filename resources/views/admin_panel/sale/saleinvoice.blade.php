@@ -32,9 +32,9 @@
                             <div class="row mb-4">
                                 <div class="col-md-6">
                                     <h6 class="fw-bold text-uppercase text-secondary">Customer Details</h6>
-                                    <p class="mb-1"><strong>Name:</strong> {{ $sale->customer_relation->customer_name ?? 'N/A' }}</p>
-                                    <p class="mb-1"><strong>Mobile:</strong> {{ $sale->customer_relation->mobile ?? 'N/A' }}</p>
-                                    <p class="mb-0"><strong>Email:</strong> {{ $sale->customer_relation->email_address ?? 'N/A' }}</p>
+                                    <p class="mb-1"><strong>Name:</strong> {{ $sale->customer->customer_name ?? 'N/A' }}</p>
+                                    <p class="mb-1"><strong>Mobile:</strong> {{ $sale->customer->mobile ?? 'N/A' }}</p>
+                                    <p class="mb-0"><strong>Email:</strong> {{ $sale->customer->email_address ?? 'N/A' }}</p>
                                 </div>
                                 <div class="col-md-6 text-md-end">
                                     <h6 class="fw-bold text-uppercase text-secondary">Address</h6>

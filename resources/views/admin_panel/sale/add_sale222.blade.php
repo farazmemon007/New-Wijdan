@@ -315,20 +315,27 @@
       </select>
       <small class="text-muted" id="customerCountHint"></small>
   </div>
+{{-- ///////////////////// --}}
+  <div class="mb-2">
+      <label class="form-label fw-bold mb-1">Customer id & name</label>
+      <input type="text" class="form-control" id="customer_id" name="customer_id" value="">
+      <small class="text-muted" id="customerCountHint"></small>
+  </div>
+  
 
   <div class="mb-2">
       <label class="form-label fw-bold">Address</label>
-      <textarea class="form-control" id="address"></textarea>
+      <textarea class="form-control" id="address" name="address"></textarea>
   </div>
 
   <div class="mb-2">
       <label class="form-label fw-bold">Tel</label>
-      <input type="text" class="form-control" id="tel">
+      <input type="text" class="form-control" id="tel" name="tel">
   </div>
 
   <div class="mb-2">
       <label class="form-label fw-bold">Remarks</label>
-      <textarea class="form-control" id="remarks"></textarea>
+      <textarea class="form-control" id="remarks" name="remarks"></textarea>
   </div>
 
   <div class="mb-2 d-flex justify-content-between">
@@ -500,7 +507,48 @@
 
 </script>
 
+<script>
+    window.RECEIPT_ACCOUNTS = @json($accounts);
+</script>
+<script>
+function loadAccountsInto($select) {
 
+    const currentVal = $select.val(); // 🔒 preserve selection
+    let usedAccounts = [];
+
+    $('.rv-account').each(function () {
+        const val = $(this).val();
+        if (val && this !== $select[0]) {
+            usedAccounts.push(String(val));
+        }
+    });
+
+    let html = '<option value="">Select account</option>';
+
+    window.RECEIPT_ACCOUNTS.forEach(function (acc) {
+        const accId = String(acc.id);
+
+        if (!usedAccounts.includes(accId) || accId === String(currentVal)) {
+            html += `<option value="${accId}">${acc.title}</option>`;
+        }
+    });
+
+    $select.html(html);
+
+    // 🔥 restore selected value
+    if (currentVal) {
+        $select.val(currentVal);
+    }
+}
+</script>
+
+
+<script>
+  $(document).ready(function () {
+    loadAccountsInto($('.rv-account').first());
+});
+
+</script>
 
 
 
@@ -600,6 +648,7 @@
       // 🔹 Change customer type (radio)
       $(document).on('change', 'input[name="partyType"]', function () {
           $('#customerSelect').val('');
+          
           $('#address,#tel,#remarks').val('');
           $('#previousBalance').val('0');
           loadCustomersByType(this.value);
@@ -615,7 +664,7 @@
           $.get('{{ route("salecustomers.index") }}',{type:type}, function (data) {
 
               let html = '<option value="">-- Select --</option>';
-
+            
               if (data.length > 0) {
                   data.forEach(row => {
                       html += `<option value="${row.id}">
@@ -635,6 +684,7 @@
       // 🔹 When customer selected → load detail
       $(document).on('change', '#customerSelect', function () {
           const id = $(this).val();
+          $('#customer_id').val(id);  
           if (!id) return;
 
           $.get(
@@ -762,12 +812,12 @@
 
     <!-- QTY -->
     <td class="small-col">
-      <input type="text" class="form-control sales-qty text-end" id="sales-qty">
+      <input type="text" class="form-control sales-qty text-end" id="sales-qty" name="sales_qty[]">
     </td>
 
     <!-- RETAIL PRICE -->
     <td class="medium-col">
-      <input type="text" id="retail-price" class="form-control retail-price text-end input-readonly" value="0" readonly>
+      <input type="text" id="retail-price" class="form-control retail-price text-end input-readonly" value="0" readonly name="retail_price[]">
     </td>
 
 <!-- DISCOUNT -->
@@ -776,7 +826,7 @@
   <div class="discount-wrapper">
     <input type="text"
            class="form-control discount-value text-end"
-           placeholder="">
+           placeholder="" name="discount_percentage[] >
 
     <button type="button"
             class="btn btn-outline-secondary discount-toggle"
@@ -788,12 +838,12 @@
 
     <!-- DISCOUNT AMOUNT -->
     <td class="medium-col">
-      <input type="text" class="form-control discount-amount text-end">
+      <input type="text" class="form-control discount-amount text-end" name="discount_amount[]">
     </td>
 
     <!-- NET AMOUNT -->
     <td class="medium-col">
-      <input type="text" class="form-control sales-amount text-end input-readonly" value="0" readonly>
+      <input type="text" class="form-control sales-amount text-end input-readonly" name="sales_amount[]" value="0" readonly>
     </td>
 
     <!-- ACTION -->
@@ -894,21 +944,57 @@ $(document).on('click', '.discount-toggle', function () {
 }
 
 
-    function postNow() {
-      $.post('{{ route('sales.store') }}', serializeForm())
-        .done(function(res) {
-          if (res?.ok) {
-            window.open(res.invoice_url, '_blank');
-            showAlert('success', 'Posted & invoice opened');
-          } else {
-            showAlert('danger', 'Post failed');
+   function postNow() {
+
+  const bookingId = $('#booking_id').val();
+
+  if (!bookingId) {
+    showAlert('danger', 'Please save booking first');
+    return;
+  }
+
+  // 🔒 disable buttons while posting
+  $('#btnPosted, #btnHeaderPosted').prop('disabled', true);
+
+  $.post('{{ route("sale.ajax.post") }}', {
+      _token: $('input[name="_token"]').val(),
+      booking_id: bookingId
+  })
+
+  .done(function(res) {
+
+      if (res && res.ok) {
+
+          // ✅ SUCCESS STATE
+          showAlert('success', 'Posted successfully');
+
+          // 🔒 permanently disable after post
+          $('#btnPosted, #btnHeaderPosted, #btnSave').prop('disabled', true);
+
+          // 🧾 open invoice
+          if (res.invoice_url) {
+              window.open(res.invoice_url, '_blank');
           }
-        })
-        .fail(function(xhr) {
-          console.error(xhr.responseText);
-          showAlert('danger', 'Post error');
-        });
-    }
+
+      } else {
+
+          // ❌ FAILED
+          $('#btnPosted, #btnHeaderPosted').prop('disabled', false);
+          showAlert('danger', res.msg || 'Post failed');
+
+      }
+  })
+
+  .fail(function(xhr) {
+
+      console.error(xhr.responseText);
+
+      // ❌ enable again if error
+      $('#btnPosted, #btnHeaderPosted').prop('disabled', false);
+
+      showAlert('danger', 'Server error while posting');
+  });
+}
 
     /* ---------- Events top buttons ---------- */
     $('#btnAdd').on('click', addNewRow);
@@ -935,9 +1021,20 @@ $(document).on('click', '.discount-toggle', function () {
     $('#btnPrint2').on('click', function() {
       ensureSaved().then(id => window.open('{{ url("booking/print2") }}/' + id, '_blank'));
     });
-    $('#btnDCPrint').on('click', function() {
-      ensureSaved().then(id => window.open('{{ url("booking/dc") }}/' + id, '_blank'));
+  $('#btnDCPrint').off('click').on('click', function () {
+
+    ensureSaved().then(function (id) {
+
+        alert(id); // ✅ ab zaroor chalega
+
+        window.open('{{ url("booking/dc") }}/' + id, '_blank');
+
+    }).catch(function () {
+        alert('Save failed');
     });
+
+});
+
     $('#btnExit').on('click', function() {
       ensureSaved().finally(() => {
         window.location.href = "{{ route('sale.index') }}";
@@ -1102,6 +1199,7 @@ function computeRow($row) {
 
 
 
+
  $(document).on('input', '.sales-qty, .discount-value', function () {
   const $row = $(this).closest('tr');
   computeRow($row);
@@ -1247,24 +1345,34 @@ function computeRow($row) {
       updateGrandTotals(); // Update other totals if needed
     }
 
-    $('#btnAddRV').on('click', function() {
-      $('#rvWrapper .rv-row:last').after(`
-      <div class="d-flex gap-2 align-items-center mb-2 rv-row">
-        <select class="form-select rv-account" name="receipt_account_id[]" style="max-width:320px">
-          <option value="">Select account</option>
-        </select>
-        <input type="text" class="form-control text-end rv-amount" name="receipt_amount[]" placeholder="0.00" style="max-width:160px">
-        <button type="button" class="btn btn-outline-danger btn-sm btnRemRV">&times;</button>
-      </div>
+$('#btnAddRV').on('click', function () {
+
+    const $row = $(`
+        <div class="d-flex gap-2 align-items-center mb-2 rv-row">
+            <select class="form-select rv-account" name="receipt_account_id[]" style="max-width:320px"></select>
+            <input type="text" class="form-control text-end rv-amount" name="receipt_amount[]" placeholder="0.00" style="max-width:160px">
+            <button type="button" class="btn btn-outline-danger btn-sm btnRemRV">&times;</button>
+        </div>
     `);
 
-      // Load accounts into the newly added row
-      loadAccountsInto($('#rvWrapper .rv-row:last .rv-account'));
+    $('#rvWrapper').append($row);
+
+    loadAccountsInto($row.find('.rv-account'));
+});
+
+
+   // $(document).on('click', '.btnRemRV', function() {
+    //  $(this).closest('.rv-row').remove();
+    //  recomputeReceipts(); // Recompute total receipts after removal
+    //});
+$(document).on('click', '.btnRemRV', function () {
+    $(this).closest('.rv-row').remove();
+    recomputeReceipts();
+
+    $('.rv-account').each(function () {
+        loadAccountsInto($(this));
     });
-    $(document).on('click', '.btnRemRV', function() {
-      $(this).closest('.rv-row').remove();
-      recomputeReceipts(); // Recompute total receipts after removal
-    });
+});
 
     // Recompute total receipt amounts when input changes
     $(document).on('input', '.rv-amount', recomputeReceipts);

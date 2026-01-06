@@ -8,58 +8,43 @@ use Illuminate\Database\Eloquent\Model;
 class ReceiptsVoucher extends Model
 {
     use HasFactory;
+
+    // 🔥 EXACT TABLE NAME (MUST MATCH DB)
+    protected $table = 'receipts_vouchers';
+
     protected $guarded = [];
 
-    public static function generateInvoiceNo()
+    /* ===========================
+       GENERATE RVID (CORRECT)
+    =========================== */
+    public static function generateRVID()
     {
-        $prefix = 'RVID-';
+        $prefix = 'RV-';
 
-        // Fetch last invoice
-        $lastInvoice = self::orderBy('id', 'desc')->first();
+        $last = self::orderBy('id', 'desc')->first();
 
         $lastNumber = 0;
-        if ($lastInvoice && $lastInvoice->invoice_no) {
-            $lastNumber = (int)substr($lastInvoice->invoice_no, strlen($prefix));
+        if ($last && $last->rvid) {
+            $lastNumber = (int) filter_var($last->rvid, FILTER_SANITIZE_NUMBER_INT);
         }
 
-        $newNumber = str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
-
-        return $prefix . $newNumber;
+        return $prefix . str_pad($lastNumber + 1, 5, '0', STR_PAD_LEFT);
     }
 
-
-
-
-
-    // ReceiptsVoucher.php (Model)
-    // public function Customer()
-    // {
-    //     return $this->belongsTo(Customer::class, 'party_id', 'id');
-    // }
+    /* ===========================
+       RELATIONS
+    =========================== */
 
     public function Vendor()
     {
         return $this->belongsTo(Vendor::class, 'party_id', 'id');
     }
 
-    public function getPartyAttribute()
-    {
-        if ($this->type === 'vendor') {
-            return $this->Vendor;   // vendor relation return karega
-        } elseif ($this->type === 'customer' || $this->type === '1') {
-            return $this->Customer; // customer relation return karega
-        }
-        return null;
-    }
-
-
-    // Account Head
     public function AccountHead()
     {
         return $this->belongsTo(AccountHead::class, 'row_account_head', 'id');
     }
 
-    // Account
     public function Account()
     {
         return $this->belongsTo(Account::class, 'row_account_id', 'id');
