@@ -131,7 +131,7 @@
                         <th>Image</th>
                         <th>Category<br>Sub-Category</th>
                         <th>Item Name</th>
-                        <th>Unit</th>
+                        <th>Model</th>
                         <th>Price</th>
                         <th>Stock</th>
                         <th>Alert Qty</th>
@@ -160,7 +160,7 @@
                             <small class="text-muted">{{ $product->sub_category_relation->name ?? '-' }}</small>
                         </td>
                         <td>{{ $product->item_name }}</td>
-                        <td>{{ $product->unit_id ?? '-' }}</td>
+                        <td>{{ $product->model ?? '-' }}</td>
                         <td>PKR {{ number_format($product->price) }}</td>
                         <td>{{ $product->stock->qty ?? '- ' }}</td>
                         <td>{{ $product->alert_quantity }}</td>

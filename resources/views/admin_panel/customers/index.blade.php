@@ -45,8 +45,8 @@
                 <td>{{ $customer->customer_id }}</td>
                 <td>{{ $customer->customer_name }}</td>
                 <td>{{ $customer->mobile }}</td>
-                <td>{{ $customer->zone }}</td>
-                <td><span class="text-info"> {{ $customer->debit}}  </span><br> <span class="text-center text-danger"> {{$customer->credit }} </span></td>
+                <td>{{ $customer->address }}</td>
+                <td><span> {{ $customer->customer_type}}  </span></td>
                 <td>{{ $customer->filer_type }}</td>
                 <td>{{ $customer->status }}</td>
                 <td>

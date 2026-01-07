@@ -46,7 +46,7 @@
 
                             <div class="col-md-3 ">
                                 <label>Mobile:</label>
-                                <input type="text" class="form-control" name="mobile_2" value="{{ old('mobile_2') }}">
+                                <input type="text" class="form-control" name="mobile" value="{{ old('mobile_2') }}">
                             </div>
 
                              <div class="col-md-3">
