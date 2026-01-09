@@ -1,3 +1,10 @@
+@php
+    echo "<pre>";
+    print_r($bookings);
+    echo "<pre>";
+dd();
+@endphp
+
 @extends('admin_panel.layout.app')
 @section('content')
 
@@ -16,12 +23,13 @@
                     <tr>
                         <th>ID</th>
                         <th>Customer</th>
-                        <th>Reference</th>
-                        <th>Product</th>
+                        <th>Invoice No</th>
+                        <th>Party Type</th>
                         <th>Quantity</th>
-                        <th>Price</th>
-                        <th>Discount</th>
-                        <th>Total</th>
+                        <th>Sub Total</th>
+                        <th>Discount %</th>
+                        <th>Discount Amount</th>
+                        <th>Total Balance</th>
                         <th>Booking Date</th>
                         <th>Action</th>
                     </tr>
@@ -30,18 +38,19 @@
                     @foreach($bookings as $booking)
                     <tr>
                         <td>{{ $booking->id }}</td>
-                        <td>{{ $booking->customer_relation->customer_name ?? 'N/A' }}</td>
-                        <td>{{ $booking->reference }}</td>
-                        <td>{{ $booking->product }}</td>
-                        <td>{{ $booking->qty }}</td>
-                        <td>{{ $booking->per_price }}</td>
-                        <td>{{ $booking->per_discount }}</td>
-                        <td>{{  $booking->total_net }}</td>
-                        <td>{{ $booking->created_at->format('d-m-Y') }}</td>
+                        <!-- Customer Name from relation -->
+                        <td>{{ $booking->customer->customer_name ?? 'N/A' }}</td>
+                        <td>{{ $booking->invoice_no }}</td>
+                        <td>{{ $booking->party_type }}</td>
+                        <td>{{ $booking->quantity ?? 0 }}</td>
+                        <td>{{ number_format($booking->sub_total1, 2) }}</td>
+                        <td>{{ number_format($booking->discount_percent, 2) }}</td>
+                        <td>{{ number_format($booking->discount_amount, 2) }}</td>
+                        <td>{{ number_format($booking->total_balance, 2) }}</td>
+                        <td>{{ \Carbon\Carbon::parse($booking->created_at)->format('d-m-Y') }}</td>
                         <td>
                             <a href="{{ route('booking.receipt', $booking->id) }}" target="_blank" class="btn btn-sm btn-outline-secondary">Receipt</a>
- <a href="{{ route('sales.from.booking', $booking->id) }}" class="btn btn-sm btn-success ">Confirm</a>
-
+                            <a href="{{ route('sales.from.booking', $booking->id) }}" class="btn btn-sm btn-success">Confirm</a>
                         </td>
                     </tr>
                     @endforeach

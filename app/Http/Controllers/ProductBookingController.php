@@ -12,12 +12,12 @@ class ProductBookingController extends Controller
 {
     public function index()
     {
-        $bookings = ProductBooking::with('customer_relation')->latest()->get();
+        $bookings = ProductBooking::with('customer')->latest()->get();
         return view('admin_panel.booking.index', compact('bookings'));
     }
     public function receipt($id)
     {
-        $booking = ProductBooking::with('customer_relation')->findOrFail($id);
+        $booking = ProductBooking::with('customer')->findOrFail($id);
         return view('admin_panel.booking.receipt', compact('booking'));
     }
 
