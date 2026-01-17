@@ -1,3 +1,10 @@
+@php
+echo "<pre>";
+    print_r($sale);
+echo "</pre>";
+dd();
+
+@endphp
 @extends('admin_panel.layout.app')
 
 @section('content')

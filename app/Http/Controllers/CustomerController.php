@@ -13,20 +13,14 @@ class CustomerController extends Controller
 
 //////////////
   // 🔹 Load customers list by type
-  public function saleindex(Request $request)
-
+ public function saleindex(Request $request)
 {
-    // echo "<pre>";
-    // print_r($request->type);
-    // echo "<pre>";
-    // dd();
-    $type = $request->type ?? 'Main Customer' ;
-    
-    $customers = Customer::where('customer_type', $type)->get();
-    
-    // $customers=Customer::all();
-    
-    // dd($customers);
+    $type = $request->type ?? 'Main Customer';
+
+    $customers = Customer::where('customer_type', $type)
+        ->select('id', 'customer_id','customer_name', 'mobile', 'address', 'opening_balance')
+        ->get();
+
     return response()->json($customers);
 }
 

@@ -90,25 +90,19 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Customer:</label>
-<select name="customer" class="form-control form-control-sm">
-    <option value="">Select Customer</option>
-    @foreach ($Customer as $c)
-        <option value="{{ $c->id }}" {{ $booking->customer == $c->id ? 'selected' : '' }}>
-            {{ $c->customer_name }}
-        </option>
-    @endforeach
-</select>
-
-
-
+                            <select name="customer" class="form-control form-control-sm">
+                                <option value="">Select Customer</option>
+                                @foreach ($Customer as $c)
+                                    <option value="{{ $c->id }}" {{ ($booking->customer_id ?? $booking->customer) == $c->id ? 'selected' : '' }}>
+                                        {{ $c->customer_name ?? $c->name }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
-
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Reference #</label>
-                     <input type="text" name="reference" class="form-control form-control-sm"
-    value="{{ $booking->reference }}">
-    <input type="text" name="booking_id" value="{{ $booking->id ?? '' }}">
-
+                            <input type="text" name="reference" class="form-control form-control-sm" value="{{ $booking->reference ?? $booking->invoice_no ?? '' }}">
+                            <input type="hidden" name="booking_id" value="{{ $booking->id ?? '' }}">
                         </div>
                     </div>
 
@@ -161,18 +155,16 @@
 
                             </style>
                            <tbody id="purchaseItems">
- @foreach ($bookingItems as $item)
+@foreach ($bookingItems as $item)
 <tr>
     <td>
         <input type="hidden" name="product_id[]" class="product_id" value="{{ $item['product_id'] ?? '' }}">
         <input type="text" class="form-control productSearch" value="{{ $item['item_name'] ?? '' }}" autocomplete="off">
         <ul class="searchResults list-group mt-1"></ul>
     </td>
-
     <td class="item_code border">
         <input type="text" name="item_code[]" class="form-control" value="{{ $item['item_code'] ?? '' }}" readonly>
     </td>
-
     <td class="color border">
         <select class="form-control form-control-sm select2-color" name="color[][]" multiple>
             @if(!empty($item['color']) && is_array($item['color']))
@@ -182,31 +174,24 @@
             @endif
         </select>
     </td>
-
     <td class="uom border">
         <input type="text" name="uom[]" class="form-control" value="{{ $item['uom'] ?? '' }}" readonly>
     </td>
-
     <td class="unit border">
         <input type="text" name="unit[]" class="form-control" value="{{ $item['unit'] ?? '' }}" readonly>
     </td>
-
     <td>
         <input type="number" step="0.01" name="price[]" class="form-control price" value="{{ $item['price'] ?? 0 }}">
     </td>
-
     <td>
         <input type="number" step="0.01" name="item_disc[]" class="form-control item_disc" value="{{ $item['discount'] ?? 0 }}">
     </td>
-
     <td class="qty">
         <input type="number" name="qty[]" class="form-control quantity" value="{{ $item['qty'] ?? 1 }}" min="1">
     </td>
-
     <td class="total border">
         <input type="text" name="total[]" class="form-control row-total" value="{{ $item['total'] ?? 0 }}" readonly>
     </td>
-
     <td>
         <button type="button" class="btn btn-sm btn-danger remove-row">X</button>
     </td>

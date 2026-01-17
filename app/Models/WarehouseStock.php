@@ -16,6 +16,8 @@ class WarehouseStock extends Model
         'price',
         'remarks'
     ];
+// App\Models\WarehouseStock.php
+
 
     public function warehouse() {
         return $this->belongsTo(Warehouse::class);

@@ -1,3 +1,5 @@
+
+
 @extends('admin_panel.layout.app')
 
   @section('content')
@@ -227,26 +229,48 @@
   <style>
     
   /* ===== Sales Table UI Fix ===== */
-  .sales-table td.product-col {
-      min-width: 180px;
-  }
-  .sales-table td.warehouse-col {
-      min-width: 170px;
-  }
-  .sales-table td.small-col {
-      width: 110px;
-  }
-  .sales-table td.medium-col {
-      width: 120px;
-  }
-  .sales-table td.action-col {
-      width: 100px;
+    .sales-table td.product-col {
+      min-width: 160px;
+      width: 180px;
+      padding: 4px 8px;
+    }
+    .sales-table td.stock-col {
+      min-width: 90px;
+      width: 90px;
       text-align: center;
-  }
-  .input-readonly {
+    }
+      .sales-table td.qty-col {
+        min-width: 90px;
+        width: 90px;
+        text-align: center;
+      }
+    .sales-table td.price-col {
+      min-width: 100px;
+      width: 100px;
+      text-align: right;
+    }
+      .sales-table td.action-col {
+        min-width: 40px;
+        width: 40px;
+        text-align: center;
+        padding-left: 0;
+        padding-right: 0;
+      }
+    .sales-table td.amount-col {
+      min-width: 110px;
+      width: 110px;
+      text-align: right;
+    }
+    .sales-table td.action-col {
+      min-width: 60px;
+      width: 60px;
+      text-align: center;
+    }
+    .input-readonly {
       background: #f1f3f5;
       font-weight: 600;
-  }
+      color: #495057;
+    }
   </style>
 
   
@@ -287,7 +311,7 @@
 
             <div class="mb-2 d-flex align-items-center gap-2">
               <label class="form-label fw-bold mb-0">Invoice No.</label>
-              <input type="text" class="form-control input-readonly" name="Invoice_no" style="width:150px" value="{{ $nextInvoiceNumber }}" readonly>
+              <input type="text" class="form-control" name="Invoice_main" value="{{ $booking->invoice_no ?? '' }}" readonly>
               <label class="form-label fw-bold mb-0">M. Inv#</label>
               <input type="text" class="form-control" name="Invoice_main" placeholder="Manual invoice">
             </div>
@@ -295,53 +319,55 @@
             {{-- Type toggle --}}
           <div class="mb-2">
       <label class="form-label fw-bold mb-1 d-block">Type</label>
-      <div class="btn-group" role="group" id="partyTypeGroup">
-          <input type="radio" class="btn-check" name="partyType" id="typeCustomers" value="Main Customer" checked>
+        <div class="btn-group" role="group" id="partyTypeGroup">
+          <input type="radio" class="btn-check" name="partyType" id="typeCustomers" value="Main Customer" {{ (isset($booking->party_type) && $booking->party_type == 'Main Customer') ? 'checked' : '' }}>
           <label class="btn btn-outline-primary btn-sm" for="typeCustomers">Customers</label>
 
-          <input type="radio" class="btn-check" name="partyType" id="typeWalkin" value="Walking Customer">
+          <input type="radio" class="btn-check" name="partyType" id="typeWalkin" value="Walking Customer" {{ (isset($booking->party_type) && $booking->party_type == 'Walking Customer') ? 'checked' : '' }}>
           <label class="btn btn-outline-primary btn-sm" for="typeWalkin">Walk-in</label>
 
           {{-- <input type="radio" class="btn-check" name="partyType" id="typeVendors" value="vendor">
           <label class="btn btn-outline-primary btn-sm" for="typeVendors">Vendors</label> --}}
-      </div>
+        </div>
   </div>
 
             <!-- CUSTOMER SELECT -->
   <div class="mb-2">
-      <label class="form-label fw-bold mb-1">Select Customer</label>
-      <select class="form-select" id="customerSelect">
-          <option selected disabled>Loading…</option>
-      </select>
-      <small class="text-muted" id="customerCountHint"></small>
+        <label class="form-label fw-bold mb-1">Select Customer</label>
+        <select class="form-select" id="customerSelect" name="customerSelect" >
+            <option value="" selected>-- Select --</option>
+        </select>
+        <small class="text-muted" id="customerCountHint"></small>
   </div>
 {{-- ///////////////////// --}}
   <div class="mb-2">
       <label class="form-label fw-bold mb-1">Customer id & name</label>
-      <input type="text" class="form-control" id="customer_id" name="customer_id" value="">
-      <small class="text-muted" id="customerCountHint"></small>
-  </div>
+<input type="hidden" id="customer_id" name="customer_id" value="{{ $booking->customer_id ?? '' }}">
+<input type="text" class="form-control" id="customerDisplay" readonly
+       value="{{ isset($booking_customer) ? $booking_customer->customer_id.' -- '.$booking_customer->customer_name : '' }}">
+       
+    </div>
   
 
-  <div class="mb-2">
+    <div class="mb-2">
       <label class="form-label fw-bold">Address</label>
-      <textarea class="form-control" id="address" name="address"></textarea>
-  </div>
+      <textarea class="form-control" id="address" name="address">{{ $booking_customer->address ?? '' }}</textarea>
+    </div>
 
-  <div class="mb-2">
+    <div class="mb-2">
       <label class="form-label fw-bold">Tel</label>
-      <input type="text" class="form-control" id="tel" name="tel">
-  </div>
+      <input type="text" class="form-control" id="tel" name="tel" value="{{ $booking_customer->mobile ?? '' }}">
+    </div>
 
-  <div class="mb-2">
+    <div class="mb-2">
       <label class="form-label fw-bold">Remarks</label>
-      <textarea class="form-control" id="remarks" name="remarks"></textarea>
-  </div>
+      <textarea class="form-control" id="remarks" name="remarks">{{ $booking_customer->status ?? '' }}</textarea>
+    </div>
 
-  <div class="mb-2 d-flex justify-content-between">
+    <div class="mb-2 d-flex justify-content-between">
       <span>Previous Balance</span>
-      <input type="text" class="form-control w-25 text-end" id="previousBalance" value="0">
-  </div>
+      <input type="text" class="form-control w-25 text-end" id="previousBalance" value="{{ isset($booking_customer->opening_balance) ? number_format($booking_customer->opening_balance, 2) : '0' }}">
+    </div>
 
             <div class="text-end mt-3">
               <button id="clearCustomerData" type="button" class="btn btn-sm btn-secondary">Clear</button>
@@ -350,36 +376,29 @@
 
           {{-- RIGHT: Items --}}
           <div class="flex-grow-1">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <div class="section-title mb-0">Items</div>
+            <div class="section-title mb-2 d-flex justify-content-between align-items-center">
+              <span>Items</span>
               <button type="button" class="btn btn-sm btn-primary" id="btnAdd">Add Row</button>
             </div>
-
-            <div class="table-responsive">
-  <table class="table table-bordered sales-table mb-0">
-
+            <div class="table-responsive mb-0">
+              <table class="table table-bordered sales-table mb-0">
                 <thead>
                   <tr>
-                    <th style="width:10px">Product</th>
-                    {{-- <th style="width:10px">Warehouse</th> --}}
-                    <th style="width:10px">Stock</th>
-                    {{-- <th style="width:10px">Sales Price</th> --}}
-                    <th style="width:10px">Qty</th>
-                    <th style="width:10px">Retail Price</th>
-                    <th style="width:10px">Disc %</th>
-                    <th style="width:10px">Disc Amt</th>
-                    <th style="width:10px">Amount</th>
-                    <th style="width:10px">—</th>
+                    <th class="product-col">Product</th>
+                    <th class="stock-col">Stock</th>
+                    <th class="qty-col">Qty</th>
+                    <th class="price-col">Retail Price</th>
+                    <th class="discount-col">Disc %</th>
+                    <th class="discount-col">Disc Amt</th>
+                    <th class="amount-col">Amount</th>
                   </tr>
                 </thead>
                 <tbody id="salesTableBody">
-
                 </tbody>
                 <tfoot>
                   <tr>
-                    <td colspan="8" class="text-end fw-bold">Total:</td>
+                    <td colspan="6" class="text-end fw-bold">Total:</td>
                     <td class="text-end fw-bold"><span id="totalAmount">0.00</span></td>
-                    <td></td>
                   </tr>
                 </tfoot>
               </table>
@@ -462,7 +481,7 @@
           <button type="button" class="btn btn-sm btn-warning" id="btnRevert">Revert</button>
 
           <button type="button" class="btn btn-sm btn-success" id="btnSave">Save</button>
-          <button type="button" class="btn btn-sm btn-outline-success" id="btnPosted" disabled>Posted</button>
+          <button type="button" class="btn btn-sm btn-outline-success" onclick =faraz() id="btnPosted">Posted</button>
 
           <button type="button" class="btn btn-sm btn-secondary" id="btnPrint">Print</button>
           <button type="button" class="btn btn-sm btn-secondary" id="btnPrint2">Print-2</button>
@@ -514,12 +533,69 @@
   </div>
 </div>
 
+{{-- warehouse modal start --}}
+<!-- POST CONFIRMATION MODAL -->
+<!-- POST CONFIRMATION MODAL -->
+{{--  --}}
+<script>
+
+function faraz() {
+    const productIds = [];
+
+    $('#salesTableBody tr').each(function() {
+        const pid = $(this).find('.product').val();
+        if (pid) productIds.push(pid);
+    });
+
+    if (productIds.length === 0) {
+        alert('Please select at least one product!');
+        return;
+    }
+
+    // Convert to comma-separated string
+    const idsStr = productIds.join(',');
+
+    // AJAX call
+    $.ajax({
+        url: '/get-warehouses/' , // use route parameter
+        type: 'GET',
+        data: { product_ids: productIds },
+        success: function(res) {
+            console.log(res);
+
+           
+
+            // Show modal
+           
+        },
+        error: function(err) {
+            console.error(err);
+            alert('Something went wrong fetching warehouses!');
+        }
+    });
+}
+
+
+
+</script>
+{{-- warehouse modal end --}}
+
+
+
 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 {{--faarz memon --}}
+
+
+
+{{--  --}}
+<script>
+    const BOOKING_ITEMS = @json($bookingItems);
+</script>
+
 <script>
   let CURRENT_PRODUCT_ROW = null;
 
@@ -598,9 +674,7 @@ $('#productSearchInput').on('keyup', function () {
 });
 
 
-
 $(document).on('click', '.select-product', function () {
-
     if (!CURRENT_PRODUCT_ROW) return;
 
     const id    = $(this).data('id');
@@ -611,33 +685,24 @@ $(document).on('click', '.select-product', function () {
     // product dropdown me add + select
     const $productSelect = CURRENT_PRODUCT_ROW.find('.product');
 
-    if ($productSelect.find(`option[value="${id}"]`).length === 0) {
-        $productSelect.append(`<option value="${id}">${name}</option>`);
-    }
-
-    $productSelect.val(id).trigger('change');
+    // Remove old options and set new selected product
+    $productSelect.empty().append(`<option value="${id}" selected>${name}</option>`);
 
     // stock & price set
     CURRENT_PRODUCT_ROW.find('.stock').val(stock);
     CURRENT_PRODUCT_ROW.find('.retail-price').val(price);
 
+    // qty focus
+    setTimeout(() => CURRENT_PRODUCT_ROW.find('.sales-qty').focus(), 200);
+
+    // compute row totals
+    computeRow(CURRENT_PRODUCT_ROW);
+    updateGrandTotals();
+    refreshPostedState();
+
     // modal close
     $('#productSearchModal').modal('hide');
-
-    // qty par focus
-    setTimeout(() => {
-        CURRENT_PRODUCT_ROW.find('.sales-qty').focus();
-    }, 200);
 });
-
-
-
-
-
-
-
-
-
 
 
 
@@ -715,15 +780,37 @@ function loadAccountsInto($select) {
   <!--fgdffhjkjkhgkhkh  -->
 
   <script>
-  $(document).ready(function () {
-  function init() {
-      addNewRow();
-      loadCustomersByType('Main Customer');
-      // loadAccountsInto($('.rv-account').first());
+    $(document).ready(function () {
+    function init() {
+      if (BOOKING_ITEMS.length > 0) {
+        $('#salesTableBody').empty();
+        BOOKING_ITEMS.forEach(item => {
+          addNewRow(item);
+        });
+      } else {
+        addNewRow();
+      }
+      // Load customers with correct type and preselect if editing
+      let partyType = 'Main Customer';
+      let selectedCustomerId = '';
+      @if(isset($booking->party_type))
+        partyType = @json($booking->party_type);
+      @endif
+      @if(isset($booking->customer_id))
+        selectedCustomerId = @json($booking->customer_id);
+      @endif
+      loadCustomersByType(partyType, selectedCustomerId);
       updateGrandTotals();
       refreshPostedState();
+      // Prefill customer id & name field if editing
+      @if(isset($booking_customer))
+        $('#customer_id').val(@json($booking_customer->customer_id.' -- '.$booking_customer->customer_name));
+        $('#address').val(@json($booking_customer->address));
+        $('#tel').val(@json($booking_customer->mobile));
+        $('#remarks').val(@json($booking_customer->status));
+        $('#previousBalance').val((@json(isset($booking_customer->opening_balance) ? number_format($booking_customer->opening_balance, 2) : '0')));
+      @endif
     }
-
     init();
       // 🔹 Load customers on page load
       // loadCustomersByType('customer');
@@ -738,55 +825,80 @@ function loadAccountsInto($select) {
       });
 
       // 🔹 Load customers list
-      function loadCustomersByType(type) {
-         //alert('loadCustomersByType CALLED → ' + type);
-          $('#customerSelect')
-              .prop('disabled', true)
-              .html('<option selected disabled>Loading…</option>');
+  // 🔹 Load customers on page load based on selected type
+  function loadCustomersByType(type, selectedId = '') {
+    $('#customerSelect')
+      .prop('disabled', true)
+      .html('<option selected disabled>Loading…</option>');
 
-          $.get('{{ route("salecustomers.index") }}',{type:type}, function (data) {
-
-              let html = '<option value="">-- Select --</option>';
-            
-              if (data.length > 0) {
-                  data.forEach(row => {
-                      html += `<option value="${row.id}">
-                        ${row.customer_id} -- ${row.customer_name}
-                      </option>`;
-                  });
-                  $('#customerCountHint').text(data.length + ' record(s) found');
-              } else {
-                  html += '<option disabled>No record found</option>';
-                  $('#customerCountHint').text('No record found');
-              }
-
-              $('#customerSelect').html(html).prop('disabled', false);
-          });
+    $.get('{{ route("salecustomers.index") }}', { type: type }, function (data) {
+      let html = '<option value="">-- Select --</option>';
+      let found = false;
+      if (data.length > 0) {
+        data.forEach(row => {
+          let selected = '';
+          if (selectedId && String(row.id) === String(selectedId)) {
+            selected = 'selected';
+            found = true;
+          }
+          html += `<option value="${row.id}" ${selected}>${row.customer_id} -- ${row.customer_name}</option>`;
+        });
+        $('#customerCountHint').text(data.length + ' record(s) found');
+      } else {
+        html += '<option disabled>No record found</option>';
+        $('#customerCountHint').text('No record found');
       }
+      $('#customerSelect').html(html).prop('disabled', false);
+      // If preselected, trigger change to fill details
+      if (found && selectedId) {
+        $('#customerSelect').val(selectedId).trigger('change');
+      }
+    });
+  }
+
+// 🔹 When customer selected → load detail
+
+
+
+// 🔹 Clear customer data button
+$('#clearCustomerData').on('click', function () {
+    $('#customerSelect').val('');
+    $('#customer_id,#customerDisplay').val('');
+    $('#address,#tel,#remarks').val('');
+    $('#previousBalance').val('0.00');
+});
+
 
       // 🔹 When customer selected → load detail
-      $(document).on('change', '#customerSelect', function () {
-          const id = $(this).val();
-          $('#customer_id').val(id);  
-          if (!id) return;
+     $(document).on('change', '#customerSelect', function () {
 
-          $.get(
-              '{{ route("salecustomers.show", "__ID__") }}'.replace('__ID__', id),
-              function (d) {
-                  $('#address').val(d.address || '');
-                  $('#tel').val(d.mobile || '');
-                  $('#remarks').val(d.status || '');
-                  $('#previousBalance').val((+d.opening_balance || 0).toFixed(2));
-              }
-          );
-      });
+ const id   = $(this).val();
+ const text = $(this).find('option:selected').text();
 
-      // 🔹 Clear button
-      $('#clearCustomerData').on('click', function () {
-          $('#customerSelect').val('');
-          $('#address,#tel,#remarks').val('');
-          $('#previousBalance').val('0');
-      });
+ if (!id) {
+   $('#customer_id,#customerDisplay').val('');
+   $('#address,#tel,#remarks').val('');
+   $('#previousBalance').val('0.00');
+   return;
+ }
+
+ // ✅ DB ke liye
+ $('#customer_id').val(id);
+
+ // ✅ UI ke liye
+ $('#customerDisplay').val(text);
+
+ $.get(
+   '{{ route("salecustomers.show", "__ID__") }}'.replace('__ID__', id),
+   function (d) {
+     $('#address').val(d.address || '');
+     $('#tel').val(d.mobile || '');
+     $('#remarks').val(d.status || '');
+     $('#previousBalance').val((+d.opening_balance || 0).toFixed(2));
+   }
+ );
+});
+
 
   });
   </script>
@@ -833,75 +945,74 @@ function loadAccountsInto($select) {
 
 
 
-
-    function addNewRow() {
-  let productOptions = '<option value="">Select product</option>';
-  if (window.ALL_PRODUCTS && Array.isArray(window.ALL_PRODUCTS)) {
-    window.ALL_PRODUCTS.forEach(function(p) {
-      productOptions += `<option value="${p.id}">${p.item_name}</option>`;
-    });
-  }
-  $('#salesTableBody').append(`
-  <tr>
-    <!-- PRODUCT -->
-    <td class="product-col">
-      <div class="input-group">
+function addNewRow(item = null) {
+    $('#salesTableBody').append(`
+    <tr class="sale-row align-middle">
+      <!-- PRODUCT -->
+      <td class="product-col">
         <select class="form-select product" name="product_id[]">
-          ${productOptions}
+          ${item ? `<option value="${item.product_id}" selected>${item.item_name}</option>` : '<option value="">Select product</option>'}
         </select>
-      </div>
-    </td>
+      </td>
 
-    <!-- STOCK -->
-    <td class="small-col">
-      <input type="text" class="form-control stock text-center input-readonly" readonly>
-    </td>
+      <!-- STOCK -->
+      <td class="product-col text-center">
+        <input type="text" class="form-control stock" name="stock[]" readonly 
+               value="${item && typeof item.onhand_qty !== 'undefined' ? item.onhand_qty : ''}" placeholder="Stock">
+        ${item && typeof item.onhand_qty !== 'undefined' && typeof item.qty !== 'undefined' && item.onhand_qty < item.qty ? '<span class="text-danger">Insufficient stock</span>' : ''}
+      </td>
 
-    <!-- QTY -->
-    <td class="small-col">
-      <input type="text" class="form-control sales-qty text-end" id="sales-qty" name="sales_qty[]">
-    </td>
+      <!-- QTY -->
+      <td class="text-center qty-col">
+        <input type="number" class="form-control sales-qty" name="sales_qty[]" min="1" placeholder="Qty" value="${item && typeof item.qty !== 'undefined' ? item.qty : ''}">
+      </td>
 
-    <!-- RETAIL PRICE -->
-    <td class="medium-col">
-      <input type="text" id="retail-price" class="form-control retail-price text-end input-readonly" value="0" readonly name="retail_price[]">
-    </td>
+      <!-- PRICE -->
+      <td class="text-end product-col">
+        <input type="text" class="form-control retail-price" name="retail_price[]" readonly placeholder="Price" value="${item && typeof item.price !== 'undefined' ? item.price : ''}">
+      </td>
 
-<!-- DISCOUNT -->
-<!-- DISCOUNT % / PKR -->
-<td class="large-col">
-  <div class="discount-wrapper">
-    <input type="text"
-           class="form-control discount-value text-end"
-           placeholder="" name="discount_percentage[]" >
+      <!-- DISCOUNT -->
+      <td class="text-end product-col">
+        <input type="text" class="form-control discount-amount" name="discount_amount[]" placeholder="Discount" value="${item && typeof item.discount !== 'undefined' ? item.discount : ''}">
+      </td>
 
-    <button type="button"
-            class="btn btn-outline-secondary discount-toggle"
-            data-type="percent">%</button>
-  </div>
-</td>
+      <!-- TOTAL -->
+      <td class="text-end product-col">
+        <input type="text" class="form-control sales-amount" name="sales_amount[]" readonly placeholder="Total" value="${item && typeof item.total !== 'undefined' ? item.total : ''}">
+      </td>
+
+      <!-- DELETE BUTTON -->
+      <td class="text-center">
+        <button type="button" class="btn btn-sm btn-danger del-row" title="Delete Row">
+          <i class="bi bi-trash">X</i>
+        </button>
+      </td>
+    </tr>
+    `);
+
+    const $row = $('#salesTableBody tr:last');
+    // ✅ EDIT MODE PREFILL
+    console.log(item);
+    if (item) {
+        const $productSelect = $row.find('.product');
+
+        // Remove old options if any, add current product
+        $productSelect.empty().append(`<option value="${item.product_id}">${item.item_name}</option>`);
+
+        // ⚡ Force the select to hold the correct value
+        $productSelect.val(item.product_id);
+
+        // Set other fields
+        $row.find('.sales-qty').val(item.qty);
+        $row.find('.retail-price').val(item.price);
+        $row.find('.discount-amount').val(item.discount);
+        $row.find('.sales-amount').val(item.total);
+    }
+}
 
 
 
-    <!-- DISCOUNT AMOUNT -->
-    <td class="medium-col">
-      <input type="text" class="form-control discount-amount text-end" name="discount_amount[]">
-    </td>
-
-    <!-- NET AMOUNT -->
-    <td class="medium-col">
-      <input type="text" class="form-control sales-amount text-end input-readonly" name="sales_amount[]" value="0" readonly>
-    </td>
-
-    <!-- ACTION -->
-    <td class="action-col">
-      <button type="button" class="btn btn-sm btn-outline-danger del-row">&times;</button>
-    </td>
-  </tr>
-  `);
-
-
-  }
 
 // discunt % field
 $(document).on('click', '.discount-toggle', function () {
@@ -943,13 +1054,14 @@ $(document).on('click', '.discount-toggle', function () {
 
     function refreshPostedState() {
       const state = canPost();
-      $('#btnPosted, #btnHeaderPosted').prop('disabled', !state);
+      $(' #btnHeaderPosted').prop('disabled', !state);
     }
 
     /* ---------- SAVE/POST ---------- */
     function serializeForm() {
       return $('#saleForm').serialize();
     }
+
 
  function ensureSaved() {
   return new Promise(function(resolve, reject) {
@@ -960,8 +1072,8 @@ $(document).on('click', '.discount-toggle', function () {
     // 🔴 TESTING: form ka data console me print
     const formData = serializeForm();
     console.log('🚀 DATA GOING TO sale.ajax.save:', formData);
-
-    $('#btnSave, #btnHeaderPosted, #btnPosted').prop('disabled', true);
+// abbasmemon
+    $('#btnSave, #btnHeaderPosted, #btnPosted ').prop('disabled', true);
 
     $.post('{{ route("sale.ajax.save") }}', formData)
 
@@ -991,7 +1103,7 @@ $(document).on('click', '.discount-toggle', function () {
 }
 
 
-   function postNow() {
+ function postNow(warehouseId) {
 
   const bookingId = $('#booking_id').val();
 
@@ -1000,22 +1112,28 @@ $(document).on('click', '.discount-toggle', function () {
     return;
   }
 
+  if (!warehouseId) {
+    showAlert('danger', 'Please select warehouse');
+    return;
+  }
+
   // 🔒 disable buttons while posting
   $('#btnPosted, #btnHeaderPosted').prop('disabled', true);
 
   $.post('{{ route("sale.ajax.post") }}', {
       _token: $('input[name="_token"]').val(),
-      booking_id: bookingId
+      booking_id: bookingId,
+      warehouse_id: warehouseId // ✅ NEW
   })
 
   .done(function(res) {
-
+console.log(res)
       if (res && res.ok) {
 
-          // ✅ SUCCESS STATE
+          // ✅ SUCCESS
           showAlert('success', 'Posted successfully');
 
-          // 🔒 permanently disable after post
+          // 🔒 permanently disable
           $('#btnPosted, #btnHeaderPosted, #btnSave').prop('disabled', true);
 
           // 🧾 open invoice
@@ -1036,12 +1154,13 @@ $(document).on('click', '.discount-toggle', function () {
 
       console.error(xhr.responseText);
 
-      // ❌ enable again if error
+      // ❌ enable again
       $('#btnPosted, #btnHeaderPosted').prop('disabled', false);
 
       showAlert('danger', 'Server error while posting');
   });
 }
+
 
     /* ---------- Events top buttons ---------- */
     $('#btnAdd').on('click', addNewRow);
@@ -1087,10 +1206,8 @@ $(document).on('click', '.discount-toggle', function () {
         window.location.href = "{{ route('sale.index') }}";
       });
     });
-    $('#btnHeaderPosted, #btnPosted').on('click', function() {
-      if (!canPost()) return;
-      ensureSaved().then(postNow);
-    });
+
+
 
 
     /* ---------- Row compute ---------- */
@@ -1532,28 +1649,28 @@ $(document).on('click', '.btnRemRV', function () {
 
 
     // override Post buttons to validate first
-    $('#btnHeaderPosted, #btnPosted').off('click').on('click', function() {
-      cleanupEmptyRows();
-      updateGrandTotals();
-      refreshPostedState();
+   $('#btnHeaderPosted, #btnPosted').off('click').on('click', function () {
 
-      const v = validateFormAll();
-      if (!v.ok) {
+    cleanupEmptyRows();
+    updateGrandTotals();
+    refreshPostedState();
+
+    const v = validateFormAll();
+    if (!v.ok) {
         showAlert('danger', v.message);
-        if (v.el && v.el.length) {
-          v.el.focus();
-          if (v.el.hasClass('js-customer')) v.el.select2?.('open');
-        }
+        if (v.el) v.el.focus();
         return;
-      }
+    }
 
-      if (!canPost()) {
+    if (!canPost()) {
         showAlert('danger', 'No valid item lines to post');
         return;
-      }
+    }
 
-      ensureSaved().then(postNow);
-    });
+    // 🔥 OPEN CONFIRMATION MODAL
+    $('#postConfirmModal').modal('show');
+});
+
 
 
     function isRowMeaningful($row) {
@@ -1596,7 +1713,4 @@ $(document).on('click', '.btnRemRV', function () {
       if ($('#salesTableBody tr').length === 0) addNewRow();
     }
   </script>
-  <script>
-window.ALL_PRODUCTS = @json($products ?? []);
-</script>
   @endsection

@@ -361,7 +361,7 @@
                 <thead>
                   <tr>
                     <th style="width:10px">Product</th>
-                    <th style="width:10px">Warehouse</th>
+                    {{-- <th style="width:10px">Warehouse</th> --}}
                     <th style="width:10px">Stock</th>
                     {{-- <th style="width:10px">Sales Price</th> --}}
                     <th style="width:10px">Qty</th>
@@ -475,37 +475,185 @@
     </div>
   </div>
 
+  {{-- product search model --}}
+
+  <div class="modal fade" id="productSearchModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Search Product</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <!-- Search input -->
+        <input type="text" id="productSearchInput" class="form-control mb-3"
+               placeholder="Search product by name...">
+
+        <!-- Product list -->
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="productSearchResults">
+              <tr>
+                <td colspan="2" class="text-center">Type to search...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-{{-- sjadlfksal --}}
-
+{{--faarz memon --}}
 <script>
-  /* ========== DISCOUNT TOGGLE (% ↔ PKR) ========== */
+  let CURRENT_PRODUCT_ROW = null;
 
-// $(document).on('click', '.discount-toggle', function () {
 
-//     const $btn = $(this);
-//     const currentType = $btn.data('type');
 
-//     if (currentType === 'percent') {
-//         // switch to PKR
-//         $btn.data('type', 'pkr');
-//         $btn.text('PKR');
-//     } else {
-//         // switch to %
-//         $btn.data('type', 'percent');
-//         $btn.text('%');
-//     }
+$(document).on('keydown', function (e) {
 
-//     // focus back to input
-//     $btn.closest('.discount-wrapper')
-//         .find('.discount-value')
-//         .focus();
-// });
+    if (e.key === 'F2') {
+        e.preventDefault();
+
+        // jis row me cursor hai wo detect karo
+        CURRENT_PRODUCT_ROW = $(':focus').closest('tr');
+
+        if (!CURRENT_PRODUCT_ROW.length) {
+            alert('Please focus on a product row first');
+            return;
+        }
+
+        $('#productSearchInput').val('');
+        $('#productSearchResults').html(
+            '<tr><td colspan="2" class="text-center">Type to search...</td></tr>'
+        );
+
+        $('#productSearchModal').modal('show');
+
+        setTimeout(() => $('#productSearchInput').focus(), 300);
+    }
+
+});
+
+
+
+
+
+
+
+$('#productSearchInput').on('keyup', function () {
+
+    const keyword = $(this).val().trim();
+
+    if (keyword.length < 2) {
+        $('#productSearchResults').html(
+            '<tr><td colspan="2" class="text-center">Type at least 2 characters</td></tr>'
+        );
+        return;
+    }
+
+    $.get('{{ route("search_products") }}', { q: keyword }, function (products) {
+
+        let html = '';
+
+        if (products.length === 0) {
+            html = '<tr><td colspan="2" class="text-center">No product found</td></tr>';
+        } else {
+            products.forEach(p => {
+                html += `
+                    <tr>
+                        <td>${p.item_name}</td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-primary select-product"
+                                data-id="${p.id}"
+                                data-name="${p.item_name}"
+                                data-stock="${p.stock}"
+                                data-price="${p.retail_price}">
+                                Select
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        $('#productSearchResults').html(html);
+    });
+
+});
+
+
+
+$(document).on('click', '.select-product', function () {
+
+    if (!CURRENT_PRODUCT_ROW) return;
+
+    const id    = $(this).data('id');
+    const name  = $(this).data('name');
+    const stock = $(this).data('stock');
+    const price = $(this).data('price');
+
+    // product dropdown me add + select
+    const $productSelect = CURRENT_PRODUCT_ROW.find('.product');
+
+    if ($productSelect.find(`option[value="${id}"]`).length === 0) {
+        $productSelect.append(`<option value="${id}">${name}</option>`);
+    }
+
+    $productSelect.val(id).trigger('change');
+
+    // stock & price set
+    CURRENT_PRODUCT_ROW.find('.stock').val(stock);
+    CURRENT_PRODUCT_ROW.find('.retail-price').val(price);
+
+    // modal close
+    $('#productSearchModal').modal('hide');
+
+    // qty par focus
+    setTimeout(() => {
+        CURRENT_PRODUCT_ROW.find('.sales-qty').focus();
+    }, 200);
+});
+
+
+
+
+
+
+
+
+
+
+
 
 </script>
+
+
+
+
+
+
+
+
+
+
+{{--faarz memon --}}
+
 
 <script>
     window.RECEIPT_ACCOUNTS = @json($accounts);
@@ -561,71 +709,6 @@ function loadAccountsInto($select) {
 
 
 
-  {{-- hajshdsadsdsksa --}}
-
-    <script>   // Load products once
-    // When product changes, load warehouses for that product
-    $(document).on('change', '.product', function () {
-
-    const $row = $(this).closest('tr');
-    const productId = $(this).val();
-
-    const $warehouse   = $row.find('.warehouse');
-    const $stock       = $row.find('.stock');
-    const $retailPrice = $row.find('.retail-price');
-
-    // reset
-    $retailPrice.val('0');
-    $stock.val('');
-
-    if (!productId) {
-        $warehouse.html('<option value="">Select Warehouse</option>').prop('disabled', true);
-        return;
-    }
-
-    /* ================== LOAD WAREHOUSES ================== */
-    $warehouse.prop('disabled', true)
-              .html('<option>Loading warehouses...</option>');
-
-    $.get('{{ route("warehouses.get") }}', { product_id: productId })
-        .done(function (warehouses) {
-
-            let html = '<option value="">Select Warehouse</option>';
-
-            warehouses.forEach(function (w) {
-                html += `<option value="${w.warehouse_id}" data-stock="${w.stock}">
-                            ${w.warehouse_name} -- ${w.stock}
-                        </option>`;
-            });
-
-            $warehouse.html(html).prop('disabled', false);
-        })
-        .fail(function () {
-            $warehouse.html('<option value="">Error loading warehouses</option>').prop('disabled', false);
-        });
-
-    /* ================== LOAD RETAIL PRICE ================== */
-    $.get('{{ route("products.price") }}', { product_id: productId })
-        .done(function (res) {
-          // console.log(res);
-            $retailPrice.val(parseFloat(res.retail_price || 0).toFixed(2));
-        })
-        .fail(function () {
-            $retailPrice.val('0');
-        });
-
-});
-
-
-    // When warehouse is selected, update stock
-    $(document).on('change', '.warehouse', function () {
-        const $row = $(this).closest('tr');
-        const stock = $(this).find(':selected').data('stock') || 0;
-        $row.find('.stock').val(stock);
-    });
-
-    </script> 
-
 
 
 
@@ -656,7 +739,7 @@ function loadAccountsInto($select) {
 
       // 🔹 Load customers list
       function loadCustomersByType(type) {
-        //  alert('loadCustomersByType CALLED → ' + type);
+         //alert('loadCustomersByType CALLED → ' + type);
           $('#customerSelect')
               .prop('disabled', true)
               .html('<option selected disabled>Loading…</option>');
@@ -711,45 +794,10 @@ function loadAccountsInto($select) {
 
 
 
-  {{-- jsdakjdskldjlasd --}}
 
-  <script>
-    function loadProductsAjax($select) {
 
-    
-    // agar already load ho chuka ho, dobara call na ho
-    if ($select.data('loaded')) return;
 
-    $select.prop('disabled', true)
-          .html('<option value="">Loading products...</option>');
-
-    $.get('{{ route("productget") }}')
-      .done(function (products) {
-        
-        let html = '<option value="">Select Product</option>';
-        // console.log(products);
-        products.forEach(function (p) {
-          html += `<option value="${p.id}">${p.item_name}</option>`;
-        });
-
-        $select.html(html)
-              .prop('disabled', false)
-              .data('loaded', true); // ✅ mark as loaded
-      })
-      .fail(function () {
-        $select.html('<option value="">Error loading products</option>')
-              .prop('disabled', false);
-      });
-  }
-
-  </script> 
-
-  <script>
-    $(document).on('focus click', '.product', function () {
-    loadProductsAjax($(this));
-  });
-
-  </script>
+  
 
 
   <script>
@@ -790,18 +838,19 @@ function loadAccountsInto($select) {
     $('#salesTableBody').append(`
   <tr>
     <!-- PRODUCT -->
-    <td class="product-col">
-      <select class="form-select product" name="product_id[]">
-        <option value="">Loading products...</option>
-      </select>
-    </td>
+<td class="product-col">
+  <div class="input-group">
+    
 
-    <!-- WAREHOUSE -->
-    <td class="warehouse-col">
-      <select class="form-select warehouse" name="warehouse_id[]" disabled>
-        <option value="">Select Warehouse</option>
-      </select>
-    </td>
+    <select class="form-select product" name="product_id[]">
+    <option value="">Select product</option>
+</select>
+  </div>
+</td>
+
+
+
+  
 
     <!-- STOCK -->
     <td class="small-col">
@@ -826,7 +875,7 @@ function loadAccountsInto($select) {
   <div class="discount-wrapper">
     <input type="text"
            class="form-control discount-value text-end"
-           placeholder="" name="discount_percentage[] >
+           placeholder="" name="discount_percentage[]" >
 
     <button type="button"
             class="btn btn-outline-secondary discount-toggle"
@@ -919,7 +968,7 @@ $(document).on('click', '.discount-toggle', function () {
     $.post('{{ route("sale.ajax.save") }}', formData)
 
       .done(function(res) {
-        console.log('✅ RESPONSE FROM SERVER:', res);
+       console.log('✅ RESPONSE FROM SERVER:', res);
 
         $('#btnSave, #btnHeaderPosted, #btnPosted').prop('disabled', false);
 
@@ -1012,7 +1061,7 @@ $(document).on('click', '.discount-toggle', function () {
       showAlert('success', 'Form cleared');
     });
     $('#btnSave').on('click', function() {
-      alert();
+      // alert();
       ensureSaved();
     });
     $('#btnPrint').on('click', function() {
@@ -1025,7 +1074,7 @@ $(document).on('click', '.discount-toggle', function () {
 
     ensureSaved().then(function (id) {
 
-        alert(id); // ✅ ab zaroor chalega
+        // alert(id); // ✅ ab zaroor chalega
 
         window.open('{{ url("booking/dc") }}/' + id, '_blank');
 
@@ -1045,115 +1094,6 @@ $(document).on('click', '.discount-toggle', function () {
       ensureSaved().then(postNow);
     });
 
-    /* ---------- Customer type & list ---------- */
-    // function loadCustomersByType(type) {
-    //   const $sel = $('#customerSelect').prop('disabled', true).empty().append('<option selected disabled>Loading...</option>');
-    //   $.get(, {
-    //     type
-    //   }, function(list) {
-    //     $sel.empty().append('<option selected disabled>Select ' + (type === 'vendor' ? 'vendor' : (type === 'walking' ? 'walk-in customer' : 'customer')) + '</option>');
-    //     list.forEach(r => $sel.append('<option value="' + r.id + '">' + r.text + '</option>'));
-    //     $('#customerCountHint').text(list.length + ' ' + type + (list.length === 1 ? ' found' : 's found'));
-    //     $sel.prop('disabled', false);
-    //   }).fail(function() {
-    //     $sel.empty().append('<option selected disabled>Error loading</option>').prop('disabled', false);
-    //     $('#customerCountHint').text('');
-    //   });
-    // }
-
-    // loadCustomersByType('customer');
-    // $(document).on('change', 'input[name="partyType"]', function() {
-    //   $('#customerSelect').val(null).trigger('change');
-    //   $('#address,#tel,#remarks').val('');
-    //   loadCustomersByType(this.value);
-    // });
-    // $(document).on('change', '#customerSelect', function() {
-    //   let id = $(this).val();
-    //   if (!id) return;
-
-    //   let type = $('input[name="partyType"]:checked').val(); // Get the selected type (customer/vendor)
-
-    //  $.get('{{ route("salecustomers.index") }}', function(d) {
-    //   console.log(d);
-    //     // Fill in the customer/vendor details
-    //     $('#address').val(d.address || '');
-    //     $('#tel').val(d.mobile || '');
-    //     $('#remarks').val(d.remarks || '');
-    //     $('#previousBalance').val((+d.previous_balance || 0).toFixed(2)); // Set previous balance for customer
-    //     updateGrandTotals(); // Update other totals if needed
-    //   });
-    // });
-
-    // $('#clearCustomerData').on('click', function() {
-    //   $('#customerSelect').val(null).trigger('change');
-    //   $('#address,#tel,#remarks').val('');
-    //   $('#previousBalance').val('0');
-    //   updateGrandTotals();
-    // });
-
-    /* ---------- Warehouse -> products ---------- */
-    // $(document).on('change', '.warehouse', function() {
-    //   var wid = $(this).val();
-    //   var $row = $(this).closest('tr');
-    //   var $product = $row.find('.product');
-    //   var $stock = $row.find('.stock');
-    //   var $sp = $row.find('.sales-price');
-    //   var $rp = $row.find('.retail-price');
-
-    //   $product.prop('disabled', true).empty().append('<option value="">Loading...</option>');
-    //   $stock.val('');
-    //   $sp.val('0');
-    //   $rp.val('0');
-
-    //   if (!wid) {
-    //     $product.empty().append('<option value="">Select Product</option>').prop('disabled', false);
-    //     return;
-    //   }
-
-    //   // $.get(.replace(':id', wid), function(list) {
-    //   //   $product.empty().append('<option value="">Select Product</option>');
-    //   //   console.log(list);
-    //   //   (list || []).forEach(p => $product.append('<option value="' + p.id + '">' + p.name + '</option>'));
-    //   //   $product.prop('disabled', false);
-    //   // }).fail(function() {
-    //   //   $product.empty().append('<option value="">Error loading</option>').prop('disabled', false);
-    //   // });
-    // });
-
-    /* ---------- Product -> stock + prices ---------- */
-    // $(document).on('change', '.product', function() {
-
-    //   var $row = $(this).closest('tr');
-    //   var pid = $(this).val();
-    //   // alert(pid);
-    //   var $stock = $row.find('.stock');
-    //   var $sp = $row.find('.sales-price');
-    //   var $rp = $row.find('.retail-price');
-    //   if (!pid) {
-    //     $stock.val('');
-    //     $sp.val('0');
-    //     $rp.val('0');
-    //     refreshPostedState();
-    //     return;
-    //   }
-
-    //   $.get('{{ url("get-stock") }}/' + pid, function(d) {
-    //     console.log(d);
-    //     $stock.val((d.stock ?? 0));
-    //     $sp.val((+d.sales_price || 0).toFixed(2));
-    //     $rp.val((+d.retail_price || 0).toFixed(2));
-    //     computeRow($row);
-    //     updateGrandTotals();
-    //     refreshPostedState();
-    //   }).fail(function() {
-    //     $stock.val('');
-    //     $sp.val('0');
-    //     $rp.val('0');
-    //     computeRow($row);
-    //     updateGrandTotals();
-    //     refreshPostedState();
-    //   });
-    // });
 
     /* ---------- Row compute ---------- */
     function toNum(v) {
@@ -1310,7 +1250,7 @@ function computeRow($row) {
           addNewRow();
           // focus on new row product for quick entry
           const $newRow = $('#salesTableBody tr:last-child');
-          setTimeout(() => $newRow.find('.warehouse').focus(), 0);
+          // setTimeout(() => $newRow.find('.warehouse').focus(), 0);
         }
       }
     });
@@ -1416,19 +1356,19 @@ $(document).on('click', '.btnRemRV', function () {
 
       $('#salesTableBody tr').each(function(rowIndex) {
         const $row = $(this);
-        const $wh = $row.find('.warehouse');
+        // const $wh = $row.find('.warehouse');
         const $prod = $row.find('.product');
         const $qty = $row.find('.sales-qty');
 
         // Warehouse
-        if (!$wh.val()) {
-          ok = false;
-          if (!firstMessage) {
-            firstMessage = 'Please select Warehouse for row ' + (rowIndex + 1);
-            firstEl = $wh;
-          }
-          markInvalid($wh);
-        }
+        // if (!$wh.val()) {
+        //   ok = false;
+        //   if (!firstMessage) {
+        //     firstMessage = 'Please select Warehouse for row ' + (rowIndex + 1);
+        //     firstEl = $wh;
+        //   }
+        //   markInvalid($wh);
+        // }
 
         // Product / Item
         if (!$prod.val()) {
@@ -1620,7 +1560,7 @@ $(document).on('click', '.btnRemRV', function () {
 
     function isRowMeaningful($row) {
       const prod = $row.find('.product').val();
-      const wh = $row.find('.warehouse').val();
+      // const wh = $row.find('.warehouse').val();
       const qty = parseFloat($row.find('.sales-qty').val() || '0') || 0;
       const discPct = parseFloat($row.find('.discount-value.discount-percent').val() || '0') || 0;
       const discAmt = parseFloat($row.find('.discount-amount').val() || '0') || 0;
@@ -1633,7 +1573,7 @@ $(document).on('click', '.btnRemRV', function () {
       $('#salesTableBody tr').each(function() {
         const $r = $(this);
         const prod = $r.find('.product').val();
-        const wh = $r.find('.warehouse').val();
+        // const wh = $r.find('.warehouse').val();
         const qty = parseFloat($r.find('.sales-qty').val() || '0') || 0;
 
         // Remove row when qty is zero or (product empty AND warehouse empty)

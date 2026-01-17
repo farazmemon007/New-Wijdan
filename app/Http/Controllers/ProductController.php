@@ -20,32 +20,35 @@ class ProductController extends Controller
 {
 
     public function getPrice(Request $request)
-{
-    $product = Product::find($request->product_id);
+    {
+        $product = Product::find($request->product_id);
 
-    return response()->json([
-        'retail_price' => $product?->price ?? 0
-    ]);
-    
-}
+        return response()->json([
+            'retail_price' => $product?->price ?? 0
+        ]);
+        
+    }
 
-    public function productget(){
+    public function productget()
+    {
         $products=Product::all();
         return response()->json($products);
     }
 
     private function upsertStocks(int $productId, float $qtyDelta, int $branchId = 1, int $warehouseId = 1): void
     {
+        // try update
         $updated = Stock::where([
             'branch_id'    => $branchId,
             'warehouse_id' => $warehouseId,
             'product_id'   => $productId,
         ])->update([
-            'qty'        => DB::raw('qty + ' . ($qtyDelta + 0)),
+            'qty'        => DB::raw('qty + ('.($qtyDelta+0).')'),
             'updated_at' => now(),
         ]);
 
         if (!$updated) {
+            // insert if row doesn't exist
             Stock::create([
                 'branch_id'    => $branchId,
                 'warehouse_id' => $warehouseId,
@@ -165,19 +168,36 @@ class ProductController extends Controller
 
 
     // ===== Product search (general) =====
-    public function searchProducts(Request $request)
-    {
-        $q = $request->get('q');
-        $products = Product::with('brand')
-            ->where(function ($query) use ($q) {
-                $query->where('item_name', 'like', "%{$q}%")
-                    ->orWhere('item_code', 'like', "%{$q}%")
-                    ->orWhere('barcode_path', 'like', "%{$q}%");
-            })
-            ->get();
 
-        return response()->json($products);
-    }
+
+public function searchProducts(Request $request)
+{
+    $q = $request->get('q');
+
+    $products = Product::with(['brand','stockproduct'])
+        ->where(function ($query) use ($q) {
+            $query->where('item_name', 'like', "%{$q}%")
+                  ->orWhere('item_code', 'like', "%{$q}%")
+                  ->orWhere('barcode_path', 'like', "%{$q}%");
+        })
+        ->get()
+        ->map(function ($product) {
+
+            return [
+                'id'           => $product->id,
+                'item_name'    => $product->item_name,
+                'item_code'    => $product->item_code,
+                'brand'        => $product->brand->name ?? '',
+                'stock'        => $product->stockproduct->qty ?? 0, // ✅ FIX
+                'retail_price' => $product->price ?? 0,
+            ];
+        });
+
+    return response()->json($products);
+}
+
+
+
 
     // ===== List page =====
     public function product()
@@ -186,7 +206,16 @@ class ProductController extends Controller
             ->when(Auth::user()->email !== "admin@admin.com", function ($query) {
                 return $query->where('creater_id', Auth::user()->id);
             })
-            ->get();
+            ->get()
+            ->map(function ($product) {
+                // Get stock onhand
+                $stock = DB::table('v_stock_onhand')
+                    ->where('product_id', $product->id)
+                    ->first();
+                
+                $product->onhand_qty = $stock->onhand_qty ?? 0;
+                return $product;
+            });
 
         $categories = Category::get();
         return view('admin_panel.product.index', compact('products', 'categories'));

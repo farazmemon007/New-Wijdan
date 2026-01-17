@@ -187,6 +187,7 @@ public function ajaxSave(Request $request)
         $booking->discount_amount  = $request->discountAmount ?? 0;
         $booking->previous_balance = $request->previousBalance ?? 0;
         $booking->total_balance    = $request->totalBalance ?? 0;
+        $booking->status    = 'pending';
 
         $booking->quantity = 0;
         $booking->save();
@@ -194,23 +195,21 @@ public function ajaxSave(Request $request)
         /* ================= SAVE ITEMS ================= */
         $totalQty = 0;
 
-        foreach ($request->product_id ?? [] as $i => $productId) {
+       foreach ($request->product_id ?? [] as $i => $productId) {
 
-            $qty = (float) ($request->sales_qty[$i] ?? 0);
-            if (!$productId || $qty <= 0) continue;
+    $qty = (float) ($request->sales_qty[$i] ?? 0);
+    if (!$productId || $qty <= 0) continue;
 
-            $totalQty += $qty;
+    ProductBookingItem::create([
+        'booking_id' => $booking->id,
+        'product_id' => $productId,
+        'sales_qty' => $qty,
+        'retail_price' => $request->retail_price[$i] ?? 0,
+        'discount_amount' => $request->discount_amount[$i] ?? 0,
+        'amount' => $request->sales_amount[$i] ?? 0,
+    ]);
+}
 
-            ProductBookingItem::create([
-                'booking_id' => $booking->id,
-                'warehouse_id' => $request->warehouse_id[$i],
-                'product_id' => $productId,
-                'sales_qty' => $qty,
-                'retail_price' => $request->retail_price[$i] ?? 0,
-                'discount_amount' => $request->discount_amount[$i] ?? 0,
-                'amount' => $request->sales_amount[$i] ?? 0,
-            ]);
-        }
 
         $booking->quantity = $totalQty;
         $booking->save();
@@ -243,6 +242,46 @@ public function ajaxSave(Request $request)
         ]);
     });
 }
+
+public function getWarehousesByProducts(Request $request)
+{
+    $productIds = $request->product_ids; // array from query string
+    if (empty($productIds) || !is_array($productIds)) return response()->json([]);
+
+    $warehouseIds = \App\Models\WarehouseStock::whereIn('product_id', $productIds)
+        ->where('quantity', '>', 0)
+        ->groupBy('warehouse_id')
+        ->havingRaw('COUNT(DISTINCT product_id) = ?', [count($productIds)])
+        ->pluck('warehouse_id');
+
+    if ($warehouseIds->isEmpty()) return response()->json([]);
+
+    $warehouses = \App\Models\WarehouseStock::whereIn('warehouse_id', $warehouseIds)
+        ->whereIn('product_id', $productIds)
+        ->select('warehouse_id','product_id','quantity')
+        ->get()
+        ->groupBy('warehouse_id');
+
+    $response = [];
+    foreach ($warehouses as $whId => $items) {
+        $warehouseName = \App\Models\Warehouse::where('id', $whId)->value('warehouse_name');
+        $response[] = [
+            'id' => $whId,
+            'name' => $warehouseName,
+            'products' => $items->map(function($i) {
+                return [
+                    'product_id' => $i->product_id,
+                    'quantity' => $i->quantity
+                ];
+            })->values()
+        ];
+    }
+
+    return response()->json($response);
+}
+
+
+
 
 
 
@@ -329,6 +368,7 @@ public function ajaxSave(Request $request)
         $sales = Sale::with(['customer', 'product'])->get();
 
         return view('admin_panel.sale.index', compact('sales'));
+        
     }
 
     public function addsale()
@@ -386,35 +426,31 @@ public function ajaxSave(Request $request)
                 'receipt2' => $request->receipt2 ?? 0,
                 'final_balance1' => $request->finalBalance1 ?? 0,
                 'final_balance2' => $request->finalBalance2 ?? 0,
-                'weight' => $request->weight ?? null,
+                // 'weight' => $request->weight ?? null,
             ]);
 
-            $totalQty = 0;
-            foreach ($request->warehouse_name ?? [] as $i => $warehouse_id) {
-                $productId = $request->input("product_name.$i");
-                if (empty($warehouse_id) || empty($productId)) {
-                    continue;
-                }
+         $totalQty = 0;
 
-                $qty = (float) $request->input("sales-qty.$i", 0);
-                $totalQty += $qty;
+foreach ($request->product_id ?? [] as $i => $productId) {
 
-                ProductBookingItem::create([
-                    'booking_id' => $booking->id,
-                    'warehouse_id' => $warehouse_id,
-                    'product_id' => $productId,
-                    'stock' => (float) $request->input("stock.$i", 0),
-                    'price_level' => (float) $request->input("price.$i", 0),
-                    'sales_price' => (float) $request->input("sales-price.$i", 0),
-                    'sales_qty' => $qty,
-                    'retail_price' => (float) $request->input("retail-price.$i", 0),
-                    'discount_percent' => (float) $request->input("discount-percent.$i", 0),
-                    'discount_amount' => (float) $request->input("discount-amount.$i", 0),
-                    'amount' => (float) $request->input("sales-amount.$i", 0),
-                ]);
-            }
-            $booking->quantity = $totalQty;
-            $booking->save();
+    $qty = (float) ($request->sales_qty[$i] ?? 0);
+    if (!$productId || $qty <= 0) continue;
+
+    $totalQty += $qty; // ✅ YEH LINE MISSING THI
+
+    ProductBookingItem::create([
+        'booking_id' => $booking->id,
+        'product_id' => $productId,
+        'sales_qty' => $qty,
+        'retail_price' => $request->retail_price[$i] ?? 0,
+        'discount_amount' => $request->discount_amount[$i] ?? 0,
+        'amount' => $request->sales_amount[$i] ?? 0,
+    ]);
+}
+
+$booking->quantity = $totalQty;
+$booking->save();
+
 
             return back()->with('success', 'Booking saved successfully!');
         }
@@ -495,50 +531,121 @@ public function ajaxSave(Request $request)
     /**
      * Convert booking to sale form prefill.
      */
-    public function convertFromBooking($id)
-    {
-        $booking = ProductBooking::findOrFail($id);
-        $customers = Customer::all();
+   public function convertFromBooking($id)
+{
+    // ================= BASIC DATA =================
+    $booking = ProductBooking::findOrFail($id);
+    $booking_customer = Customer::findOrFail($booking->customer_id);
 
-        // Decode fields
-        $products = explode(',', $booking->product);
-        $codes = explode(',', $booking->product_code);
-        $brands = explode(',', $booking->brand);
-        $units = explode(',', $booking->unit);
-        $prices = explode(',', $booking->per_price);
-        $discounts = explode(',', $booking->per_discount);
-        $qtys = explode(',', $booking->qty);
-        $totals = explode(',', $booking->per_total);
-        $colors_json = json_decode($booking->color, true);
+    $customers = Customer::all();
+    $accounts  = Account::all();
 
-        $items = [];
+    // ================= LEGACY FIELDS =================
+    $products    = explode(',', $booking->product);
+    $codes       = explode(',', $booking->product_code);
+    $brands      = explode(',', $booking->brand);
+    $units       = explode(',', $booking->unit);
+    $prices      = explode(',', $booking->per_price);
+    $discounts   = explode(',', $booking->per_discount);
+    $qtys        = explode(',', $booking->qty);
+    $totals      = explode(',', $booking->per_total);
+    $colors_json = json_decode($booking->color, true);
+
+    // ================= BOOKING ITEMS =================
+    $bookingItemsRaw = \App\Models\ProductBookingItem::where('booking_id', $booking->id)->get();
+
+    // ================= STOCK ON HAND =================
+    $stockMap = DB::table('v_stock_onhand')
+        ->pluck('onhand_qty', 'product_id');
+    // example: [ 2 => 10.00, 5 => 25.00 ]
+
+    // ================= WAREHOUSE MAP =================
+   $warehouseStocks = WarehouseStock::with('warehouse')
+    ->whereIn(
+        'product_id',
+        $bookingItemsRaw->pluck('product_id')->unique()
+    )
+    ->get();
+
+    
+
+    // ================= FINAL ITEMS =================
+    $items = [];
+
+    // =================================================
+    // CASE 1: ProductBookingItem TABLE DATA
+    // =================================================
+    if ($bookingItemsRaw->count() > 0) {
+
+        foreach ($bookingItemsRaw as $item) {
+
+            $product = Product::find($item->product_id);
+
+            $items[] = [
+                'product_id' => $item->product_id,
+                'item_name'  => $product->item_name ?? '',
+                'item_code'  => $product->item_code ?? '',
+                'uom'        => $product && $product->brand ? $product->brand->name : '',
+                'unit'       => $product->unit_id ?? '',
+                'price'      => (float) $item->retail_price,
+                'discount'   => (float) $item->discount_amount,
+                'qty'        => (int) $item->sales_qty,
+                'total'      => (float) $item->amount,
+                'color'      => [],
+                'onhand_qty' => (float) ($stockMap[$item->product_id] ?? 0),
+
+                // ✅ MULTIPLE WAREHOUSES
+                'warehouses' => $warehouseStocks,
+            ];
+        }
+
+    }
+    // =================================================
+    // CASE 2: LEGACY CSV DATA
+    // =================================================
+    else {
 
         foreach ($products as $index => $p) {
-            // Find product name using item_code or product_name
+
             $product = Product::where('item_name', trim($p))
                 ->orWhere('item_code', trim($codes[$index] ?? ''))
                 ->first();
 
+            $productId = $product->id ?? null;
+
             $items[] = [
-                'product_id' => $product->id ?? '',
-                'item_name'  => $product->item_name ?? $p, // This will appear in input box
+                'product_id' => $productId,
+                'item_name'  => $product->item_name ?? $p,
                 'item_code'  => $product->item_code ?? ($codes[$index] ?? ''),
-                'uom'        => $product->brand->name ?? ($brands[$index] ?? ''),
+                'uom'        => $product && $product->brand
+                                    ? $product->brand->name
+                                    : ($brands[$index] ?? ''),
                 'unit'       => $product->unit_id ?? ($units[$index] ?? ''),
-                'price'      => floatval($prices[$index] ?? 0),
-                'discount'   => floatval($discounts[$index] ?? 0),
-                'qty'        => intval($qtys[$index] ?? 1),
-                'total'      => floatval($totals[$index] ?? 0),
-                'color'      => isset($colors_json[$index]) ? json_decode($colors_json[$index], true) : [],
+                'price'      => (float) ($prices[$index] ?? 0),
+                'discount'   => (float) ($discounts[$index] ?? 0),
+                'qty'        => (int) ($qtys[$index] ?? 1),
+                'total'      => (float) ($totals[$index] ?? 0),
+                'color'      => isset($colors_json[$index])
+                                    ? json_decode($colors_json[$index], true)
+                                    : [],
+                'onhand_qty' => (float) ($stockMap[$productId] ?? 0),
+
+                // ✅ FIXED: product_id variable
+               'warehouses' => $warehouseStocks,
             ];
         }
-
-        return view('admin_panel.sale.booking_edit', [
-            'Customer'      => $customers,
-            'booking'       => $booking,
-            'bookingItems'  => $items,
-        ]);
     }
+
+    // ================= VIEW =================
+    return view('admin_panel.sale.booking_edit222', [
+        'Customer'         => $customers,
+        'booking_customer' => $booking_customer,
+        'booking'          => $booking,
+        'bookingItems'     => $items,
+        'accounts'         => $accounts,
+    ]);
+}
+
 
     // sale return start
     public function saleretun($id)
@@ -1047,15 +1154,20 @@ public function ajaxSave(Request $request)
 
 
  /* -------- Prints -------- */
-    public function invoice(Sale $sale)
-    { 
-   $sale->load([
+   public function invoice(ProductBooking $booking)
+{
+
+    $booking->load([
         'items.product',
-        'items.warehouse',
         'customer'
     ]);
-        return view('admin_panel.sale.invoice', compact('sale'));
-    }
+        // echo $booking;
+// print_r($booking);
+// dd();
+
+    return view('admin_panel.sale.invoice2', compact('booking'));
+}
+
     public function print2(Sale $sale)
     {
         return view('admin_panel.sale.prints.print2', compact('sale'));
@@ -1092,7 +1204,7 @@ public function bookingDc(Productbooking $booking)
         ->get();
 
     return view(
-        'admin_panel.sale.booking.prints.dc',
+        'admin_panel.sale.booking.prints.dc2',
         compact('booking', 'customer', 'items')
     );
 }

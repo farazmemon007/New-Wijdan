@@ -33,7 +33,7 @@ return new class extends Migration
             $table->decimal('final_balance1', 12, 2)->default(0);
             $table->decimal('final_balance2', 12, 2)->default(0);
             // $table->text('weight')->nullable();
-            $table->int('total_net')->nullable();
+            $table->decimal('total_net')->nullable();
             
 
             $table->timestamps();

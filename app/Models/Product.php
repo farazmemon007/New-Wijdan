@@ -55,9 +55,14 @@ class Product extends Model
     {
         return $this->belongsTo(Brand::class, 'brand_id');
     }
-    public function stock()
+    // public function stock()
+    // {
+    //     return $this->hasOne(Stock::class);
+    // }
+   // ✅ SINGLE stock relation
+    public function stockproduct()
     {
-        return $this->hasOne(Stock::class);
+        return $this->hasOne(Stock::class, 'product_id', 'id');
     }
 
     public function boms(){ return $this->hasMany(ProductBom::class,'product_id'); }
@@ -65,5 +70,11 @@ public function components(){ return $this->belongsToMany(Product::class,'produc
 public function movements(){ return $this->hasMany(StockMovement::class); }
 public function scopeWithAvailable($q){
     return $q->withSum('movements as available_qty','qty'); // sum of ledger
+}
+
+public function stock()
+{
+    // Stock model me foreign key product_id hai
+    return $this->hasOne(Stock::class, 'product_id', 'id');
 }
 }

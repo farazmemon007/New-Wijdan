@@ -46,21 +46,18 @@ use Illuminate\Support\Facades\Route;
     |
     */
 
-Route::get('/home', [HomeController::class, 'index'])->middleware('auth')->name('home');
-// Route::get('/testing', [HomeController::class, 'testingform'])->middleware('auth')->name('testingform');
-
-// Route::get('/adminpage', [HomeController::class, 'adminpage'])->middleware(['auth','admin'])->name('adminpage');
-
-Route::get('/', function () {
-    return view('welcome');
-});
-
-// Route::get('/dashboard', function () {
-//     return view('dashboard');
-// })->middleware(['auth', 'verified'])->name('dashboard');
-
-Route::middleware('auth')->group(function () {
-
+   
+    // Route::get('/', function () {
+    //         echo "faraz memon";
+    //     });
+        
+        // Route::get('/dashboard', function () {
+            //     return view('dashboard');
+            // })->middleware(['auth', 'verified'])->name('dashboard');
+            
+            Route::middleware('auth')->group(function () {
+                
+                Route::get('/', [HomeController::class, 'index'])->name('home');
 
 
 
@@ -98,6 +95,11 @@ Route::middleware('auth')->group(function () {
     ////////////
     Route::get('/products/price', [ProductController::class, 'getPrice'])
         ->name('products.price');
+//////
+
+
+Route::get('/search_products', [ProductController::class, 'searchProducts'])
+     ->name('products_search');
 
     //////////
     Route::get('/create_prodcut', [ProductController::class, 'view_store'])->name('store');
@@ -239,7 +241,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/purchase/{id}/edit', [PurchaseController::class, 'edit'])->name('purchase.edit');
     Route::put('/purchase/{id}', [PurchaseController::class, 'update'])->name('purchase.update');
     Route::delete('/purchase/{id}', [PurchaseController::class, 'destroy'])->name('purchase.destroy');
-    Route::get('/search-products', [ProductController::class, 'searchProducts'])->name('search-products');
+    Route::post('/search_products', [ProductController::class, 'searchProducts'])->name('search_products');
     Route::get('/purchase/{id}/invoice', [PurchaseController::class, 'Invoice'])->name('purchase.invoice');
 
     Route::get('purchase/return', [PurchaseController::class, 'purchaseReturnIndex'])->name('purchase.return.index');
@@ -284,7 +286,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/sales/{id}/return', [SaleController::class, 'saleretun'])->name('sales.return.create');
     Route::post('/sales-return/store', [SaleController::class, 'storeSaleReturn'])->name('sales.return.store');
     Route::get('/sale-returns', [App\Http\Controllers\SaleController::class, 'salereturnview'])->name('sale.returns.index');
-    Route::get('/sales/{id}/invoice', [SaleController::class, 'saleinvoice'])->name('sales.invoice');
+    // Route::get('/sales/{id}/invoice', [SaleController::class, 'saleinvoice'])->name('sales.invoice');
     Route::get('/sales/{id}/edit', [SaleController::class, 'saleedit'])->name('sales.edit');
     Route::put('/sales/{id}', [SaleController::class, 'updatesale'])->name('sales.update');
     Route::get('/sales/{id}/dc', [SaleController::class, 'saledc'])->name('sales.dc');
@@ -292,6 +294,13 @@ Route::middleware('auth')->group(function () {
 // AJAX (no refresh)
     Route::post('/sale/ajax/save', [SaleController::class, 'ajaxSave'])->name('sale.ajax.save');
     Route::post('/sale/ajax/post', [SaleController::class, 'ajaxPost'])->name('sale.ajax.post');
+    Route::get('/sale/invoice/{booking}', [SaleController::class, 'invoice'])
+    ->name('booking.invoice');
+// routes/web.php
+// Route::get('get-warehouses/{product_id}', 
+//     [SaleController::class, 'getWarehousesByProducts']
+// )->name('sale.warehouses.by.products');
+Route::get('/get-warehouses', [SaleController::class, 'getWarehousesByProducts']);
 
         // Prints
     Route::get('/booking/dc/{booking}', [SaleController::class, 'bookingDc'])->name('booking.dc');
@@ -299,6 +308,9 @@ Route::middleware('auth')->group(function () {
 
     // });
     Route::get('/sale/invoice/{sale}', [SaleController::class, 'invoice'])->name('sale.invoice');
+    // Route::get('/sale/invoice',function(){
+    //     return view('admin_panel.sale.invoice2');
+    // });
     // Route::get('/sale/print2/{sale}', [SaleController::class, 'print2'])->name('sale.print2');
     // Route::get('/sale/dc/{sale}', [SaleController::class, 'dc'])->name('sale.dc');
     // booking system

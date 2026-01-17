@@ -1,3 +1,9 @@
+{{-- @php 
+echo "<pre>";
+        print_r($customer); 
+    echo "</pre>";
+@endphp --}}
+
 @extends('admin_panel.layout.app')
 
 @section('content')

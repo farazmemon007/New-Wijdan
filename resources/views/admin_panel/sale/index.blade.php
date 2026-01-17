@@ -1,9 +1,9 @@
-@php
+{{-- @php --}}
     
-// echo "<pre>";
+{{-- // echo "<pre>";
 //         print_r($sales); 
-//     echo "</pre>";
-@endphp
+//     echo "</pre>"; --}}
+{{-- @endphp --}}
 @extends('admin_panel.layout.app')
 
 @section('content')
@@ -72,7 +72,7 @@
     <td>{{ \Carbon\Carbon::parse($sale->created_at)->format('d-m-Y') }}</td>
     <td class="text-center">
         <!-- PRIMARY ACTION -->
-        <a href="{{ route('sales.invoice', $sale->id) }}" class="btn btn-sm btn-info text-white me-1" title="View Invoice">
+        <a href="{{ route('sale.invoice', $sale->id) }}" class="btn btn-sm btn-info text-white me-1" title="View Invoice">
             <i class="fas fa-file-invoice"></i> Invoice
         </a>
 
@@ -99,7 +99,7 @@
                     </a>
                 </li>
                 <li>
-                    <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('sales.dc', $sale->id) }}">
+                    <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('booking.dc', $sale->id) }}">
                         <i class="fas fa-truck text-success"></i> Delivery Challan
                     </a>
                 </li>
