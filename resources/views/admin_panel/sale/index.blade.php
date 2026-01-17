@@ -72,7 +72,7 @@
     <td>{{ \Carbon\Carbon::parse($sale->created_at)->format('d-m-Y') }}</td>
     <td class="text-center">
         <!-- PRIMARY ACTION -->
-        <a href="{{ route('sale.invoice', $sale->id) }}" class="btn btn-sm btn-info text-white me-1" title="View Invoice">
+        <a href="{{ route('booking.dc', $sale->id) }}" class="btn btn-sm btn-info text-white me-1" title="View Invoice">
             <i class="fas fa-file-invoice"></i> Invoice
         </a>
 

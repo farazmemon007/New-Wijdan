@@ -591,6 +591,7 @@ function faraz() {
 // Handle warehouse select button
 $(document).on('click', '.select-warehouse', function() {
   var warehouseId = $(this).data('id');
+  // alert('farz memon' + warehouseId);
   $('#warehouseModal').modal('hide');
   postNow(warehouseId);
 });
@@ -1119,62 +1120,54 @@ $(document).on('click', '.discount-toggle', function () {
 }
 
 
- function postNow(warehouseId) {
 
-  const bookingId = $('#booking_id').val();
-
-  if (!bookingId) {
-    showAlert('danger', 'Please save booking first');
-    return;
-  }
+function postNow(warehouseId) {
+  // alert(warehouseId);
+  let bookingId = $('#booking_id').val();
 
   if (!warehouseId) {
     showAlert('danger', 'Please select warehouse');
     return;
   }
 
-  // 🔒 disable buttons while posting
-  $('#btnPosted, #btnHeaderPosted').prop('disabled', true);
+  function doPost(id) {
+    // 🔒 disable buttons while posting
+    $('#btnPosted, #btnHeaderPosted').prop('disabled', true);
+    $.post('{{ route("sale.ajax.post") }}', {
+        _token: $('input[name="_token"]').val(),
+        booking_id: id,
+        warehouse_id: warehouseId
+    })
+    .done(function(res) {
+        console.log(res)
+        if (res && res.ok) {
+            showAlert('success', 'Posted successfully');
+            $('#btnPosted, #btnHeaderPosted, #btnSave').prop('disabled', true);
+            if (res.invoice_url) {
+                window.open(res.invoice_url, '_blank');
+            }
+        } else {
+            $('#btnPosted, #btnHeaderPosted').prop('disabled', false);
+            showAlert('danger', res.msg || 'Post failed');
+        }
+    })
+    .fail(function(xhr) {
+        console.error(xhr.responseText);
+        $('#btnPosted, #btnHeaderPosted').prop('disabled', false);
+        showAlert('danger', 'Server error while posting');
+    });
+  }
 
-  $.post('{{ route("sale.ajax.post") }}', {
-      _token: $('input[name="_token"]').val(),
-      booking_id: bookingId,
-      warehouse_id: warehouseId // ✅ NEW
-  })
-
-  .done(function(res) {
-console.log(res)
-      if (res && res.ok) {
-
-          // ✅ SUCCESS
-          showAlert('success', 'Posted successfully');
-
-          // 🔒 permanently disable
-          $('#btnPosted, #btnHeaderPosted, #btnSave').prop('disabled', true);
-
-          // 🧾 open invoice
-          if (res.invoice_url) {
-              window.open(res.invoice_url, '_blank');
-          }
-
-      } else {
-
-          // ❌ FAILED
-          $('#btnPosted, #btnHeaderPosted').prop('disabled', false);
-          showAlert('danger', res.msg || 'Post failed');
-
-      }
-  })
-
-  .fail(function(xhr) {
-
-      console.error(xhr.responseText);
-
-      // ❌ enable again
-      $('#btnPosted, #btnHeaderPosted').prop('disabled', false);
-
-      showAlert('danger', 'Server error while posting');
-  });
+  if (!bookingId) {
+    // Save first, then post
+    ensureSaved().then(function(id) {
+      doPost(id);
+    }).catch(function() {
+      showAlert('danger', 'Please fix errors before posting.');
+    });
+  } else {
+    doPost(bookingId);
+  }
 }
 
 

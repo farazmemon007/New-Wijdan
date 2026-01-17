@@ -30,6 +30,15 @@ class SaleController extends Controller
    
 public function ajaxPost(Request $request)
 {
+    // echo "<pre>"; 
+    // print_r($request);
+    // dd();
+    
+        // return response()->json([
+        //     'request'          => $request->warehouse_id,
+           
+        // ]);
+        // dd();
     return DB::transaction(function () use ($request) {
 
         if (!$request->booking_id) {
@@ -40,7 +49,11 @@ public function ajaxPost(Request $request)
         $booking = Productbooking::with('items')
             ->lockForUpdate()
             ->findOrFail($request->booking_id);
-
+//  return response()->json([
+//             'request'          => $booking,
+           
+//         ]);
+//         dd();
         if ($booking->is_posted) {
             abort(422, 'This invoice is already posted');
         }
@@ -62,23 +75,27 @@ public function ajaxPost(Request $request)
             'total_balance'    => $booking->total_balance,
             'total_net'        => $booking->sub_total2 ?? 0,
         ]);
-
+        
         /* ================= ITEMS + STOCK HANDLING ================= */
-        foreach ($booking->items as $it) {
+        foreach ($booking->items as $i => $it) {
+            $warehouseId = $request->warehouse_id[$i] ?? null;
+            if (!$warehouseId) {
+                abort(422, 'Warehouse ID is required for product ID ' . $it->product_id);
+            }
 
-            // 1️⃣ Sale Item
+            // 1️⃣ SALE ITEM
             SaleItem::create([
                 'sale_id'      => $sale->id,
-                'warehouse_id' => $it->warehouse_id,
+                'warehouse_id' => $warehouseId,
                 'product_id'   => $it->product_id,
                 'sales_qty'    => $it->sales_qty,
                 'retail_price' => $it->retail_price,
                 'amount'       => $it->amount,
             ]);
 
-            // 2️⃣ LOCK STOCK ROW
+            // 2️⃣ LOCK STOCK
             $stock = Stock::lockForUpdate()
-                ->where('warehouse_id', $it->warehouse_id)
+                ->where('warehouse_id', $warehouseId)
                 ->where('product_id', $it->product_id)
                 ->first();
 
@@ -90,11 +107,11 @@ public function ajaxPost(Request $request)
                 abort(422, 'Insufficient stock for product ID ' . $it->product_id);
             }
 
-            // 3️⃣ MINUS FROM STOCK
+            // 3️⃣ MINUS STOCK
             $stock->qty -= $it->sales_qty;
             $stock->save();
 
-            // 4️⃣ STOCK MOVEMENT (OUT)
+            // 4️⃣ STOCK MOVEMENT
             StockMovement::create([
                 'product_id'   => $it->product_id,
                 'type'         => 'out',
@@ -106,6 +123,7 @@ public function ajaxPost(Request $request)
                 'note'         => 'Sale Invoice ' . $booking->invoice_no,
             ]);
         }
+
 
         /* ================= RECEIPTS ================= */
         $receipts = ReceiptsVoucher::where(
