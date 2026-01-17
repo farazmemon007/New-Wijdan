@@ -533,40 +533,53 @@
   </div>
 </div>
 
-{{-- warehouse modal start --}}
-<!-- POST CONFIRMATION MODAL -->
-<!-- POST CONFIRMATION MODAL -->
-{{--  --}}
-<script>
 
+<!-- Warehouse Selection Modal -->
+<div class="modal fade" id="warehouseModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Select Warehouse</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="warehouseModalBody">
+        <!-- Warehouses will be loaded here -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
 function faraz() {
     const productIds = [];
-
     $('#salesTableBody tr').each(function() {
         const pid = $(this).find('.product').val();
         if (pid) productIds.push(pid);
     });
-
     if (productIds.length === 0) {
         alert('Please select at least one product!');
         return;
     }
-
-    // Convert to comma-separated string
-    const idsStr = productIds.join(',');
-
-    // AJAX call
     $.ajax({
-        url: '/get-warehouses/' , // use route parameter
+        url: '/get-warehouses/',
         type: 'GET',
         data: { product_ids: productIds },
         success: function(res) {
-            console.log(res);
-
-           
-
-            // Show modal
-           
+            // Build warehouse list
+            let html = '<table class="table"><thead><tr><th>Name</th><th>Action</th></tr></thead><tbody>';
+            if (Array.isArray(res) && res.length > 0) {
+                res.forEach(function(wh) {
+                  html += `<tr>
+                    <td>${wh.name}</td>
+                    <td><button class="btn btn-primary btn-sm select-warehouse" data-id="${wh.id}">Select</button></td>
+                  </tr>`;
+                });
+            } else {
+                html += '<tr><td colspan="2" class="text-center">No warehouses found</td></tr>';
+            }
+            html += '</tbody></table>';
+            $('#warehouseModalBody').html(html);
+            $('#warehouseModal').modal('show');
         },
         error: function(err) {
             console.error(err);
@@ -575,10 +588,13 @@ function faraz() {
     });
 }
 
-
-
+// Handle warehouse select button
+$(document).on('click', '.select-warehouse', function() {
+  var warehouseId = $(this).data('id');
+  $('#warehouseModal').modal('hide');
+  postNow(warehouseId);
+});
 </script>
-{{-- warehouse modal end --}}
 
 
 
