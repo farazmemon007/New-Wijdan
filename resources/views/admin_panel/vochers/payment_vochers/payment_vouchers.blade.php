@@ -74,7 +74,7 @@
                                     <tr>
                                         <td>
                                             <div class="input-group">
-                                                <input type="hidden" name="narration_text[]" class="narrationTextHidden">
+                                                <input type="hidden" name="narration_text" class="narrationTextHidden">
                                                 <select name="narration_id[]" class="form-select narrationSelect">
                                                     <option value="">Select / Add New</option>
                                                     @foreach($narrations as $id => $name)
@@ -85,7 +85,7 @@
                                                     placeholder="Type new narration" style="display:none;">
                                             </div>
                                         </td>
-                                        <td><input name="reference_no[]" type="text" class="form-control"></td>
+                                        <td><input name="reference_no" type="text" class="form-control"></td>
                                         <td>
                                             <select name="vendor_type" class="form-select">
                                                 <option disabled selected>Select</option>
@@ -109,7 +109,7 @@
                                         <td><input name="discount_value[]" type="number" class="form-control discountValue"
                                                 value="0"></td>
                                         <!-- <td><input name="kg[]" type="number" class="form-control kg"></td> -->
-                                        <td><input name="rate[]" type="number" class="form-control rate"></td>
+                                        <td><input name="rate" type="number" class="form-control rate"></td>
                                         <td><input name="amount[]" type="text" class="form-control text-end amount"></td>
                                         <td><button class="btn btn-danger btn-sm removeRow"><i
                                                     class="bi bi-trash"></i></button></td>
@@ -178,7 +178,7 @@
 
     // Reset fields
     $tel.val('');
-    $('#remarks').val('');
+    // $('#remarks').val('');
 
     $vendorSelect.empty().append('<option disabled selected>Loading...</option>');
 
@@ -218,13 +218,13 @@
             let accountCode = $selected.data('code');
             if (accountCode) {
                 $tel.val(accountCode);
-                $('#remarks').val('');
+               // $('#remarks').val('');
                 return;
             }
 
             $.get('{{ route("customers.show", ["id" => "__ID__"]) }}'.replace('__ID__', id) + '?type=' + type, function (d) {
                 $tel.val(d.mobile || '');
-                $('#remarks').val(d.remarks || '');
+                // $('#remarks').val(d.remarks || '');
             });
         });
 
@@ -305,7 +305,7 @@
                                         </td>
                                         <td><input name="reference_no[]" type="text" class="form-control"></td>
                                         <td>
-                                            <select name="vendor_type" class="form-select">
+                                            <select name="vendor_type[]" class="form-select">
                                                 <option disabled selected>Select</option>
                                                 @foreach($AccountHeads as $head)
                                                     <option value="{{ $head->id }}">{{ $head->name }}</option>
@@ -316,16 +316,17 @@
                                             </select>
                                         </td>
                                         <td>
-                                            <select name="vendor_id" class="form-select">
+                                            <select name="vendor_id[]" class="form-select">
                                                 <option disabled selected>Select</option>
                                             </select>
                                         </td>
                                         <td>
-                                            <input type="text" name="tel" id="tel" class="form-control" readonly>
+                                            <input type="text" name="tel[]" id="tel" class="form-control" readonly>
                                         </td>
                                         <td><input name="discount_value[]" type="number" class="form-control discountValue" value="0"></td>
                                         <td><input name="kg[]" type="number" class="form-control kg"></td>
-                                        <td><input name="rate[]" type="number" class="form-control rate"></td>
+                                        <td><input name="rate[]" required>
+</td>
     <td><input name="amount[]" type="text" class="form-control text-end amount"></td>
                                         <td><button class="btn btn-danger btn-sm removeRow"><i class="bi bi-trash"></i></button></td>
                                     </tr>`;

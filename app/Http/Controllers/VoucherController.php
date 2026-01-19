@@ -450,6 +450,9 @@ if ($request->row_account_id && $request->amount) {
 
     public function store_Pay_vochers(Request $request)
     {
+            // echo "<pre>";
+            // print_r($request->all());
+            // dd();
         DB::beginTransaction();
         try {
             $pvid = PaymentVoucher::generateInvoiceNo();
@@ -489,8 +492,8 @@ if ($request->row_account_id && $request->amount) {
                 'row_account_head' => json_encode($request->row_account_head),
                 'row_account_id'   => json_encode($request->row_account_id),
                 'discount_value'   => json_encode($request->discount_value),
-                'kg'               => json_encode($request->kg),
-                'rate'             => json_encode($request->rate),
+                // 'kg'               => json_encode($request->kg),
+                // 'rate'             => json_encode($request->rate),
                 'amount'           => json_encode($request->amount),
                 'total_amount'     => $request->total_amount,
             ];
