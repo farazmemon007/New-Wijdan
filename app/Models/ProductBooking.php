@@ -31,6 +31,7 @@ class Productbooking extends Model
         'final_balance1',
         'final_balance2',
         'weight',
+        'status',
     ];
 
     // Relation to sale items

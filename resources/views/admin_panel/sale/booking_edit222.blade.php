@@ -589,12 +589,20 @@ function faraz() {
 }
 
 // Handle warehouse select button
-$(document).on('click', '.select-warehouse', function() {
-  var warehouseId = $(this).data('id');
-  // alert('farz memon' + warehouseId);
-  $('#warehouseModal').modal('hide');
-  postNow(warehouseId);
+$(document).on('click', '.select-warehouse', function () {
+
+    var warehouseId = $(this).data('id');
+
+    $('#warehouseModal').modal('hide');
+
+    // 🔥 SET warehouse_id[] for EACH row
+    $('#salesTableBody tr').each(function () {
+        $(this).find('.warehouse-id').val(warehouseId);
+    });
+
+    postNow(warehouseId);
 });
+
 </script>
 
 
@@ -966,6 +974,8 @@ function addNewRow(item = null) {
     $('#salesTableBody').append(`
     <tr class="sale-row align-middle">
       <!-- PRODUCT -->
+      <!-- hidden warehouse -->
+    <input type="hidden" class="warehouse-id" name="warehouse_id[]">
       <td class="product-col">
         <select class="form-select product" name="product_id[]">
           ${item ? `<option value="${item.product_id}" selected>${item.item_name}</option>` : '<option value="">Select product</option>'}

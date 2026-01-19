@@ -293,7 +293,7 @@ Route::get('/search_products', [ProductController::class, 'searchProducts'])
     Route::get('/sales/{id}/recepit', [SaleController::class, 'salerecepit'])->name('sales.recepit');
 // AJAX (no refresh)
     Route::post('/sale/ajax/save', [SaleController::class, 'ajaxSave'])->name('sale.ajax.save');
-    Route::post('/sale/ajax/post', [SaleController::class, 'ajaxPost'])->name('sale.ajax.post');
+    Route::get('/sale/ajax/post', [SaleController::class, 'ajaxPost'])->name('sale.ajax.post');
     Route::get('/sale/invoice/{booking}', [SaleController::class, 'invoice'])
     ->name('booking.invoice');
 // routes/web.php

@@ -230,9 +230,9 @@
   .sales-table td.product-col {
       min-width: 180px;
   }
-  .sales-table td.warehouse-col {
+  /* .sales-table td.warehouse-col {
       min-width: 170px;
-  }
+  } */
   .sales-table td.small-col {
       width: 110px;
   }
@@ -575,12 +575,40 @@ function faraz() {
 }
 
 //Handle warehouse select button/
-$(document).on('click', '.select-warehouse', function() {
-  var warehouseId = $(this).data('id');
-  alert('farz memon' + warehouseId);
-  $('#warehouseModal').modal('hide');
-  postNow(warehouseId);
+$(document).on('click', '.select-warehouse', function () {
+
+    const warehouseId = $(this).data('id');
+    console.log('Selected Warehouse ID:', warehouseId);
+
+    $('#warehouseModal').modal('hide');
+
+    $('#salesTableBody tr').each(function () {
+
+        const productId = $(this).find('.product').val();
+
+        if (productId) {
+
+            // ✅ pehle variable define karo
+            const $warehouseInput = $(this).find('.warehouse-id');
+
+            // ✅ phir value set karo
+            $warehouseInput
+                .attr('name', `warehouse_id[${productId}]`)
+                .val(warehouseId);
+
+            // ✅ ab console me safely dekh sakte ho
+            console.log(
+                'Product ID:', productId,
+                'Warehouse Value:', $warehouseInput.val()
+            );
+        }
+
+    });
+  
+       ensureSaved().then(postNow);
 });
+
+
 </script>
 
 
@@ -908,6 +936,9 @@ function loadAccountsInto($select) {
     function addNewRow() {
     $('#salesTableBody').append(`
   <tr>
+    <!-- hidden warehouse -->
+<input type="hidden"  class="warehouse-id" >
+
     <!-- PRODUCT -->
 <td class="product-col">
   <div class="input-group">
@@ -1064,28 +1095,46 @@ $(document).on('click', '.discount-toggle', function () {
 }
 
 
-   function postNow(warehouseId) {
-  // alert(warehouseId);
-  let bookingId = $('#booking_id').val();
+ function postNow() {
 
-  if (!warehouseId) {
-    showAlert('danger', 'Please select warehouse');
-    return;
-  }
+    let bookingId = $('#booking_id').val();
 
-  function doPost(id) {
-    // 🔒 disable buttons while posting
-    $('#btnPosted, #btnHeaderPosted').prop('disabled', true);
-    $.post('{{ route("sale.ajax.post") }}', {
-        _token: $('input[name="_token"]').val(),
-        booking_id: id,
-        warehouse_id: warehouseId
-    })
-    .done(function(res) {
-        console.log(res)
+    let data = $('#saleForm').serializeArray();
+
+    // warehouse_id[product_id] build karo
+    $('#salesTableBody tr').each(function () {
+        let productId   = $(this).find('.product').val();
+        let warehouseId = $(this).find('.warehouse-id').val();
+
+        if (productId && warehouseId) {
+            data.push({
+                name: `warehouse_id[${productId}]`,
+                value: warehouseId
+            });
+        }
+    });
+
+    // booking id ensure
+    data.push({
+        name: 'booking_id',
+        value: bookingId
+    });
+
+    // 🔹 GET request ke liye data query string me convert karo
+    let queryString = $.param(data);
+
+    console.log('GET Request URL:', '{{ route("sale.ajax.post") }}?' + queryString);
+
+    // 🔹 AJAX GET request
+    $.get('{{ route("sale.ajax.post") }}', queryString)
+
+    .done(function (res) {
+        console.log('Response:', res);
+
         if (res && res.ok) {
             showAlert('success', 'Posted successfully');
             $('#btnPosted, #btnHeaderPosted, #btnSave').prop('disabled', true);
+
             if (res.invoice_url) {
                 window.open(res.invoice_url, '_blank');
             }
@@ -1094,24 +1143,14 @@ $(document).on('click', '.discount-toggle', function () {
             showAlert('danger', res.msg || 'Post failed');
         }
     })
-    .fail(function(xhr) {
-        console.error(xhr.responseText);
+
+    .fail(function (xhr) {
+        console.error('Server Error:', xhr.responseText);
         $('#btnPosted, #btnHeaderPosted').prop('disabled', false);
         showAlert('danger', 'Server error while posting');
     });
-  }
-
-  if (!bookingId) {
-    // Save first, then post
-    ensureSaved().then(function(id) {
-      doPost(id);
-    }).catch(function() {
-      showAlert('danger', 'Please fix errors before posting.');
-    });
-  } else {
-    doPost(bookingId);
-  }
 }
+
 
     /* ---------- Events top buttons ---------- */
     $('#btnAdd').on('click', addNewRow);
@@ -1157,10 +1196,11 @@ $(document).on('click', '.discount-toggle', function () {
         window.location.href = "{{ route('sale.index') }}";
       });
     });
-    $('#btnHeaderPosted, #btnPosted').on('click', function() {
-      if (!canPost()) return;
-      ensureSaved().then(postNow);
-    });
+
+//     $('#btnPosted, #btnHeaderPosted').on('click', function () {
+//     ensureSaved().faraz().then(postNow);
+// });
+
 
 
     /* ---------- Row compute ---------- */
@@ -1606,7 +1646,7 @@ $(document).on('click', '.btnRemRV', function () {
       cleanupEmptyRows();
       updateGrandTotals();
       refreshPostedState();
-
+  // console.log('👉 Post button clicked');
       const v = validateFormAll();
       if (!v.ok) {
         showAlert('danger', v.message);
@@ -1622,7 +1662,10 @@ $(document).on('click', '.btnRemRV', function () {
         return;
       }
 
-      ensureSaved().then(postNow);
+       ensureSaved().then(function () {
+    console.log('✅ ensureSaved resolved');
+    postNow();
+  });
     });
 
 
