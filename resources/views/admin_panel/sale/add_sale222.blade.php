@@ -462,7 +462,7 @@
           <button type="button" class="btn btn-sm btn-warning" id="btnRevert">Revert</button>
 
           <button type="button" class="btn btn-sm btn-success" id="btnSave">Save</button>
-          <button type="button" class="btn btn-sm btn-outline-success" id="btnPosted" disabled>Posted</button>
+          <button type="button" class="btn btn-sm btn-outline-success" onclick="faraz()" id="btnPosted" disabled>Posted</button>
 
           <button type="button" class="btn btn-sm btn-secondary" id="btnPrint">Print</button>
           <button type="button" class="btn btn-sm btn-secondary" id="btnPrint2">Print-2</button>
@@ -514,10 +514,81 @@
   </div>
 </div>
 
+<!-- Warehouse Selection Modal -->
+<div class="modal fade" id="warehouseModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Select Warehouse</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="warehouseModalBody">
+        <!-- Warehouses will be loaded here -->
+      </div>
+    </div>
+  </div>
+</div>
+
 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+
+  <script>
+function faraz() {
+    const productIds = [];
+    $('#salesTableBody tr').each(function() {
+        const pid = $(this).find('.product').val();
+        if (pid) productIds.push(pid);
+    });
+    if (productIds.length === 0) {
+        alert('Please select at least one product!');
+        return;
+    }
+    $.ajax({
+        url: '/get-warehouses/',
+        type: 'GET',
+        data: { product_ids: productIds },
+        success: function(res) {
+            // Build warehouse list
+            let html = '<table class="table"><thead><tr><th>Name</th><th>Action</th></tr></thead><tbody>';
+            if (Array.isArray(res) && res.length > 0) {
+                res.forEach(function(wh) {
+                  html += `<tr>
+                    <td>${wh.name}</td>
+                    <td><button class="btn btn-primary btn-sm select-warehouse" data-id="${wh.id}">Select</button></td>
+                  </tr>`;
+                });
+            } else {
+                html += '<tr><td colspan="2" class="text-center">No warehouses found</td></tr>';
+            }
+            html += '</tbody></table>';
+            $('#warehouseModalBody').html(html);
+            $('#warehouseModal').modal('show');
+        },
+        error: function(err) {
+            console.error(err);
+            alert('Something went wrong fetching warehouses!');
+        }
+    });
+}
+
+//Handle warehouse select button/
+$(document).on('click', '.select-warehouse', function() {
+  var warehouseId = $(this).data('id');
+  alert('farz memon' + warehouseId);
+  $('#warehouseModal').modal('hide');
+  postNow(warehouseId);
+});
+</script>
+
+
+
+
+
+
+
 
 {{--faarz memon --}}
 <script>
@@ -993,56 +1064,53 @@ $(document).on('click', '.discount-toggle', function () {
 }
 
 
-   function postNow() {
+   function postNow(warehouseId) {
+  // alert(warehouseId);
+  let bookingId = $('#booking_id').val();
 
-  const bookingId = $('#booking_id').val();
-
-  if (!bookingId) {
-    showAlert('danger', 'Please save booking first');
+  if (!warehouseId) {
+    showAlert('danger', 'Please select warehouse');
     return;
   }
 
-  // 🔒 disable buttons while posting
-  $('#btnPosted, #btnHeaderPosted').prop('disabled', true);
+  function doPost(id) {
+    // 🔒 disable buttons while posting
+    $('#btnPosted, #btnHeaderPosted').prop('disabled', true);
+    $.post('{{ route("sale.ajax.post") }}', {
+        _token: $('input[name="_token"]').val(),
+        booking_id: id,
+        warehouse_id: warehouseId
+    })
+    .done(function(res) {
+        console.log(res)
+        if (res && res.ok) {
+            showAlert('success', 'Posted successfully');
+            $('#btnPosted, #btnHeaderPosted, #btnSave').prop('disabled', true);
+            if (res.invoice_url) {
+                window.open(res.invoice_url, '_blank');
+            }
+        } else {
+            $('#btnPosted, #btnHeaderPosted').prop('disabled', false);
+            showAlert('danger', res.msg || 'Post failed');
+        }
+    })
+    .fail(function(xhr) {
+        console.error(xhr.responseText);
+        $('#btnPosted, #btnHeaderPosted').prop('disabled', false);
+        showAlert('danger', 'Server error while posting');
+    });
+  }
 
-  $.post('{{ route("sale.ajax.post") }}', {
-      _token: $('input[name="_token"]').val(),
-      booking_id: bookingId
-  })
-
-  .done(function(res) {
-
-      if (res && res.ok) {
-
-          // ✅ SUCCESS STATE
-          showAlert('success', 'Posted successfully');
-
-          // 🔒 permanently disable after post
-          $('#btnPosted, #btnHeaderPosted, #btnSave').prop('disabled', true);
-
-          // 🧾 open invoice
-          if (res.invoice_url) {
-              window.open(res.invoice_url, '_blank');
-          }
-
-      } else {
-
-          // ❌ FAILED
-          $('#btnPosted, #btnHeaderPosted').prop('disabled', false);
-          showAlert('danger', res.msg || 'Post failed');
-
-      }
-  })
-
-  .fail(function(xhr) {
-
-      console.error(xhr.responseText);
-
-      // ❌ enable again if error
-      $('#btnPosted, #btnHeaderPosted').prop('disabled', false);
-
-      showAlert('danger', 'Server error while posting');
-  });
+  if (!bookingId) {
+    // Save first, then post
+    ensureSaved().then(function(id) {
+      doPost(id);
+    }).catch(function() {
+      showAlert('danger', 'Please fix errors before posting.');
+    });
+  } else {
+    doPost(bookingId);
+  }
 }
 
     /* ---------- Events top buttons ---------- */

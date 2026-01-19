@@ -181,7 +181,7 @@
                               Home
                     *===========================-->
                         <li class="nav-item">
-                            <a href="{{ url("/home")}}" class="nav-link"><i class="menu_icon feather ft-home"></i><span class="menu-title">Dashboard</span></a>
+                            <a href="{{ url("/")}}" class="nav-link"><i class="menu_icon feather ft-home"></i><span class="menu-title">Dashboard</span></a>
 
                         </li>
                         <!--=========================*
