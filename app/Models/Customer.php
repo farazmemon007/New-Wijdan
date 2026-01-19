@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Customer extends Model
 {
+    use HasFactory;
 // app/Models/Customer.php
 protected $fillable = [
     'customer_id', 'customer_name', 'customer_name_ur', 'cnic', 'filer_type', 'zone',
@@ -14,6 +15,8 @@ protected $fillable = [
     'email_address_2', 'opening_balance', 'address' , 'status','customer_type'
 ];
 
-    
-    use HasFactory;
+      public function ledgers()
+    {
+        return $this->hasMany(CustomerLedger::class, 'customer_id');
+    }
 }

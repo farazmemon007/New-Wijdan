@@ -293,9 +293,12 @@ public function getOpeningBalance($type, $id)
 
     public function store_rec_vochers(Request $request)
     {
+        // echo "<pre>";
+        // print_r($request->remarks);
+        // dd();
         DB::beginTransaction();
         try {
-            $rvid = ReceiptsVoucher::generateInvoiceNo();
+            $rvid = $request->rvid; //ReceiptsVoucher::generateInvoiceNo();
             $narrationIds = [];
 
             foreach ($request->narration_id as $index => $narrId) {
@@ -366,7 +369,7 @@ public function getOpeningBalance($type, $id)
                         'closing_balance'  => -$amount,
                     ]);
                 }
-            } elseif ($request->vendor_type === 'customer') {
+            } elseif ($request->vendor_type == 'customer') {
                 $ledger = CustomerLedger::where('customer_id', $request->vendor_id)->latest()->first();
                 if ($ledger) {
                     $ledger->previous_balance = $ledger->closing_balance;

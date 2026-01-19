@@ -17,15 +17,37 @@ use Illuminate\Support\Facades\DB;
 
 class PurchaseController extends Controller
 {
-     public function getPartyList(Request $request)
+    public function getPartyList(Request $request)
     {
         $type = strtolower($request->query('type', 'Main Customer'));
-// echo $type;
-// dd();
-       if ($type === 'customer') {
-            $customers = Customer::where('customer_type', 'Main Customer')
-                ->select('id', 'customer_name as text')
-                ->get();
+        // echo $type;
+        // dd();
+        if ($type === 'customer') {
+
+            $customers = Customer::with(['ledgers' => function ($q) {
+                $q->latest();   // last inserted ledger
+            }])
+                ->where('customer_type', 'Main Customer')
+                ->get()
+                ->map(function ($customer) {
+
+                    $ledger = $customer->ledgers->first(); // latest ledger
+
+                    // Agar ledger exist karta hai
+                    if ($ledger) {
+                        $closing = $ledger->closing_balance;
+                    } else {
+                        // Agar ledger hi nahi bana
+                        $closing = $customer->opening_balance ?? 0;
+                    }
+
+                    return [
+                        'id'              => $customer->id,
+                        'text'            => $customer->customer_name,
+                        'closing_balance' => $closing,
+                    ];
+                });
+
             return response()->json($customers);
         } elseif ($type === 'walkin') {
             $walkins = Customer::where('customer_type', 'Walking Customer')
@@ -37,29 +59,29 @@ class PurchaseController extends Controller
         return response()->json([]);
     }
     /** Keep stocks table in sync for a (branch,warehouse,product) */
-private function upsertStocks(int $productId, float $qtyDelta, int $branchId, int $warehouseId): void
-{
-    $affected = DB::table('stocks')
-        ->where('product_id', $productId)
-        ->where('branch_id', $branchId)
-        ->where('warehouse_id', $warehouseId)
-        ->update([
-            'qty'        => DB::raw('qty + ' . ($qtyDelta + 0)),
-            'updated_at' => now(),
-        ]);
+    private function upsertStocks(int $productId, float $qtyDelta, int $branchId, int $warehouseId): void
+    {
+        $affected = DB::table('stocks')
+            ->where('product_id', $productId)
+            ->where('branch_id', $branchId)
+            ->where('warehouse_id', $warehouseId)
+            ->update([
+                'qty'        => DB::raw('qty + ' . ($qtyDelta + 0)),
+                'updated_at' => now(),
+            ]);
 
-    if ($affected === 0) {
-        DB::table('stocks')->insert([
-            'product_id'   => $productId,
-            'branch_id'    => $branchId,
-            'warehouse_id' => $warehouseId,
-            'qty'          => $qtyDelta,
-            'reserved_qty' => 0,
-            'created_at'   => now(),
-            'updated_at'   => now(),
-        ]);
+        if ($affected === 0) {
+            DB::table('stocks')->insert([
+                'product_id'   => $productId,
+                'branch_id'    => $branchId,
+                'warehouse_id' => $warehouseId,
+                'qty'          => $qtyDelta,
+                'reserved_qty' => 0,
+                'created_at'   => now(),
+                'updated_at'   => now(),
+            ]);
+        }
     }
-}
 
     public function index()
     {
@@ -83,157 +105,157 @@ private function upsertStocks(int $productId, float $qtyDelta, int $branchId, in
         $Warehouse = Warehouse::get();
         return view('admin_panel.purchase.add_purchase', compact('Vendor', "Warehouse", 'Purchase'));
     }
-   public function store(Request $request, $gatepassId = null)
-{
-    // (A) Gatepass fetch if provided
-    $gatepass = null;
-    if ($gatepassId) {
-        $gatepass = \App\Models\InwardGatepass::with('purchase')->findOrFail($gatepassId);
-        if ($gatepass->purchase) {
-            return back()->with('error', 'This gatepass already has an associated bill.');
-        }
-    }
-
-    // (B) Validation (branch_id bhi lein, warehouse_id to already hai)
-    $validated = $request->validate([
-        'invoice_no'      => 'nullable|string',
-        'vendor_id'       => 'nullable|exists:vendors,id',
-        'purchase_date'   => 'nullable|date',
-        'branch_id'       => 'nullable|exists:branches,id',
-        'warehouse_id'    => 'required|exists:warehouses,id',
-        'note'            => 'nullable|string',
-        'discount'        => 'nullable|numeric|min:0',
-        'extra_cost'      => 'nullable|numeric|min:0',
-
-        'product_id'      => 'array',
-        'product_id.*'    => 'nullable|exists:products,id',
-        'qty'             => 'array',
-        'qty.*'           => 'nullable|required_with:product_id.*|numeric|min:1',
-        'price'           => 'array',
-        'price.*'         => 'nullable|required_with:product_id.*|numeric|min:0',
-        'unit'            => 'array',
-        'unit.*'          => 'nullable|required_with:product_id.*|string',
-        'item_discount'   => 'nullable|array',
-        'item_discount.*' => 'nullable|numeric|min:0',
-    ]);
-
-    DB::transaction(function () use ($validated, $request, $gatepass) {
-        // invoice number
-        $lastInvoice = Purchase::latest()->value('invoice_no');
-        $nextInvoice = $lastInvoice
-            ? 'INV-' . str_pad(((int) filter_var($lastInvoice, FILTER_SANITIZE_NUMBER_INT)) + 1, 5, '0', STR_PAD_LEFT)
-            : 'INV-00001';
-
-        $branchId    = (int)($validated['branch_id'] ?? 1);                 // ✅ use real branch
-        $warehouseId = (int)$validated['warehouse_id'];
-
-        // create header
-        $purchase = Purchase::create([
-            'branch_id'     => $branchId,
-            'warehouse_id'  => $warehouseId,
-            'vendor_id'     => $validated['vendor_id'] ?? null,
-            'purchase_date' => $validated['purchase_date'] ?? now(),
-            'invoice_no'    => $validated['invoice_no'] ?? $nextInvoice,
-            'note'          => $validated['note'] ?? null,
-            'subtotal'      => 0,
-            'discount'      => 0,
-            'extra_cost'    => 0,
-            'net_amount'    => 0,
-            'paid_amount'   => 0,
-            'due_amount'    => 0,
-        ]);
-
-        $subtotal = 0;
-        $pids = $validated['product_id'] ?? [];
-        $qtys = $validated['qty'] ?? [];
-        $prices = $validated['price'] ?? [];
-        $units = $validated['unit'] ?? [];
-        $itemDiscs = $validated['item_discount'] ?? [];
-
-        $movRows = [];  // only for direct purchase
-
-        foreach ($pids as $i => $pid) {
-            $pid = (int)($pid ?? 0);
-            $qty = (float)($qtys[$i] ?? 0);
-            $price = (float)($prices[$i] ?? 0);
-            if (!$pid || $qty <= 0 || $price < 0) continue;
-
-            $disc = (float)($itemDiscs[$i] ?? 0);
-            $unit = $units[$i] ?? null;
-            $lineTotal = ($price * $qty) - $disc;
-
-            PurchaseItem::create([
-                'purchase_id'   => $purchase->id,
-                'product_id'    => $pid,
-                'unit'          => $unit,
-                'price'         => $price,
-                'item_discount' => $disc,
-                'qty'           => $qty,
-                'line_total'    => $lineTotal,
-            ]);
-
-            $subtotal += $lineTotal;
-
-            // ✅ STOCK: if gatepass linked, DO NOTHING (already inward added it)
-            if (!$gatepass) {
-                // movement (+)
-                $movRows[] = [
-                    'product_id' => $pid,
-                    'type'       => 'in',
-                    'qty'        => $qty,
-                    'ref_type'   => 'PURCHASE',
-                    'ref_id'     => $purchase->id,
-                    'note'       => 'Direct purchase',
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ];
-                // stocks
-                $this->upsertStocks($pid, +$qty, $branchId, $warehouseId);
+    public function store(Request $request, $gatepassId = null)
+    {
+        // (A) Gatepass fetch if provided
+        $gatepass = null;
+        if ($gatepassId) {
+            $gatepass = \App\Models\InwardGatepass::with('purchase')->findOrFail($gatepassId);
+            if ($gatepass->purchase) {
+                return back()->with('error', 'This gatepass already has an associated bill.');
             }
         }
 
-        // insert movements (direct purchase only)
-        if (!$gatepass && !empty($movRows)) {
-            DB::table('stock_movements')->insert($movRows);
-        }
+        // (B) Validation (branch_id bhi lein, warehouse_id to already hai)
+        $validated = $request->validate([
+            'invoice_no'      => 'nullable|string',
+            'vendor_id'       => 'nullable|exists:vendors,id',
+            'purchase_date'   => 'nullable|date',
+            'branch_id'       => 'nullable|exists:branches,id',
+            'warehouse_id'    => 'required|exists:warehouses,id',
+            'note'            => 'nullable|string',
+            'discount'        => 'nullable|numeric|min:0',
+            'extra_cost'      => 'nullable|numeric|min:0',
 
-        // totals
-        $discount  = (float)($request->discount ?? 0);
-        $extraCost = (float)($request->extra_cost ?? 0);
-        $netAmount = ($subtotal - $discount) + $extraCost;
-
-        $purchase->update([
-            'subtotal'    => $subtotal,
-            'discount'    => $discount,
-            'extra_cost'  => $extraCost,
-            'net_amount'  => $netAmount,
-            'due_amount'  => $netAmount,
+            'product_id'      => 'array',
+            'product_id.*'    => 'nullable|exists:products,id',
+            'qty'             => 'array',
+            'qty.*'           => 'nullable|required_with:product_id.*|numeric|min:1',
+            'price'           => 'array',
+            'price.*'         => 'nullable|required_with:product_id.*|numeric|min:0',
+            'unit'            => 'array',
+            'unit.*'          => 'nullable|required_with:product_id.*|string',
+            'item_discount'   => 'nullable|array',
+            'item_discount.*' => 'nullable|numeric|min:0',
         ]);
 
-        // Vendor ledger
-        $prevClosing = \App\Models\VendorLedger::where('vendor_id', $validated['vendor_id'] ?? null)
-            ->value('closing_balance') ?? 0;
-        \App\Models\VendorLedger::updateOrCreate(
-            ['vendor_id' => $validated['vendor_id'] ?? null],
-            [
-                'vendor_id'         => $validated['vendor_id'] ?? null,
-                'admin_or_user_id'  => auth()->id(),
-                'previous_balance'  => $prevClosing,
-                'opening_balance'   => $prevClosing,
-                'closing_balance'   => $prevClosing + $netAmount,
-            ]
-        );
+        DB::transaction(function () use ($validated, $request, $gatepass) {
+            // invoice number
+            $lastInvoice = Purchase::latest()->value('invoice_no');
+            $nextInvoice = $lastInvoice
+                ? 'INV-' . str_pad(((int) filter_var($lastInvoice, FILTER_SANITIZE_NUMBER_INT)) + 1, 5, '0', STR_PAD_LEFT)
+                : 'INV-00001';
 
-        // link gatepass -> purchase (and keep status)
-        if ($gatepass) {
-            $gatepass->purchase_id = $purchase->id;
-            $gatepass->status = 'linked';
-            $gatepass->save();
-        }
-    });
+            $branchId    = (int)($validated['branch_id'] ?? 1);                 // ✅ use real branch
+            $warehouseId = (int)$validated['warehouse_id'];
 
-    return redirect()->route('Purchase.home')->with('success', 'Purchase saved successfully.');
-}
+            // create header
+            $purchase = Purchase::create([
+                'branch_id'     => $branchId,
+                'warehouse_id'  => $warehouseId,
+                'vendor_id'     => $validated['vendor_id'] ?? null,
+                'purchase_date' => $validated['purchase_date'] ?? now(),
+                'invoice_no'    => $validated['invoice_no'] ?? $nextInvoice,
+                'note'          => $validated['note'] ?? null,
+                'subtotal'      => 0,
+                'discount'      => 0,
+                'extra_cost'    => 0,
+                'net_amount'    => 0,
+                'paid_amount'   => 0,
+                'due_amount'    => 0,
+            ]);
+
+            $subtotal = 0;
+            $pids = $validated['product_id'] ?? [];
+            $qtys = $validated['qty'] ?? [];
+            $prices = $validated['price'] ?? [];
+            $units = $validated['unit'] ?? [];
+            $itemDiscs = $validated['item_discount'] ?? [];
+
+            $movRows = [];  // only for direct purchase
+
+            foreach ($pids as $i => $pid) {
+                $pid = (int)($pid ?? 0);
+                $qty = (float)($qtys[$i] ?? 0);
+                $price = (float)($prices[$i] ?? 0);
+                if (!$pid || $qty <= 0 || $price < 0) continue;
+
+                $disc = (float)($itemDiscs[$i] ?? 0);
+                $unit = $units[$i] ?? null;
+                $lineTotal = ($price * $qty) - $disc;
+
+                PurchaseItem::create([
+                    'purchase_id'   => $purchase->id,
+                    'product_id'    => $pid,
+                    'unit'          => $unit,
+                    'price'         => $price,
+                    'item_discount' => $disc,
+                    'qty'           => $qty,
+                    'line_total'    => $lineTotal,
+                ]);
+
+                $subtotal += $lineTotal;
+
+                // ✅ STOCK: if gatepass linked, DO NOTHING (already inward added it)
+                if (!$gatepass) {
+                    // movement (+)
+                    $movRows[] = [
+                        'product_id' => $pid,
+                        'type'       => 'in',
+                        'qty'        => $qty,
+                        'ref_type'   => 'PURCHASE',
+                        'ref_id'     => $purchase->id,
+                        'note'       => 'Direct purchase',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                    // stocks
+                    $this->upsertStocks($pid, +$qty, $branchId, $warehouseId);
+                }
+            }
+
+            // insert movements (direct purchase only)
+            if (!$gatepass && !empty($movRows)) {
+                DB::table('stock_movements')->insert($movRows);
+            }
+
+            // totals
+            $discount  = (float)($request->discount ?? 0);
+            $extraCost = (float)($request->extra_cost ?? 0);
+            $netAmount = ($subtotal - $discount) + $extraCost;
+
+            $purchase->update([
+                'subtotal'    => $subtotal,
+                'discount'    => $discount,
+                'extra_cost'  => $extraCost,
+                'net_amount'  => $netAmount,
+                'due_amount'  => $netAmount,
+            ]);
+
+            // Vendor ledger
+            $prevClosing = \App\Models\VendorLedger::where('vendor_id', $validated['vendor_id'] ?? null)
+                ->value('closing_balance') ?? 0;
+            \App\Models\VendorLedger::updateOrCreate(
+                ['vendor_id' => $validated['vendor_id'] ?? null],
+                [
+                    'vendor_id'         => $validated['vendor_id'] ?? null,
+                    'admin_or_user_id'  => auth()->id(),
+                    'previous_balance'  => $prevClosing,
+                    'opening_balance'   => $prevClosing,
+                    'closing_balance'   => $prevClosing + $netAmount,
+                ]
+            );
+
+            // link gatepass -> purchase (and keep status)
+            if ($gatepass) {
+                $gatepass->purchase_id = $purchase->id;
+                $gatepass->status = 'linked';
+                $gatepass->save();
+            }
+        });
+
+        return redirect()->route('Purchase.home')->with('success', 'Purchase saved successfully.');
+    }
 
 
 
@@ -608,198 +630,198 @@ private function upsertStocks(int $productId, float $qtyDelta, int $branchId, in
 
 
 
-   public function update(Request $request, $id)
-{
-    $validated = $request->validate([
-        'invoice_no'      => 'nullable|string',
-        'vendor_id'       => 'nullable|exists:vendors,id',
-        'purchase_date'   => 'nullable|date',
-        'branch_id'       => 'nullable|exists:branches,id',
-        'warehouse_id'    => 'required|exists:warehouses,id',
-        'note'            => 'nullable|string',
-        'discount'        => 'nullable|numeric|min:0',
-        'extra_cost'      => 'nullable|numeric|min:0',
+    public function update(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'invoice_no'      => 'nullable|string',
+            'vendor_id'       => 'nullable|exists:vendors,id',
+            'purchase_date'   => 'nullable|date',
+            'branch_id'       => 'nullable|exists:branches,id',
+            'warehouse_id'    => 'required|exists:warehouses,id',
+            'note'            => 'nullable|string',
+            'discount'        => 'nullable|numeric|min:0',
+            'extra_cost'      => 'nullable|numeric|min:0',
 
-        'product_id'      => 'array',
-        'product_id.*'    => 'nullable|exists:products,id',
-        'qty'             => 'array',
-        'qty.*'           => 'nullable|required_with:product_id.*|numeric|min:1',
-        'price'           => 'array',
-        'price.*'         => 'nullable|required_with:product_id.*|numeric|min:0',
-        'unit'            => 'array',
-        'unit.*'          => 'nullable|required_with:product_id.*|string',
-        'item_discount'   => 'nullable|array',
-        'item_discount.*' => 'nullable|numeric|min:0',
-    ]);
+            'product_id'      => 'array',
+            'product_id.*'    => 'nullable|exists:products,id',
+            'qty'             => 'array',
+            'qty.*'           => 'nullable|required_with:product_id.*|numeric|min:1',
+            'price'           => 'array',
+            'price.*'         => 'nullable|required_with:product_id.*|numeric|min:0',
+            'unit'            => 'array',
+            'unit.*'          => 'nullable|required_with:product_id.*|string',
+            'item_discount'   => 'nullable|array',
+            'item_discount.*' => 'nullable|numeric|min:0',
+        ]);
 
-    DB::transaction(function () use ($validated, $request, $id) {
-        $purchase = Purchase::with('items')->findOrFail($id);
+        DB::transaction(function () use ($validated, $request, $id) {
+            $purchase = Purchase::with('items')->findOrFail($id);
 
-        $branchId    = (int)($validated['branch_id'] ?? $purchase->branch_id ?? 1);
-        $warehouseId = (int)($validated['warehouse_id'] ?? $purchase->warehouse_id);
+            $branchId    = (int)($validated['branch_id'] ?? $purchase->branch_id ?? 1);
+            $warehouseId = (int)($validated['warehouse_id'] ?? $purchase->warehouse_id);
 
-        // Map old totals per product
-        $oldMap = $purchase->items->groupBy('product_id')->map(fn($g)=> (float)$g->sum('qty'));
+            // Map old totals per product
+            $oldMap = $purchase->items->groupBy('product_id')->map(fn($g) => (float)$g->sum('qty'));
 
-        // Rebuild items
-        $purchase->items()->delete();
+            // Rebuild items
+            $purchase->items()->delete();
 
-        $subtotal = 0;
-        $newMap = collect();
+            $subtotal = 0;
+            $newMap = collect();
 
-        $pids = $validated['product_id'] ?? [];
-        $qtys = $validated['qty'] ?? [];
-        $prices = $validated['price'] ?? [];
-        $units = $validated['unit'] ?? [];
-        $itemDiscs = $validated['item_discount'] ?? [];
+            $pids = $validated['product_id'] ?? [];
+            $qtys = $validated['qty'] ?? [];
+            $prices = $validated['price'] ?? [];
+            $units = $validated['unit'] ?? [];
+            $itemDiscs = $validated['item_discount'] ?? [];
 
-        foreach ($pids as $i => $pid) {
-            $pid = (int)($pid ?? 0);
-            $qty = (float)($qtys[$i] ?? 0);
-            $price = (float)($prices[$i] ?? 0);
-            if (!$pid || $qty <= 0 || $price < 0) continue;
+            foreach ($pids as $i => $pid) {
+                $pid = (int)($pid ?? 0);
+                $qty = (float)($qtys[$i] ?? 0);
+                $price = (float)($prices[$i] ?? 0);
+                if (!$pid || $qty <= 0 || $price < 0) continue;
 
-            $disc = (float)($itemDiscs[$i] ?? 0);
-            $unit = $units[$i] ?? null;
-            $lineTotal = ($price * $qty) - $disc;
+                $disc = (float)($itemDiscs[$i] ?? 0);
+                $unit = $units[$i] ?? null;
+                $lineTotal = ($price * $qty) - $disc;
 
-            PurchaseItem::create([
-                'purchase_id'   => $purchase->id,
-                'product_id'    => $pid,
-                'unit'          => $unit,
-                'price'         => $price,
-                'item_discount' => $disc,
-                'qty'           => $qty,
-                'line_total'    => $lineTotal,
+                PurchaseItem::create([
+                    'purchase_id'   => $purchase->id,
+                    'product_id'    => $pid,
+                    'unit'          => $unit,
+                    'price'         => $price,
+                    'item_discount' => $disc,
+                    'qty'           => $qty,
+                    'line_total'    => $lineTotal,
+                ]);
+
+                $subtotal += $lineTotal;
+                $newMap[$pid] = ($newMap[$pid] ?? 0) + $qty;
+            }
+
+            // header update
+            $purchase->update([
+                'vendor_id'     => $validated['vendor_id'] ?? $purchase->vendor_id,
+                'branch_id'     => $branchId,
+                'warehouse_id'  => $warehouseId,
+                'purchase_date' => $validated['purchase_date'] ?? $purchase->purchase_date,
+                'invoice_no'    => $validated['invoice_no'] ?? $purchase->invoice_no,
+                'note'          => $validated['note'] ?? $purchase->note,
             ]);
 
-            $subtotal += $lineTotal;
-            $newMap[$pid] = ($newMap[$pid] ?? 0) + $qty;
-        }
+            // totals
+            $discount  = (float)($request->discount ?? 0);
+            $extraCost = (float)($request->extra_cost ?? 0);
+            $netAmount = ($subtotal - $discount) + $extraCost;
 
-        // header update
-        $purchase->update([
-            'vendor_id'     => $validated['vendor_id'] ?? $purchase->vendor_id,
-            'branch_id'     => $branchId,
-            'warehouse_id'  => $warehouseId,
-            'purchase_date' => $validated['purchase_date'] ?? $purchase->purchase_date,
-            'invoice_no'    => $validated['invoice_no'] ?? $purchase->invoice_no,
-            'note'          => $validated['note'] ?? $purchase->note,
-        ]);
+            $purchase->update([
+                'subtotal'    => $subtotal,
+                'discount'    => $discount,
+                'extra_cost'  => $extraCost,
+                'net_amount'  => $netAmount,
+                'due_amount'  => $netAmount,
+            ]);
 
-        // totals
-        $discount  = (float)($request->discount ?? 0);
-        $extraCost = (float)($request->extra_cost ?? 0);
-        $netAmount = ($subtotal - $discount) + $extraCost;
+            // If this purchase is linked to a gatepass => NO stock changes here
+            $isLinkedToGatepass = \App\Models\InwardGatepass::where('purchase_id', $purchase->id)->exists();
 
-        $purchase->update([
-            'subtotal'    => $subtotal,
-            'discount'    => $discount,
-            'extra_cost'  => $extraCost,
-            'net_amount'  => $netAmount,
-            'due_amount'  => $netAmount,
-        ]);
+            if (!$isLinkedToGatepass) {
+                // deltas for movements + stocks
+                $movs = [];
+                $now = now();
+                $all = $oldMap->keys()->merge($newMap->keys())->unique();
+                foreach ($all as $pid) {
+                    $oldQ = (float)($oldMap[$pid] ?? 0);
+                    $newQ = (float)($newMap[$pid] ?? 0);
+                    $delta = $newQ - $oldQ;
+                    if ($delta == 0) continue;
 
-        // If this purchase is linked to a gatepass => NO stock changes here
-        $isLinkedToGatepass = \App\Models\InwardGatepass::where('purchase_id', $purchase->id)->exists();
+                    $type = $delta > 0 ? 'in' : 'out';
+                    $qty  = abs($delta);
 
-        if (!$isLinkedToGatepass) {
-            // deltas for movements + stocks
-            $movs = [];
-            $now = now();
-            $all = $oldMap->keys()->merge($newMap->keys())->unique();
-            foreach ($all as $pid) {
-                $oldQ = (float)($oldMap[$pid] ?? 0);
-                $newQ = (float)($newMap[$pid] ?? 0);
-                $delta = $newQ - $oldQ;
-                if ($delta == 0) continue;
+                    $movs[] = [
+                        'product_id' => (int)$pid,
+                        'type'       => $type,
+                        'qty'        => $qty,
+                        'ref_type'   => 'PURCHASE_EDIT',
+                        'ref_id'     => $purchase->id,
+                        'note'       => 'Purchase edit delta',
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
 
-                $type = $delta > 0 ? 'in' : 'out';
-                $qty  = abs($delta);
-
-                $movs[] = [
-                    'product_id' => (int)$pid,
-                    'type'       => $type,
-                    'qty'        => $qty,
-                    'ref_type'   => 'PURCHASE_EDIT',
-                    'ref_id'     => $purchase->id,
-                    'note'       => 'Purchase edit delta',
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
-
-                $this->upsertStocks((int)$pid, ($type==='in' ? +$qty : -$qty), $branchId, $warehouseId);
-            }
-            if (!empty($movs)) {
-                DB::table('stock_movements')->insert($movs);
-            }
-        }
-
-        // Vendor ledger (simple overwrite pattern)
-        $prevClosing = \App\Models\VendorLedger::where('vendor_id', $purchase->vendor_id)
-            ->value('closing_balance') ?? 0;
-        \App\Models\VendorLedger::updateOrCreate(
-            ['vendor_id' => $purchase->vendor_id],
-            [
-                'vendor_id'         => $purchase->vendor_id,
-                'admin_or_user_id'  => auth()->id(),
-                'previous_balance'  => $prevClosing,
-                'opening_balance'   => $prevClosing,
-                'closing_balance'   => $prevClosing + $netAmount,
-            ]
-        );
-    });
-
-    return redirect()->route('Purchase.home')->with('success', 'Purchase updated successfully!');
-}
-
-
-
-public function destroy($id)
-{
-    DB::transaction(function () use ($id) {
-        $purchase = Purchase::with('items')->findOrFail($id);
-
-        $branchId    = (int)($purchase->branch_id ?? 1);
-        $warehouseId = (int)($purchase->warehouse_id);
-
-        // linked to gatepass? then NO stock changes
-        $isLinkedToGatepass = \App\Models\InwardGatepass::where('purchase_id', $purchase->id)->exists();
-
-        if (!$isLinkedToGatepass) {
-            $movs = [];
-            $now = now();
-
-            foreach ($purchase->items as $it) {
-                $pid = (int)$it->product_id;
-                $qty = (float)$it->qty;
-
-                $movs[] = [
-                    'product_id' => $pid,
-                    'type'       => 'out',
-                    'qty'        => $qty,
-                    'ref_type'   => 'PURCHASE_DELETE',
-                    'ref_id'     => $purchase->id,
-                    'note'       => 'Delete purchase (reverse)',
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
-
-                // stocks rollback
-                $this->upsertStocks($pid, -$qty, $branchId, $warehouseId);
+                    $this->upsertStocks((int)$pid, ($type === 'in' ? +$qty : -$qty), $branchId, $warehouseId);
+                }
+                if (!empty($movs)) {
+                    DB::table('stock_movements')->insert($movs);
+                }
             }
 
-            if (!empty($movs)) {
-                DB::table('stock_movements')->insert($movs);
+            // Vendor ledger (simple overwrite pattern)
+            $prevClosing = \App\Models\VendorLedger::where('vendor_id', $purchase->vendor_id)
+                ->value('closing_balance') ?? 0;
+            \App\Models\VendorLedger::updateOrCreate(
+                ['vendor_id' => $purchase->vendor_id],
+                [
+                    'vendor_id'         => $purchase->vendor_id,
+                    'admin_or_user_id'  => auth()->id(),
+                    'previous_balance'  => $prevClosing,
+                    'opening_balance'   => $prevClosing,
+                    'closing_balance'   => $prevClosing + $netAmount,
+                ]
+            );
+        });
+
+        return redirect()->route('Purchase.home')->with('success', 'Purchase updated successfully!');
+    }
+
+
+
+    public function destroy($id)
+    {
+        DB::transaction(function () use ($id) {
+            $purchase = Purchase::with('items')->findOrFail($id);
+
+            $branchId    = (int)($purchase->branch_id ?? 1);
+            $warehouseId = (int)($purchase->warehouse_id);
+
+            // linked to gatepass? then NO stock changes
+            $isLinkedToGatepass = \App\Models\InwardGatepass::where('purchase_id', $purchase->id)->exists();
+
+            if (!$isLinkedToGatepass) {
+                $movs = [];
+                $now = now();
+
+                foreach ($purchase->items as $it) {
+                    $pid = (int)$it->product_id;
+                    $qty = (float)$it->qty;
+
+                    $movs[] = [
+                        'product_id' => $pid,
+                        'type'       => 'out',
+                        'qty'        => $qty,
+                        'ref_type'   => 'PURCHASE_DELETE',
+                        'ref_id'     => $purchase->id,
+                        'note'       => 'Delete purchase (reverse)',
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
+
+                    // stocks rollback
+                    $this->upsertStocks($pid, -$qty, $branchId, $warehouseId);
+                }
+
+                if (!empty($movs)) {
+                    DB::table('stock_movements')->insert($movs);
+                }
             }
-        }
 
-        $purchase->items()->delete();
-        $purchase->delete();
-    });
+            $purchase->items()->delete();
+            $purchase->delete();
+        });
 
-    return redirect()->back()->with('success', 'Purchase deleted successfully.');
-}
+        return redirect()->back()->with('success', 'Purchase deleted successfully.');
+    }
 
 
 
